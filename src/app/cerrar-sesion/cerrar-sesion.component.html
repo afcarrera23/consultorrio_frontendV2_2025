@@ -1,0 +1,13 @@
+<span class="cerrar-sesion-label" (click)="cerrarSesion()">
+    <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+  </span>
+  
+  <app-popup 
+    *ngIf="mostrarPopup" 
+    [message]="'¿Estás seguro que deseas cerrar la sesión?'" 
+    [confirmText]="'Aceptar'" 
+    [cancelText]="'Cancelar'"
+    (onConfirm)="confirmarCerrarSesion()" 
+    (onCancel)="cancelarCerrarSesion()">
+  </app-popup>
+  

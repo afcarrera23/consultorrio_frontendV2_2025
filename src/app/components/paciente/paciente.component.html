@@ -1,0 +1,112 @@
+<div class="form-container">
+  <form #pacienteForm="ngForm">
+    <p class="form-note">Los campos marcados con asterisco (*) son obligatorios</p>
+
+    <!-- Fila 1: Tipo y número de identificación -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="tipoIdentificacion">Tipo de identificación *:</label>
+        <select id="tipoIdentificacion" name="tipoIdentificacion"
+                [(ngModel)]="paciente.tipoIdentificacion" required>
+          <option value="">Seleccione</option>
+          <option value="CC">Cédula de ciudadanía</option>
+          <option value="TI">Tarjeta de identidad</option>
+          <option value="CE">Cédula de extranjero</option>
+          <option value="NA">No aplica</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="identificacion">Número de identificación *:</label>
+        <input type="text" id="identificacion" name="identificacion"
+               [(ngModel)]="paciente.identificacion" required>
+      </div>
+    </div>
+
+    <!-- Fila 2: Edad y nombre completo -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="edad">Edad *:</label>
+        <input type="number" id="edad" name="edad"
+               [(ngModel)]="paciente.edad" required>
+      </div>
+
+      <div class="form-group">
+        <label for="nombreCompleto">Nombre completo *:</label>
+        <input type="text" id="nombreCompleto" name="nombreCompleto"
+               [(ngModel)]="paciente.nombreCompleto" required>
+      </div>
+    </div>
+
+    <!-- Fila 3: Apellidos y género -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="apellidoCompleto">Apellidos *:</label>
+        <input type="text" id="apellidoCompleto" name="apellidoCompleto"
+               [(ngModel)]="paciente.apellidoCompleto" required>
+      </div>
+
+      <div class="form-group">
+        <label for="genero">Sexo *:</label>
+        <select id="genero" name="genero" [(ngModel)]="paciente.genero" required>
+          <option value="">Seleccione</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fila 4: Profesión y teléfono -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="profesion">Profesión / ocupación:</label>
+        <input type="text" id="profesion" name="profesion"
+               [(ngModel)]="paciente.profesion">
+      </div>
+
+      <div class="form-group">
+        <label for="numeroTelefono">Teléfono *:</label>
+        <input type="text" id="numeroTelefono" name="numeroTelefono"
+               [(ngModel)]="paciente.numeroTelefono" required>
+      </div>
+    </div>
+
+    <!-- Fila 5: Dirección y acompañante -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="direccion">Dirección:</label>
+        <input type="text" id="direccion" name="direccion"
+               [(ngModel)]="paciente.direccion">
+      </div>
+
+      <div class="form-group">
+        <label for="nombreAcompanante">Nombre del acompañante:</label>
+        <input type="text" id="nombreAcompanante" name="nombreAcompanante"
+               [(ngModel)]="paciente.nombreAcompanante">
+      </div>
+    </div>
+
+    <!-- Fila 6: Correo -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="correo">Correo electrónico:</label>
+        <input type="email" id="correo" name="correo"
+               [(ngModel)]="paciente.correo">
+      </div>
+    </div>
+
+    <!-- Campo oculto: ID del usuario que registra -->
+    <input type="hidden" [(ngModel)]="paciente.usuarioRegistroId" name="usuarioRegistroId">
+
+    <!-- Botón Siguiente -->
+    <div class="form-row">
+      <button type="button" 
+              class="btn btn-primary"
+              (click)="siguientePanelAntecedentes()"
+              [disabled]="!pacienteForm.form.valid">
+        Siguiente
+      </button>
+    </div>
+  </form>
+</div>

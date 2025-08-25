@@ -1,0 +1,17 @@
+<div class="container">
+    <div class="login-box">
+      <form (submit)="iniciarSesion()">
+        <div class="form-group">
+          <label for="usuario">Usuario</label>
+          <input type="text" id="usuario" [(ngModel)]="usuario" name="usuario" placeholder="Usuario" required>
+        </div>
+        <div class="form-group">
+          <label for="contrasena">Contraseña</label>
+          <input type="password" id="contrasena" placeholder="Contraseña" [(ngModel)]="contrasena" name="contrasena" required>
+        </div>
+        <button type="submit" class="btn-primary">Iniciar Sesión</button>
+      </form>
+      <a href="#" class="forgot-password">¿Olvidó su contraseña?</a>
+    </div>
+  </div>
+  

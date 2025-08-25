@@ -1,0 +1,50 @@
+<div class="container">
+  <div class="search-box">
+    <div class="form-group">
+      <label for="search" class="search-label">Buscar paciente:</label>
+    </div>
+    <div class="form-row">
+      <input type="text" id="search" name="search"   
+             placeholder="Número de identificación o nombre del paciente">
+      <div class="button-group">
+        <button class="btn-primary" (click)="buscarPaciente()">Buscar</button>
+        <button class="btn-secondary" (click)="agregarPaciente()">Agregar paciente</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="patient-list">
+    <h3>Lista de Pacientes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Apellido</th>
+          <th>Nombre</th>
+          <th>Identificación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let paciente of pacientesFiltrados">
+          <td>{{ paciente.apellidoCompleto }}</td>
+          <td>{{ paciente.nombreCompleto }}</td>
+          <td>{{ paciente.identificacion }}</td>
+          <td>
+            <button class="btn-icon" (click)="editarPaciente(paciente)">
+              <img src="assets/imagenes/editar.png" alt="Editar" class="icono-editar">
+            </button>
+            <button class="btn-icon" (click)="verPaciente(paciente)">
+              <img src="assets/imagenes/ver.png" alt="Ver" class="icono-ver">
+            </button>
+            <button class="btn-icon" (click)="imprimirReceta(paciente)">
+              <img src="assets/imagenes/imprimir.png" alt="Imprimir" class="icono-ver">
+            </button>
+            <button class="btn-icon" (click)="eliminarPaciente()">
+              <img src="assets/imagenes/eliminar.png" alt="Eliminar" class="icono-ver">
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

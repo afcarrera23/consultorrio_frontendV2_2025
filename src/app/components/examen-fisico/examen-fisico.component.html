@@ -1,0 +1,192 @@
+<div class="form-container">
+  <form (ngSubmit)="guardarTodo()" #examenFisicoForm="ngForm">
+    <h2>Registro de Examen Físico</h2>
+
+    <!-- Signos vitales y medidas en 3 columnas -->
+    <div class="examen-fisico-grid">
+      <div class="form-group">
+        <label>Tensión Sistólica</label>
+        <input type="number" [(ngModel)]="examenFisico.tensionSistolica" name="tensionSistolica" required />
+      </div>
+      <div class="form-group">
+        <label>Tensión Diastólica</label>
+        <input type="number" [(ngModel)]="examenFisico.tensionDiastolica" name="tensionDiastolica" required />
+      </div>
+      <div class="form-group">
+        <label>Frecuencia Respiratoria</label>
+        <input type="number" [(ngModel)]="examenFisico.frecuenciaRespiratoria" name="frecuenciaRespiratoria" required />
+      </div>
+      <div class="form-group">
+        <label>Frecuencia Cardíaca</label>
+        <input type="number" [(ngModel)]="examenFisico.frecuenciaCardiaca" name="frecuenciaCardiaca" required />
+      </div>
+      <div class="form-group">
+        <label>Temperatura</label>
+        <input type="number" step="0.1" [(ngModel)]="examenFisico.temperatura" name="temperatura" required />
+      </div>
+      <div class="form-group">
+        <label>Saturación O₂</label>
+        <input type="number" [(ngModel)]="examenFisico.saturacion" name="saturacion" />
+      </div>
+      <div class="form-group">
+        <label for="peso">Peso (kg)</label>
+        <input type="number" id="peso" [(ngModel)]="examenFisico.peso" name="peso" (input)="calcularIMC()" />
+      </div>
+      
+      <div class="form-group">
+        <label for="talla">Talla (cm)</label>
+        <input type="number" id="talla" [(ngModel)]="examenFisico.talla" name="talla" (input)="calcularIMC()" />
+      </div>
+      
+      <div class="form-group">
+        <label for="imc">IMC</label>
+        <input type="text" id="imc" [value]="examenFisico.imc" readonly />
+      </div>
+      
+      
+      <div class="form-group">
+        <label>Perímetro Cefálico (cm)</label>
+        <input type="number" [(ngModel)]="examenFisico.perimetroCefalico" name="perimetroCefalico" />
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="observaciones-grid">
+      <div class="form-group full-width">
+        <label>Aspecto General</label>
+        <textarea [(ngModel)]="examenFisico.aspectoGeneral" name="aspectoGeneral"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Craneo</label>
+        <textarea
+          [(ngModel)]="examenFisico.craneoDetalle"
+          name="craneoDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.craneoDetalle === 'Normal' ? examenFisico.craneoDetalle = '' : null"
+          (blur)="!examenFisico.craneoDetalle ? examenFisico.craneoDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Ojos</label>
+        <textarea
+          [(ngModel)]="examenFisico.ojosDetalle"
+          name="ojosDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.ojosDetalle === 'Normal' ? examenFisico.ojosDetalle = '' : null"
+          (blur)="!examenFisico.ojosDetalle ? examenFisico.ojosDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Oído</label>
+        <textarea
+          [(ngModel)]="examenFisico.oidoDetalle"
+          name="oidoDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.oidoDetalle === 'Normal' ? examenFisico.oidoDetalle = '' : null"
+          (blur)="!examenFisico.oidoDetalle ? examenFisico.oidoDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Cuello</label>
+        <textarea
+          [(ngModel)]="examenFisico.cuelloDetalle"
+          name="cuelloDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.cuelloDetalle === 'Normal' ? examenFisico.cuelloDetalle = '' : null"
+          (blur)="!examenFisico.cuelloDetalle ? examenFisico.cuelloDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Cardio-Pulmonar</label>
+        <textarea
+          [(ngModel)]="examenFisico.cardioPulmonarDetalle"
+          name="cardioPulmonarDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.cardioPulmonarDetalle === 'Normal' ? examenFisico.cardioPulmonarDetalle = '' : null"
+          (blur)="!examenFisico.cardioPulmonarDetalle ? examenFisico.cardioPulmonarDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Senos</label>
+        <textarea
+          [(ngModel)]="examenFisico.senosDetalle"
+          name="senosDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.senosDetalle === 'Normal' ? examenFisico.senosDetalle = '' : null"
+          (blur)="!examenFisico.senosDetalle ? examenFisico.senosDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Abdomen</label>
+        <textarea
+          [(ngModel)]="examenFisico.abdomenDetalle"
+          name="abdomenDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.abdomenDetalle === 'Normal' ? examenFisico.abdomenDetalle = '' : null"
+          (blur)="!examenFisico.abdomenDetalle ? examenFisico.abdomenDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Genitales</label>
+        <textarea
+          [(ngModel)]="examenFisico.genitalesDetalle"
+          name="genitalesDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.genitalesDetalle === 'Normal' ? examenFisico.genitalesDetalle = '' : null"
+          (blur)="!examenFisico.genitalesDetalle ? examenFisico.genitalesDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Examen Rectal</label>
+        <textarea
+          [(ngModel)]="examenFisico.examenRectalDetalle"
+          name="examenRectalDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.examenRectalDetalle === 'Normal' ? examenFisico.examenRectalDetalle = '' : null"
+          (blur)="!examenFisico.examenRectalDetalle ? examenFisico.examenRectalDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Neurológico</label>
+        <textarea
+          [(ngModel)]="examenFisico.neurologicoDetalle"
+          name="neurologicoDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.neurologicoDetalle === 'Normal' ? examenFisico.neurologicoDetalle = '' : null"
+          (blur)="!examenFisico.neurologicoDetalle ? examenFisico.neurologicoDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Extremidades Osteoarticulares</label>
+        <textarea
+          [(ngModel)]="examenFisico.extremidadesOsteoarticularDetalle"
+          name="extremidadesOsteoarticularDetalle"
+          placeholder="Normal"
+          (focus)="examenFisico.extremidadesOsteoarticularDetalle === 'Normal' ? examenFisico.extremidadesOsteoarticularDetalle = '' : null"
+          (blur)="!examenFisico.extremidadesOsteoarticularDetalle ? examenFisico.extremidadesOsteoarticularDetalle = 'Normal' : null"
+        >Normal</textarea>
+      </div>      
+      <div class="form-group">
+        <label>Otros Hallazgos</label>
+        <textarea [(ngModel)]="examenFisico.otrosHallazgos" name="otrosHallazgos"></textarea>
+      </div>
+    </div>
+
+    <!-- Botón -->
+    <div class="form-row">
+      <button type="submit" class="btn-primary">
+        Guardar Examen Físico
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,176 @@
+/* Estilo para el contenedor principal */
+.container {
+    font-family: 'Roboto', sans-serif;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  
+  /* Estilo para la caja del buscador */
+  .search-box {
+    width: auto;
+    background-color: #d5d5d5;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column; /* Cambia a columna para que el label esté encima */
+    gap: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  /* Estilo para el label del campo de búsqueda */
+  .search-label {
+    display: block;
+    padding: 0;
+    font-size: 20px;
+    color: #333333;
+  }
+  
+  /* Estilo para la fila del formulario */
+  .form-row {
+    display: flex; /* Use flexbox for row arrangement */
+    align-items: center;
+    gap: 10px; /* Add space between input and buttons */
+  }
+  
+  /* Estilo para el grupo de botones */
+  .button-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* Estilo para los botones principales y secundarios */
+  .btn-primary, .btn-secondary {
+    width: 150px;
+    height: 40px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+    align-items: center;
+  }
+  
+  /* Estilo para el botón primario */
+  .btn-primary {
+    background-color: #d32f2f;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #c12727;
+  }
+  
+  /* Estilo para el botón secundario */
+  .btn-secondary {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #45a049;
+  }
+  
+  /* Estilo para el input del buscador */
+  .search-box input[type="text"] {
+    width: 100%; /* Allow input field to take remaining space */
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Estilo para la lista de pacientes */
+  .patient-list {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  /* Estilo para las tablas */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+    border-radius: 8px;
+  }
+  
+  table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  /* Estilo para el botón que contiene el ícono */
+  .btn-icon {
+    background-color: transparent;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-icon:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+    cursor: pointer;
+  }
+  
+  /* Estilo para el ícono de editar */
+  .icono-editar, .icono-ver {
+    width: 20px !important;
+    height: 20px !important;
+    display: block;
+    margin: 0 auto;
+    pointer-events: none;
+  }
+  
+  
+  
+  /* Estilo para el fondo oscuro */
+  .overlay {
+    position: fixed; /* Cubrir toda la pantalla */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Color negro con opacidad */
+    z-index: 999; /* Debe estar encima del contenido */
+  }
+  
+  /* Asegúrate de que el popup esté encima del fondo */
+  .popup {
+    position: fixed; /* Ajusta la posición del popup */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white; /* Color de fondo del popup */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Asegúrate de que el popup esté en frente */
+  }
+  
