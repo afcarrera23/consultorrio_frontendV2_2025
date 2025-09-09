@@ -1,5 +1,6 @@
 import { AntecedentePatologicoDTO } from "./antecedente-patologico.model";
 import { AntecedentePersonalDTO } from "./antecedente-personal.model";
+import { DiagnosticoItem } from "./diagnostico.model";
 import { ExamenFisicoDTO } from "./examen-fisico.model";
 
 export interface PacienteListadoDTO {
@@ -27,4 +28,5 @@ export interface PacienteListadoDTO {
     antecedentesPatologicos: AntecedentePatologicoDTO[];
     antecedentePersonal: AntecedentePersonalDTO[];
     examenFisico?: ExamenFisicoDTO;
+    diagnostico?: DiagnosticoItem[];
   }

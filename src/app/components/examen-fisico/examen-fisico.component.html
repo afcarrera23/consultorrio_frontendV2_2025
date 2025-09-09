@@ -1,5 +1,5 @@
 <div class="form-container">
-  <form (ngSubmit)="guardarTodo()" #examenFisicoForm="ngForm">
+  <form (ngSubmit)="continuarADiagnostico()" #examenFisicoForm="ngForm">
     <h2>Registro de Examen Físico</h2>
 
     <!-- Signos vitales y medidas en 3 columnas -->
@@ -43,7 +43,6 @@
         <input type="text" id="imc" [value]="examenFisico.imc" readonly />
       </div>
       
-      
       <div class="form-group">
         <label>Perímetro Cefálico (cm)</label>
         <input type="number" [(ngModel)]="examenFisico.perimetroCefalico" name="perimetroCefalico" />
@@ -56,6 +55,7 @@
         <label>Aspecto General</label>
         <textarea [(ngModel)]="examenFisico.aspectoGeneral" name="aspectoGeneral"></textarea>
       </div>
+
       <div class="form-group">
         <label>Craneo</label>
         <textarea
@@ -63,8 +63,8 @@
           name="craneoDetalle"
           placeholder="Normal"
           (focus)="examenFisico.craneoDetalle === 'Normal' ? examenFisico.craneoDetalle = '' : null"
-          (blur)="!examenFisico.craneoDetalle ? examenFisico.craneoDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.craneoDetalle ? examenFisico.craneoDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -74,8 +74,8 @@
           name="ojosDetalle"
           placeholder="Normal"
           (focus)="examenFisico.ojosDetalle === 'Normal' ? examenFisico.ojosDetalle = '' : null"
-          (blur)="!examenFisico.ojosDetalle ? examenFisico.ojosDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.ojosDetalle ? examenFisico.ojosDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -85,8 +85,8 @@
           name="oidoDetalle"
           placeholder="Normal"
           (focus)="examenFisico.oidoDetalle === 'Normal' ? examenFisico.oidoDetalle = '' : null"
-          (blur)="!examenFisico.oidoDetalle ? examenFisico.oidoDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.oidoDetalle ? examenFisico.oidoDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -96,8 +96,8 @@
           name="cuelloDetalle"
           placeholder="Normal"
           (focus)="examenFisico.cuelloDetalle === 'Normal' ? examenFisico.cuelloDetalle = '' : null"
-          (blur)="!examenFisico.cuelloDetalle ? examenFisico.cuelloDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.cuelloDetalle ? examenFisico.cuelloDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -107,8 +107,8 @@
           name="cardioPulmonarDetalle"
           placeholder="Normal"
           (focus)="examenFisico.cardioPulmonarDetalle === 'Normal' ? examenFisico.cardioPulmonarDetalle = '' : null"
-          (blur)="!examenFisico.cardioPulmonarDetalle ? examenFisico.cardioPulmonarDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.cardioPulmonarDetalle ? examenFisico.cardioPulmonarDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -118,8 +118,8 @@
           name="senosDetalle"
           placeholder="Normal"
           (focus)="examenFisico.senosDetalle === 'Normal' ? examenFisico.senosDetalle = '' : null"
-          (blur)="!examenFisico.senosDetalle ? examenFisico.senosDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.senosDetalle ? examenFisico.senosDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -129,8 +129,8 @@
           name="abdomenDetalle"
           placeholder="Normal"
           (focus)="examenFisico.abdomenDetalle === 'Normal' ? examenFisico.abdomenDetalle = '' : null"
-          (blur)="!examenFisico.abdomenDetalle ? examenFisico.abdomenDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.abdomenDetalle ? examenFisico.abdomenDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -140,8 +140,8 @@
           name="genitalesDetalle"
           placeholder="Normal"
           (focus)="examenFisico.genitalesDetalle === 'Normal' ? examenFisico.genitalesDetalle = '' : null"
-          (blur)="!examenFisico.genitalesDetalle ? examenFisico.genitalesDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.genitalesDetalle ? examenFisico.genitalesDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -151,8 +151,8 @@
           name="examenRectalDetalle"
           placeholder="Normal"
           (focus)="examenFisico.examenRectalDetalle === 'Normal' ? examenFisico.examenRectalDetalle = '' : null"
-          (blur)="!examenFisico.examenRectalDetalle ? examenFisico.examenRectalDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.examenRectalDetalle ? examenFisico.examenRectalDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -162,8 +162,8 @@
           name="neurologicoDetalle"
           placeholder="Normal"
           (focus)="examenFisico.neurologicoDetalle === 'Normal' ? examenFisico.neurologicoDetalle = '' : null"
-          (blur)="!examenFisico.neurologicoDetalle ? examenFisico.neurologicoDetalle = 'Normal' : null"
-        >Normal</textarea>
+          (blur)="!examenFisico.neurologicoDetalle ? examenFisico.neurologicoDetalle = 'Normal' : null">
+        </textarea>
       </div>
       
       <div class="form-group">
@@ -173,9 +173,10 @@
           name="extremidadesOsteoarticularDetalle"
           placeholder="Normal"
           (focus)="examenFisico.extremidadesOsteoarticularDetalle === 'Normal' ? examenFisico.extremidadesOsteoarticularDetalle = '' : null"
-          (blur)="!examenFisico.extremidadesOsteoarticularDetalle ? examenFisico.extremidadesOsteoarticularDetalle = 'Normal' : null"
-        >Normal</textarea>
-      </div>      
+          (blur)="!examenFisico.extremidadesOsteoarticularDetalle ? examenFisico.extremidadesOsteoarticularDetalle = 'Normal' : null">
+        </textarea>
+      </div>
+
       <div class="form-group">
         <label>Otros Hallazgos</label>
         <textarea [(ngModel)]="examenFisico.otrosHallazgos" name="otrosHallazgos"></textarea>
@@ -184,9 +185,9 @@
 
     <!-- Botón -->
     <div class="form-row">
-      <button type="submit" class="btn-primary">
-        Guardar Examen Físico
+      <button type="button" class="btn-primary" (click)="continuarADiagnostico()">
+        Continuar a Diagnóstico
       </button>
-    </div>
+    </div>    
   </form>
 </div>

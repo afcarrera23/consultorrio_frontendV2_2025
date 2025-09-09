@@ -3,6 +3,7 @@ import { PacienteRegistroDTO } from '../models/paciente.model';
 import { AntecedentePatologicoDTO } from '../models/antecedente-patologico.model';
 import { AntecedentePersonalDTO } from '../models/antecedente-personal.model';
 import { ExamenFisicoDTO } from '../models/examen-fisico.model';
+import { DiagnosticoItem } from '../models/diagnostico.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class RegistroTempService {
   antecedentes: AntecedentePatologicoDTO[] = [];
   antecedentePersonal: AntecedentePersonalDTO[] = [];
   examenesFisicos: ExamenFisicoDTO[] = [];
+  diagnosticos: DiagnosticoItem[] = [];
 
   // Guardar paciente (temporal o con ID real)
   guardarPaciente(paciente: PacienteRegistroDTO) {
@@ -87,6 +89,19 @@ export class RegistroTempService {
       if (data) this.examenesFisicos = JSON.parse(data);
     }
     return this.examenesFisicos;
+  }
+
+  guardarDiagnosticoTemp(item: DiagnosticoItem) {
+    this.diagnosticos.push(item);
+    localStorage.setItem('tempDiagnosticos', JSON.stringify(this.diagnosticos));
+  }
+
+  obtenerDiagnosticosTemp(): DiagnosticoItem[] {
+    if (this.diagnosticos.length === 0) {
+      const data = localStorage.getItem('tempDiagnosticos');
+      if (data) this.diagnosticos = JSON.parse(data);
+    }
+    return this.diagnosticos;
   }
 
   // Limpiar datos temporales

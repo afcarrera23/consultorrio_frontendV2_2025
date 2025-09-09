@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { IniciarSesionComponent } from './iniciar-sesion/iniciar-sesion.component';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { MenuPrincipalComponent } from './menu-principal/menu-principal.component';
 import { HeaderComponent } from './header/header.component';
@@ -13,6 +13,11 @@ import { PacienteComponent } from './components/paciente/paciente.component';
 import { AntecedentePatologicoComponent } from './components/antecedente-patologico/antecedente-patologico.component';
 import { AntecedentePersonalComponent } from './components/antecedente-personal/antecedente-personal.component';
 import { ExamenFisicoComponent } from './components/examen-fisico/examen-fisico.component';
+import { DiagnosticoComponent } from './components/diagnostico/diagnostico.component';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -25,13 +30,19 @@ import { ExamenFisicoComponent } from './components/examen-fisico/examen-fisico.
     PacienteComponent,
     AntecedentePatologicoComponent,
     AntecedentePersonalComponent,
-    ExamenFisicoComponent
+    ExamenFisicoComponent,
+    DiagnosticoComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+    ReactiveFormsModule,
+    MatAutocompleteModule,
+    MatInputModule,
+    MatFormFieldModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

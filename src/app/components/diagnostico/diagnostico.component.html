@@ -1,0 +1,134 @@
+<div class="diag-wrapper">
+  <h3>Tipo de diagnóstico (los campos de esta sección no pueden estar vacíos)</h3>
+  <div class="tipo-grid">
+    <label><input type="radio" [(ngModel)]="tipoDiagnostico" [value]="1" name="tipoDiagnostico" /> Impresión diagnóstica</label>
+    <label><input type="radio" [(ngModel)]="tipoDiagnostico" [value]="2" name="tipoDiagnostico" /> Confirmado nuevo</label>
+    <label><input type="radio" [(ngModel)]="tipoDiagnostico" [value]="3" name="tipoDiagnostico" /> Confirmado repetido</label>
+  </div>
+
+  <!-- ======================== DIAGNÓSTICOS ======================== -->
+  <h4>Diagnósticos</h4>
+
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th style="width: 38%">Diagnóstico</th>
+        <th style="width: 22%">Código-Descripción</th>
+        <th style="width: 30%">Descripción</th>
+        <th style="width: 10%; text-align:center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let d of diagnosticos; let i = index">
+        <td>
+          <div class="autocomplete">
+            <input
+              #inp
+              class="input"
+              type="text"
+              placeholder="Escriba código o palabra clave"
+              [value]="diagControls[i].value || ''"
+              (focus)="openDiagMenu(i)"
+              (input)="onDiagInput(i, inp.value)"
+            />
+        
+            <div class="dropdown" *ngIf="diagMenuOpen[i] && diagFiltrados[i]?.length">
+              <div class="option"
+                   *ngFor="let op of diagFiltrados[i]"
+                   (mousedown)="onSelectDiagnostico(i, op)">
+                <strong>{{ op.codigo }}</strong> — {{ op.descripcion }}
+              </div>
+            </div>
+        
+            <div class="dropdown" *ngIf="diagMenuOpen[i] && !diagFiltrados[i]?.length">
+              <div class="nores">Sin resultados</div>
+            </div>
+          </div>
+        </td>
+        
+
+        <td>
+          <input class="input" type="text" [value]="d.codigo || ''" readonly />
+        </td>
+
+        <td>
+          <input class="input" type="text" [value]="d.descripcion || ''" readonly />
+        </td>
+
+        <td class="center">
+          <button type="button" class="btn danger" (click)="removeDiagnostico(i)">🗑️</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="actions-row">
+    <button type="button" class="btn" (click)="addDiagnostico()">+ Agregar diagnóstico</button>
+  </div>
+
+  <!-- ======================== MEDICAMENTOS ======================== -->
+  <h4>Medicamentos</h4>
+
+  <table class="ui-table">
+    <thead>
+      <tr>
+        <th style="width: 26%">Medicamento</th>
+        <th style="width: 16%">Vía administración</th>
+        <th style="width: 10%">Cantidad</th>
+        <th style="width: 38%">Posología y duración</th>
+        <th style="width: 10%; text-align:center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of medicamentos; let i = index">
+        <td>
+          <input class="input" type="text" placeholder="Nombre del medicamento" [(ngModel)]="m.nombreMedicamentoManual" name="med_nombre_{{i}}" />
+        </td>
+
+        <td>
+          <select class="input" [(ngModel)]="m.via" name="med_via_{{i}}">
+            <option value="">Seleccione vía</option>
+            <option>Oral</option>
+            <option>Intravenosa</option>
+            <option>Intramuscular</option>
+            <option>Subcutánea</option>
+            <option>Tópica</option>
+          </select>
+        </td>
+
+        <td>
+          <input class="input" type="number" min="0" step="1" placeholder="Cant." [(ngModel)]="m.dosisCantidad" name="med_cant_{{i}}" />
+        </td>
+
+        <td>
+          <input class="input" type="text"
+                 placeholder="Posología y duración"
+                 [(ngModel)]="m.dosificacion"
+                 name="med_poso_{{i}}" />
+        </td>
+        
+
+        <td class="center">
+          <button type="button" class="btn danger" (click)="removeMedicamento(i)">🗑️</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="actions-row">
+    <button type="button" class="btn" (click)="addMedicamento()">+ Agregar medicamento</button>
+  </div>
+
+  <!-- ======================== PLAN ======================== -->
+  <div class="mt-2">
+    <label class="lbl">Recomendaciones, plan de tratamiento</label>
+    <textarea class="input plan-textarea"
+          rows="4"
+          [(ngModel)]="plan"
+          placeholder="Indique el plan de tratamiento"></textarea>
+  </div>
+
+  <div class="footer-actions">
+    <button type="button" class="btn success" (click)="guardarTodo()">Registrar</button>
+  </div>
+</div>

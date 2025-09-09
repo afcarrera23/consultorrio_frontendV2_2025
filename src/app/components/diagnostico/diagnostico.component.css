@@ -1,0 +1,105 @@
+.diag-wrapper {
+  max-width: 1100px;
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+.tipo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+h3, h4 { color:#2c3e50; margin: 8px 0 12px; }
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafafa;
+  border-radius: 10px;
+  overflow: visible;
+}
+.ui-table th, .ui-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+.ui-table thead th {
+  background: #f2f4f6;
+  text-align: left;
+  font-weight: 600;
+  color:#34495e;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border:1px solid #dcdcdc;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+}
+.input:focus { border-color:#3498db; box-shadow:0 0 0 3px rgba(52,152,219,.15); }
+
+.posologia-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.9fr 0.9fr;
+  gap: 8px;
+}
+
+.actions-row { margin: 10px 0 22px; }
+
+.center { text-align: center; }
+
+.btn {
+  background:#3498db; color:#fff; border:none; border-radius:10px;
+  padding:8px 14px; cursor:pointer; font-weight:600;
+}
+.btn:hover { background:#2d86c2; }
+.btn.success { background:#27ae60; }
+.btn.success:hover { background:#1f8e4e; }
+.btn.danger { background:#e74c3c; }
+.btn.danger:hover { background:#c0392b; }
+
+.w-100 { width: 100%; }
+.mt-2 { margin-top: 12px; }
+.lbl { display:block; margin: 8px 0; color:#34495e; font-weight:600; }
+.footer-actions { display:flex; justify-content:flex-end; margin-top: 16px; }
+
+/* ====== AUTOCOMPLETE ====== */
+.autocomplete { position: relative; }
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08);
+  max-height: 260px;
+  overflow: auto;
+  z-index: 999;
+}
+.dropdown .option {
+  padding: 10px 12px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.dropdown .option:hover { background: #f4f6f8; }
+.dropdown .nores { padding: 10px 12px; color: #777; }
+
+.plan-textarea {
+  width: 100%;
+  max-width: calc(100% - 24px); /* alinea con el borde derecho como la tabla */
+  margin-right: 12px;           /* mismo margen que “emula” el padding de la tabla */
+  min-height: 120px;            /* más alto por defecto */
+  box-sizing: border-box;       /* que el padding/borde no rompa el ancho */
+  resize: vertical;             /* deja cambiar altura si el usuario quiere */
+}

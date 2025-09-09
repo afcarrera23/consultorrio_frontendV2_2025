@@ -6,6 +6,7 @@ import { AntecedentePatologicoDTO } from '../models/antecedente-patologico.model
 import { AntecedenteRegistroDTO } from '../models/antecedente-registro.model';
 import { AntecedentePersonalDTO } from '../models/antecedente-personal.model';
 import { ExamenFisicoDTO } from '../models/examen-fisico.model';
+import { Diagnostico } from '../models/diagnostico.model';
 
 @Injectable({
   providedIn: 'root'
@@ -69,6 +70,15 @@ agregarAntecedentePersonal(dto: AntecedentePersonalDTO): Observable<AntecedenteP
       `${this.apiUrl}/examen-fisico/${id}`
     );
   }
+
+  guardarDiagnostico(pacienteId: number, diagnostico: Diagnostico) {
+    // Opción A (usar tu endpoint actual del backend):
+    return this.http.post(`${this.apiUrl}/agregar-diagnostico`, {
+      ...diagnostico,
+      pacienteId // lo aseguras aquí
+    });
+  }
+  
   
   registrarConTodo(paciente: PacienteRegistroDTO) {
     return this.http.post<PacienteRegistroDTO>(
