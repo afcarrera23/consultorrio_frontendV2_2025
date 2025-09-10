@@ -1,63 +1,79 @@
 <div class="form-container">
-    <h2>Antecedente Personal</h2>
-  
-    <form>
-      <!-- Antecedentes -->
-      <div class="form-row">
-        <div class="form-group full-width">
-          <label>Antecedentes Personales</label>
-          <input type="text" [(ngModel)]="antecedentePersonal.antecedentesPersonales" name="antecedentesPersonales">
-        </div>
-        <div class="form-group full-width">
-          <label>Antecedentes Familiares</label>
-          <input type="text" [(ngModel)]="antecedentePersonal.antecedentesFamiliares" name="antecedentesFamiliares">
-        </div>
-        <div class="form-group full-width">
-          <label>Gineco-Obstétricos</label>
-          <input type="text" [(ngModel)]="antecedentePersonal.ginecoObstetricos" name="ginecoObstetricos">
-        </div>
+  <h2>Antecedente Personal</h2>
+
+  <form #antPersForm="ngForm">
+    <!-- Dos columnas: personales y familiares -->
+    <div class="form-row two-cols">
+      <div class="form-group">
+        <label for="antPersonales">Antecedentes Personales *</label>
+        <textarea id="antPersonales"
+                  name="antecedentesPersonales"
+                  [(ngModel)]="antecedentePersonal.antecedentesPersonales"
+                  required
+                  rows="8"
+                  placeholder="Describa antecedentes personales relevantes"></textarea>
       </div>
-  
-      <!-- Datos numéricos -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>Gestas</label>
-          <input type="number" [(ngModel)]="antecedentePersonal.gestas" name="gestas">
-        </div>
-        <div class="form-group">
-          <label>Partos</label>
-          <input type="number" [(ngModel)]="antecedentePersonal.partos" name="partos">
-        </div>
-        <div class="form-group">
-          <label>Abortos</label>
-          <input type="number" [(ngModel)]="antecedentePersonal.abortos" name="abortos">
-        </div>
-        <div class="form-group">
-          <label>Cesáreas</label>
-          <input type="number" [(ngModel)]="antecedentePersonal.cesareas" name="cesareas">
-        </div>
+
+      <div class="form-group">
+        <label for="antFamiliares">Antecedentes Familiares *</label>
+        <textarea id="antFamiliares"
+                  name="antecedentesFamiliares"
+                  [(ngModel)]="antecedentePersonal.antecedentesFamiliares"
+                  required
+                  rows="8"
+                  placeholder="Describa antecedentes familiares relevantes"></textarea>
       </div>
-  
-      <div class="form-row">
-        <div class="form-group">
-          <label>Vivos</label>
-          <input type="number" [(ngModel)]="antecedentePersonal.vivos" name="vivos">
-        </div>
-        <div class="form-group">
-          <label>Mortinatos</label>
-          <input type="number" [(ngModel)]="antecedentePersonal.mortinatos" name="mortinatos">
-        </div>
+    </div>
+
+    <!-- Campo opcional extra: Gineco-Obstétricos (una columna completa) -->
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label for="gineco">Gineco-Obstétricos</label>
+        <textarea id="gineco"
+                  name="ginecoObstetricos"
+                  [(ngModel)]="antecedentePersonal.ginecoObstetricos"
+                  rows="5"
+                  placeholder="Opcional"></textarea>
       </div>
-  
-      <!-- Fecha consulta -->
-      
-  
-      <!-- Botón -->
-      <div class="form-row">
-        <button type="button" class="btn-primary" (click)="guardarYContinuar()">
-          Siguiente
-        </button>
-      </div>      
-    </form>
-  </div>
-  
+    </div>
+
+    <!-- Datos numéricos -->
+    <div class="form-row">
+      <div class="form-group small-input">
+        <label>Gestas</label>
+        <input type="number" [(ngModel)]="antecedentePersonal.gestas" name="gestas">
+      </div>
+      <div class="form-group small-input">
+        <label>Partos</label>
+        <input type="number" [(ngModel)]="antecedentePersonal.partos" name="partos">
+      </div>
+      <div class="form-group small-input">
+        <label>Abortos</label>
+        <input type="number" [(ngModel)]="antecedentePersonal.abortos" name="abortos">
+      </div>
+      <div class="form-group small-input">
+        <label>Cesáreas</label>
+        <input type="number" [(ngModel)]="antecedentePersonal.cesareas" name="cesareas">
+      </div>
+      <div class="form-group small-input">
+        <label>Vivos</label>
+        <input type="number" [(ngModel)]="antecedentePersonal.vivos" name="vivos">
+      </div>
+      <div class="form-group small-input">
+        <label>Mortinatos</label>
+        <input type="number" [(ngModel)]="antecedentePersonal.mortinatos" name="mortinatos">
+      </div>
+    </div>
+    
+
+    <!-- Botón -->
+    <div class="form-row">
+      <button type="button"
+              class="btn-primary"
+              (click)="guardarYContinuar()"
+              [disabled]="!antPersForm.form.valid">
+        Siguiente
+      </button>
+    </div>
+  </form>
+</div>

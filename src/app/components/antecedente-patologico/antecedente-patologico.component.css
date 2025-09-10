@@ -5,6 +5,8 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  font-size: 0.95rem;     /* escala base */
 }
 
 .form-row {
@@ -59,7 +61,23 @@ textarea, input[type="text"], input[type="datetime-local"], select {
   font-size: 16px;
 }
 
-.btn-primary:disabled {
-  background-color: #c0c0c0;
+button {
+  background-color: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+button:disabled {
+  background-color: #ccc;
   cursor: not-allowed;
+}
+
+button:hover:enabled {
+  background-color: #218838;
 }

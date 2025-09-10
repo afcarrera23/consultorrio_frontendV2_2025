@@ -1,120 +1,121 @@
 /* ==== Contenedor General ==== */
 .form-container {
-    max-width: 1100px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
-    font-family: "Segoe UI", Roboto, sans-serif;
-  }
-  
-  /* ==== Títulos ==== */
-  h2 {
-    font-size: 1.6rem;
-    color: #2c3e50;
-    margin-bottom: 1.2rem;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 0.4rem;
-  }
-  
-  /* ==== Layout general de formularios ==== */
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  /* ==== Layout específico examen físico (3 columnas) ==== */
-  .examen-fisico-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  
-  /* ==== Layout observaciones (2 columnas) ==== */
+  max-width: 960px;       /* antes 1100px */
+  margin: 2rem auto;
+  padding: 1.5rem;        /* antes 2rem */
+  background: #ffffff;
+  border-radius: 12px;    /* antes 16px */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  font-size: 0.95rem;     /* escala base */
+}
+
+/* ==== Títulos ==== */
+h2 {
+  font-size: 1.35rem;     /* antes 1.6rem */
+  color: #2c3e50;
+  margin-bottom: 1rem;    /* antes 1.2rem */
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.4rem;
+}
+
+/* ==== Layout general de formularios ==== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;           /* antes 1rem */
+  margin-bottom: 1.2rem;  /* antes 1.5rem */
+}
+
+/* ==== Layout específico examen físico (3 columnas) ==== */
+.examen-fisico-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;           /* antes 1rem */
+  margin-bottom: 1.5rem;  /* antes 2rem */
+}
+
+/* ==== Layout observaciones (2 columnas) ==== */
+.observaciones-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;           /* antes 1rem */
+}
+
+/* ==== Grupos de formulario ==== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  padding-right: 15px;    /* antes 20px */
+}
+
+.form-group.full-width {
+  grid-column: span 2; /* Para Aspecto General */
+}
+
+/* ==== Labels ==== */
+label {
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 0.25rem; /* antes 0.3rem */
+  display: block;
+  font-size: 0.9rem;      /* más pequeño */
+}
+
+/* ==== Inputs, Selects, Textareas ==== */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem; /* antes 0.6rem 0.8rem */
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;     /* antes 10px */
+  font-size: 0.9rem;      /* antes 0.95rem */
+  outline: none;
+  transition: border 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* Inputs pequeños (signos vitales, medidas) */
+.examen-fisico-grid input {
+  padding: 0.35rem 0.55rem; /* antes 0.4rem 0.6rem */
+  font-size: 0.85rem;       /* antes 0.9rem */
+}
+
+/* ==== Focus ==== */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 4px rgba(52, 152, 219, 0.25);
+}
+
+/* ==== Botones ==== */
+button {
+  margin-top: 15px;
+  background-color: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+button:hover:enabled {
+  background-color: #218838;
+}
+
+/* ==== Responsive observaciones (colapsa a 1 col en pantallas medianas) ==== */
+@media (max-width: 1100px) {
   .observaciones-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: 1fr;
   }
-  
-  /* ==== Grupos de formulario ==== */
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    padding-right: 20px;
-  }
-  
-  .form-group.full-width {
-    grid-column: span 2; /* Para Aspecto General */
-  }
-  
-  /* ==== Labels ==== */
-  label {
-    font-weight: 600;
-    color: #34495e;
-    margin-bottom: 0.3rem;
-    display: block;
-  }
-  
-  /* ==== Inputs, Selects, Textareas ==== */
-  input,
-  select,
-  textarea {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid #dcdcdc;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border 0.2s ease;
-  }
-  
-  /* Inputs pequeños (signos vitales, medidas) */
-  .examen-fisico-grid input {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.9rem;
-  }
-  
-  /* ==== Focus ==== */
-  input:focus,
-  select:focus,
-  textarea:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 6px rgba(52, 152, 219, 0.3);
-  }
-  
-  /* ==== Botones ==== */
-  button {
-    background: #3498db;
-    color: #fff;
-    border: none;
-    padding: 0.7rem 1.4rem;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background 0.3s ease, transform 0.1s ease;
-    margin-top: 15px;
-  }
-  
-  button:hover {
-    background: #2980b9;
-  }
-  
-  button:active {
-    transform: scale(0.97);
-  }
-  
-  /* ==== Botones secundarios ==== */
-  .btn-secondary {
-    background: #95a5a6;
-  }
-  
-  .btn-secondary:hover {
-    background: #7f8c8d;
-  }
-  
+}

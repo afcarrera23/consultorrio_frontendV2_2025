@@ -52,8 +52,13 @@
     <!-- Observaciones -->
     <div class="observaciones-grid">
       <div class="form-group full-width">
-        <label>Aspecto General</label>
-        <textarea [(ngModel)]="examenFisico.aspectoGeneral" name="aspectoGeneral"></textarea>
+        <label>Aspecto General *</label>
+        <textarea [(ngModel)]="examenFisico.aspectoGeneral"
+                name="aspectoGeneral"
+                required
+                #aspectoGeneral="ngModel"
+                rows="3">
+        </textarea>
       </div>
 
       <div class="form-group">
@@ -179,15 +184,24 @@
 
       <div class="form-group">
         <label>Otros Hallazgos</label>
-        <textarea [(ngModel)]="examenFisico.otrosHallazgos" name="otrosHallazgos"></textarea>
+        <textarea
+          [(ngModel)]="examenFisico.otrosHallazgos"
+          name="otrosHallazgos"
+          placeholder="Ninguno"
+          (focus)="examenFisico.otrosHallazgos === 'Ninguno' ? examenFisico.otrosHallazgos = '' : null"
+          (blur)="!examenFisico.otrosHallazgos ? examenFisico.otrosHallazgos = 'Ninguno' : null">
+        </textarea>
       </div>
+      
     </div>
 
     <!-- Botón -->
     <div class="form-row">
-      <button type="button" class="btn-primary" (click)="continuarADiagnostico()">
-        Continuar a Diagnóstico
-      </button>
+      <button type="submit" 
+            class="btn-primary" 
+            [disabled]="!aspectoGeneral.valid">
+      Siguiente
+    </button>
     </div>    
   </form>
 </div>

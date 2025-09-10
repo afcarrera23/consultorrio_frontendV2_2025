@@ -16,7 +16,10 @@
   margin-bottom: 14px;
 }
 
-h3, h4 { color:#2c3e50; margin: 8px 0 12px; }
+h3, h4 { 
+  color:#2c3e50; 
+  margin: 8px 0 12px; 
+}
 
 .ui-table {
   width: 100%;
@@ -45,7 +48,10 @@ h3, h4 { color:#2c3e50; margin: 8px 0 12px; }
   outline: none;
   background: #fff;
 }
-.input:focus { border-color:#3498db; box-shadow:0 0 0 3px rgba(52,152,219,.15); }
+.input:focus { 
+  border-color:#3498db; 
+  box-shadow:0 0 0 3px rgba(52,152,219,.15); 
+}
 
 .posologia-grid {
   display: grid;
@@ -53,24 +59,65 @@ h3, h4 { color:#2c3e50; margin: 8px 0 12px; }
   gap: 8px;
 }
 
-.actions-row { margin: 10px 0 22px; }
-
-.center { text-align: center; }
-
-.btn {
-  background:#3498db; color:#fff; border:none; border-radius:10px;
-  padding:8px 14px; cursor:pointer; font-weight:600;
+.actions-row { 
+  margin: 10px 0 22px; 
 }
-.btn:hover { background:#2d86c2; }
-.btn.success { background:#27ae60; }
-.btn.success:hover { background:#1f8e4e; }
-.btn.danger { background:#e74c3c; }
+
+.center { 
+  text-align: center; 
+}
+
+/* ====== BOTONES ====== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover { opacity: 0.9; }
+
+.btn.danger { 
+  background:#e74c3c; 
+  color: #fff; 
+}
 .btn.danger:hover { background:#c0392b; }
+
+.btn.success {
+  margin-top: 15px;
+  background-color: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+.btn.success:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.btn.success:hover:enabled {
+  background-color: #218838;
+}
 
 .w-100 { width: 100%; }
 .mt-2 { margin-top: 12px; }
-.lbl { display:block; margin: 8px 0; color:#34495e; font-weight:600; }
-.footer-actions { display:flex; justify-content:flex-end; margin-top: 16px; }
+.lbl { 
+  display:block; 
+  margin: 8px 0; 
+  color:#34495e; 
+  font-weight:600; 
+}
+.footer-actions { 
+  display:flex; 
+  justify-content:flex-end; 
+  margin-top: 16px; 
+  width: 100%;
+}
 
 /* ====== AUTOCOMPLETE ====== */
 .autocomplete { position: relative; }
@@ -93,13 +140,16 @@ h3, h4 { color:#2c3e50; margin: 8px 0 12px; }
   line-height: 1.2;
 }
 .dropdown .option:hover { background: #f4f6f8; }
-.dropdown .nores { padding: 10px 12px; color: #777; }
+.dropdown .nores { 
+  padding: 10px 12px; 
+  color: #777; 
+}
 
 .plan-textarea {
   width: 100%;
-  max-width: calc(100% - 24px); /* alinea con el borde derecho como la tabla */
-  margin-right: 12px;           /* mismo margen que “emula” el padding de la tabla */
-  min-height: 120px;            /* más alto por defecto */
-  box-sizing: border-box;       /* que el padding/borde no rompa el ancho */
-  resize: vertical;             /* deja cambiar altura si el usuario quiere */
+  max-width: calc(100% - 24px);
+  margin-right: 12px;
+  min-height: 120px;
+  box-sizing: border-box;
+  resize: vertical;
 }

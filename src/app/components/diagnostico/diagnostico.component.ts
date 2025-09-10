@@ -184,6 +184,7 @@ export class DiagnosticoComponent implements OnInit {
     // ⬇️ usa el objeto, no el array
     const payload: PacienteRegistroDTO = {
       ...paciente,
+      id: paciente.id,
       usuarioRegistroId: paciente.usuarioRegistroId,
       antecedentesPatologicos,
       antecedentePersonal,
@@ -195,7 +196,7 @@ export class DiagnosticoComponent implements OnInit {
       next: () => {
         alert('✅ Registro completo guardado correctamente.');
         this.registroTemp.limpiarPaciente?.();
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/menu-principal']);
       },
       error: (err) => {
         console.error('❌ Error al guardar todo:', err);

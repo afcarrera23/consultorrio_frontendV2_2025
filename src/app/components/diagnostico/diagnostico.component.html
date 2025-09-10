@@ -120,15 +120,22 @@
   </div>
 
   <!-- ======================== PLAN ======================== -->
-  <div class="mt-2">
-    <label class="lbl">Recomendaciones, plan de tratamiento</label>
-    <textarea class="input plan-textarea"
-          rows="4"
-          [(ngModel)]="plan"
-          placeholder="Indique el plan de tratamiento"></textarea>
-  </div>
+<div class="mt-2">
+  <label class="lbl">Recomendaciones, plan de tratamiento <span style="color:red">*</span></label>
+  <textarea class="input plan-textarea"
+        rows="4"
+        [(ngModel)]="plan"
+        name="plan"
+        placeholder="Indique el plan de tratamiento"
+        required>
+  </textarea>
+</div>
 
-  <div class="footer-actions">
-    <button type="button" class="btn success" (click)="guardarTodo()">Registrar</button>
-  </div>
+<div class="footer-actions">
+  <button type="button"
+          class="btn success"
+          (click)="guardarTodo()"
+          [disabled]="!plan || plan.trim().length === 0">
+    Registrar
+  </button>
 </div>
