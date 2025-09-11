@@ -35,30 +35,29 @@
     <hr class="divider">
 
     <!-- Síntomas -->
-   <!-- Síntomas (checkbox) -->
-   <div class="checkbox-container">
-    <h4>Síntomas</h4>
-    <div class="checkbox-grid">
-      <label><input type="checkbox" name="covid" [(ngModel)]="antecedente.covid"> COVID</label>
-      <label><input type="checkbox" name="cefalea" [(ngModel)]="antecedente.cefalea"> Cefalea</label>
-      <label><input type="checkbox" name="tos" [(ngModel)]="antecedente.tos"> Tos</label>
-      <label><input type="checkbox" name="rinorrea" [(ngModel)]="antecedente.rinorrea"> Rinorrea</label>
-      <label><input type="checkbox" name="mialgia" [(ngModel)]="antecedente.mialgia"> Mialgia</label>
-      <label><input type="checkbox" name="dolorToraxico" [(ngModel)]="antecedente.dolorToraxico"> Dolor torácico</label>
-      <label><input type="checkbox" name="nausea" [(ngModel)]="antecedente.nausea"> Náusea</label>
-      <label><input type="checkbox" name="vomito" [(ngModel)]="antecedente.vomito"> Vómito</label>
-      <label><input type="checkbox" name="fiebre" [(ngModel)]="antecedente.fiebre"> Fiebre</label>
-      <label><input type="checkbox" name="odinofagia" [(ngModel)]="antecedente.odinofagia"> Odinofagia</label>
-      <label><input type="checkbox" name="disnea" [(ngModel)]="antecedente.disnea"> Disnea</label>
-      <label><input type="checkbox" name="anosmia" [(ngModel)]="antecedente.anosmia"> Anosmia</label>
-      <label><input type="checkbox" name="conjuntivitis" [(ngModel)]="antecedente.conjuntivitis"> Conjuntivitis</label>
-      <label><input type="checkbox" name="diarrea" [(ngModel)]="antecedente.diarrea"> Diarrea</label>
-      <label><input type="checkbox" name="disgeusia" [(ngModel)]="antecedente.disgeusia"> Disgeusia</label>
-      <label><input type="checkbox" name="sintomaticoRespiratorio" [(ngModel)]="antecedente.sintomaticoRespiratorio"> Sintomático respiratorio</label>
-      <label><input type="checkbox" name="sintomaticoPiel" [(ngModel)]="antecedente.sintomaticoPiel"> Sintomático piel</label>
-      <label><input type="checkbox" name="victimaViolencia" [(ngModel)]="antecedente.victimaViolencia"> Víctima de violencia</label>
+    <div class="checkbox-container">
+      <h4>Síntomas</h4>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" name="covid" [(ngModel)]="antecedente.covid"> COVID</label>
+        <label><input type="checkbox" name="cefalea" [(ngModel)]="antecedente.cefalea"> Cefalea</label>
+        <label><input type="checkbox" name="tos" [(ngModel)]="antecedente.tos"> Tos</label>
+        <label><input type="checkbox" name="rinorrea" [(ngModel)]="antecedente.rinorrea"> Rinorrea</label>
+        <label><input type="checkbox" name="mialgia" [(ngModel)]="antecedente.mialgia"> Mialgia</label>
+        <label><input type="checkbox" name="dolorToraxico" [(ngModel)]="antecedente.dolorToraxico"> Dolor torácico</label>
+        <label><input type="checkbox" name="nausea" [(ngModel)]="antecedente.nausea"> Náusea</label>
+        <label><input type="checkbox" name="vomito" [(ngModel)]="antecedente.vomito"> Vómito</label>
+        <label><input type="checkbox" name="fiebre" [(ngModel)]="antecedente.fiebre"> Fiebre</label>
+        <label><input type="checkbox" name="odinofagia" [(ngModel)]="antecedente.odinofagia"> Odinofagia</label>
+        <label><input type="checkbox" name="disnea" [(ngModel)]="antecedente.disnea"> Disnea</label>
+        <label><input type="checkbox" name="anosmia" [(ngModel)]="antecedente.anosmia"> Anosmia</label>
+        <label><input type="checkbox" name="conjuntivitis" [(ngModel)]="antecedente.conjuntivitis"> Conjuntivitis</label>
+        <label><input type="checkbox" name="diarrea" [(ngModel)]="antecedente.diarrea"> Diarrea</label>
+        <label><input type="checkbox" name="disgeusia" [(ngModel)]="antecedente.disgeusia"> Disgeusia</label>
+        <label><input type="checkbox" name="sintomaticoRespiratorio" [(ngModel)]="antecedente.sintomaticoRespiratorio"> Sintomático respiratorio</label>
+        <label><input type="checkbox" name="sintomaticoPiel" [(ngModel)]="antecedente.sintomaticoPiel"> Sintomático piel</label>
+        <label><input type="checkbox" name="victimaViolencia" [(ngModel)]="antecedente.victimaViolencia"> Víctima de violencia</label>
+      </div>
     </div>
-  </div>
 
     <div class="form-row">
       <div class="form-group full-width">
@@ -72,12 +71,17 @@
     <input type="hidden" name="usuarioId" [(ngModel)]="antecedente.usuarioId">
     <input type="hidden" name="pacienteId" [(ngModel)]="antecedente.pacienteId">
 
-    <!-- Botón de siguiente -->
-    <div class="form-row">
+    <!-- Acciones -->
+    <div class="form-row form-actions">
       <button type="button"
+              class="btn btn-primary"
               (click)="guardarYContinuar()"
-              [disabled]="!antPatForm.form.valid">
+              [disabled]="!antPatForm.form.valid || isSubmitting">
         Siguiente
+      </button>
+
+      <button type="button" class="btn-outline" (click)="atras()">
+        Atrás
       </button>
     </div>
 
@@ -88,7 +92,6 @@
     </div>
   </form>
 </div>
-
 
 <!-- POPUP de confirmación -->
 <app-popup

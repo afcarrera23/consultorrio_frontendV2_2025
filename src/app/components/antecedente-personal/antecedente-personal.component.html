@@ -64,15 +64,18 @@
         <input type="number" [(ngModel)]="antecedentePersonal.mortinatos" name="mortinatos">
       </div>
     </div>
-    
 
-    <!-- Botón -->
-    <div class="form-row">
+    <!-- Acciones -->
+    <div class="form-row form-actions">
       <button type="button"
               class="btn-primary"
               (click)="guardarYContinuar()"
               [disabled]="!antPersForm.form.valid">
         Siguiente
+      </button>
+
+      <button type="button" class="btn-outline" (click)="atras()">
+        Atrás
       </button>
     </div>
 
@@ -84,13 +87,13 @@
   </form>
 </div>
 
-
 <!-- POPUP de confirmación -->
 <app-popup
   *ngIf="isPopupOpen"
   [message]="'¿Deseas abandonar el registro?'"
   [confirmText]="'SI'"
   [cancelText]="'NO'"
-  (onConfirm)="confirmarSalida()"
+  (onConfirm)="confirmarSalida()
+"
   (onCancel)="cerrarPopup()">
 </app-popup>

@@ -1,4 +1,4 @@
-import { Component, HostListener, Input } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { PacienteService } from 'src/app/services/paciente.service';
@@ -9,8 +9,8 @@ import { RegistroTempService } from 'src/app/services/registro-temporal';
   templateUrl: './paciente.component.html',
   styleUrls: ['./paciente.component.css']
 })
-export class PacienteComponent {
-  @Input() paciente: PacienteRegistroDTO = {
+export class PacienteComponent implements OnInit {
+  paciente: PacienteRegistroDTO = {
     identificacion: '',
     tipoIdentificacion: '',
     edad: 0,
@@ -27,8 +27,8 @@ export class PacienteComponent {
     antecedentePersonal: []
   };
 
-  /** Estado del popup */
   isPopupOpen = false;
+  isSubmitting = false;
 
   constructor(
     private pacienteService: PacienteService,
@@ -37,60 +37,56 @@ export class PacienteComponent {
   ) {}
 
   ngOnInit(): void {
-    const usuarioId = Number(localStorage.getItem('usuarioId'));
-    if (usuarioId > 0) {
-      this.paciente.usuarioRegistroId = usuarioId;
-    } else {
-      console.warn('⚠ No se encontró un usuarioId válido en localStorage');
+    // Precarga si existe guardado/draft
+    const guardado = this.registroTemp.obtenerPaciente();
+    if (guardado) this.paciente = { ...this.paciente, ...guardado };
+
+    // Asegura usuarioRegistroId
+    if (!this.paciente.usuarioRegistroId) {
+      const usuarioId = Number(localStorage.getItem('usuarioId'));
+      if (usuarioId > 0) this.paciente.usuarioRegistroId = usuarioId;
+      else console.warn('⚠ No se encontró un usuarioId válido en localStorage');
     }
   }
 
-  siguientePanelAntecedentes() {
-    // Registrar paciente en backend
+  /** Paso 1 → Paso 2 */
+  siguientePanelAntecedentes(): void {
+    // guarda siempre el estado actual
+    this.registroTemp.guardarPaciente(this.paciente);
+
+    // si ya se registró antes y tiene id, no re-posteamos
+    const idExistente = (this.paciente as any).id;
+    if (idExistente) {
+      this.router.navigate([`/antecedente-patologico/${idExistente}`]);
+      return;
+    }
+
+    // registrar contra /registrar-con-antecedentes
+    this.isSubmitting = true;
     this.pacienteService.registrar(this.paciente).subscribe({
       next: (respuesta) => {
-        console.log('✅ Paciente registrado en backend:', respuesta);
-  
-        // Guardar paciente con ID real en el servicio temporal
-        const pacienteConId = { ...this.paciente, id: respuesta.id };
+        const nuevoId = (respuesta as any).id;
+        const pacienteConId = { ...this.paciente, id: nuevoId };
         this.registroTemp.guardarPaciente(pacienteConId);
-  
-        // Redirigir al panel de antecedentes patológicos con el ID real
-        this.router.navigate([`/antecedente-patologico/${respuesta.id}`]);
+        this.isSubmitting = false;
+        this.router.navigate([`/antecedente-patologico/${nuevoId}`]);
       },
       error: (err) => {
-        console.error('❌ Error al registrar paciente:', err);
+        console.error('❌ Error al registrar paciente (crear id):', err);
+        this.isSubmitting = false;
         alert('Error al registrar paciente');
       }
     });
   }
 
-   /** Antes navegabas directo; ahora solo abre el popup */
-   abrirPopupCancelar() {
-    this.isPopupOpen = true;
-  }
-
-  /** Cierra el popup sin salir */
-  cerrarPopup() {
-    this.isPopupOpen = false;
-  }
-
-  /** Si el usuario confirma, navega fuera (abandonar) */
+  /* ===== Popup cancelar ===== */
+  abrirPopupCancelar() { this.isPopupOpen = true; }
+  cerrarPopup() { this.isPopupOpen = false; }
   confirmarSalida() {
     this.isPopupOpen = false;
     this.router.navigate(['/menu-principal']);
   }
 
-  /** Si en algún lugar aún llamas a cancelar(), redirige a abrir el popup */
-  cancelar() {
-    this.abrirPopupCancelar();
-  }
-
-  /** UX extra: tecla ESC cierra el popup */
   @HostListener('document:keydown.escape')
-  onEsc() {
-    if (this.isPopupOpen) this.cerrarPopup();
-  }
-  
-
+  onEsc() { if (this.isPopupOpen) this.cerrarPopup(); }
 }
