@@ -1,3 +1,4 @@
+/* ==== Contenedor General ==== */
 .form-container {
   max-width: 1000px;
   margin: 20px auto;
@@ -6,9 +7,10 @@
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   font-family: "Segoe UI", Roboto, sans-serif;
-  font-size: 0.95rem;     /* escala base */
+  font-size: 0.95rem;
 }
 
+/* ==== Filas y columnas ==== */
 .form-row {
   display: flex;
   flex-wrap: wrap;
@@ -31,21 +33,23 @@
   flex-direction: column;
 }
 
+/* ==== Labels ==== */
 label {
-  font-weight: bold;
-  color: #333;
+  font-weight: 600;
+  color: #34495e;
   margin-bottom: 5px;
   display: block;
+  font-size: 0.9rem;
 }
 
-/* Inputs y textareas coherentes */
+/* ==== Inputs y Textareas ==== */
 input[type="text"],
 input[type="number"],
 input[type="datetime-local"],
 textarea {
   padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
   font-size: 14px;
   width: 100%;
   background-color: #ffffff;
@@ -54,17 +58,31 @@ textarea {
 }
 
 textarea {
-  resize: vertical;        /* 👈 permite ampliar la caja verticalmente */
-  min-height: 80px;        /* altura base cómoda */
+  resize: vertical;
+  min-height: 80px;
 }
 
-input:focus, textarea:focus {
-  border-color: #28a745;
+input:focus,
+textarea:focus {
+  border-color: #3498db;
   background-color: #fff;
   outline: none;
+  box-shadow: 0 0 4px rgba(52, 152, 219, 0.25);
 }
 
-/* Botón estilo verde y estado deshabilitado */
+/* ==== Campos numéricos pequeños (gestas, partos, etc.) ==== */
+.form-group.small-input {
+  flex: 1;                 /* ocupan el mismo espacio */
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.small-input input[type="number"] {
+  width: 100%;
+  text-align: center;      /* opcional */
+}
+
+/* ==== Botón principal (Siguiente) ==== */
 .btn-primary {
   background-color: #28a745;
   color: #fff;
@@ -73,8 +91,9 @@ input:focus, textarea:focus {
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
-  width: 100%;
+  width: 100%;             /* ancho completo */
   transition: background-color 0.2s ease;
+  margin-top: 5px;
 }
 
 .btn-primary:disabled {
@@ -86,15 +105,50 @@ input:focus, textarea:focus {
   background-color: #218838;
 }
 
-
-.form-group.small-input {
-  flex: 1;               /* 👈 todos ocupan el mismo espacio proporcional */
+/* ==== Contenedor y estilo del botón Cancelar (debajo y pequeño) ==== */
+.form-cancel {
   display: flex;
-  flex-direction: column;
+  justify-content: center; /* centrado debajo */
+  margin-top: 8px;
 }
 
-.form-group.small-input input[type="number"] {
-  width: 100%;
-  text-align: center; /* opcional: centrar el número */
-  
+.btn-cancel {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;       /* más pequeño que el primary */
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  width: auto;             /* solo lo necesario */
+  transition: background-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #c82333;
+}
+
+.btn-cancel:hover:enabled {
+  background-color: #940303;
+}
+
+/* ==== Responsivo (breakpoints suaves) ==== */
+@media (max-width: 900px) {
+  .form-row.two-cols .form-group {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 18px;
+  }
+  .btn-primary {
+    font-size: 15px;
+    padding: 10px 16px;
+  }
+  .btn-cancel {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
 }

@@ -75,5 +75,22 @@
         Siguiente
       </button>
     </div>
+
+    <div class="form-row form-cancel">
+      <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
+        Cancelar
+      </button>
+    </div>
   </form>
 </div>
+
+
+<!-- POPUP de confirmación -->
+<app-popup
+  *ngIf="isPopupOpen"
+  [message]="'¿Deseas abandonar el registro?'"
+  [confirmText]="'SI'"
+  [cancelText]="'NO'"
+  (onConfirm)="confirmarSalida()"
+  (onCancel)="cerrarPopup()">
+</app-popup>

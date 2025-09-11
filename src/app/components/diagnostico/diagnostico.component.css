@@ -1,3 +1,4 @@
+/* ====== CONTENEDOR ====== */
 .diag-wrapper {
   max-width: 1100px;
   margin: 20px auto;
@@ -8,6 +9,12 @@
   font-family: "Segoe UI", Roboto, sans-serif;
 }
 
+h3, h4 { 
+  color:#2c3e50; 
+  margin: 8px 0 12px; 
+}
+
+/* ====== TIPO (RADIOS) ====== */
 .tipo-grid {
   display: grid;
   grid-template-columns: repeat(3, max-content);
@@ -16,11 +23,7 @@
   margin-bottom: 14px;
 }
 
-h3, h4 { 
-  color:#2c3e50; 
-  margin: 8px 0 12px; 
-}
-
+/* ====== TABLAS ====== */
 .ui-table {
   width: 100%;
   border-collapse: collapse;
@@ -40,6 +43,7 @@ h3, h4 {
   color:#34495e;
 }
 
+/* ====== INPUTS ====== */
 .input {
   width: 100%;
   padding: 8px 10px;
@@ -53,57 +57,20 @@ h3, h4 {
   box-shadow:0 0 0 3px rgba(52,152,219,.15); 
 }
 
+/* Posología en grid */
 .posologia-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr 0.9fr 0.9fr;
   gap: 8px;
 }
 
+/* Filas de acciones arriba de tablas (+ agregar) */
 .actions-row { 
   margin: 10px 0 22px; 
 }
 
-.center { 
-  text-align: center; 
-}
-
-/* ====== BOTONES ====== */
-.btn {
-  border: none;
-  border-radius: 10px;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-.btn:hover { opacity: 0.9; }
-
-.btn.danger { 
-  background:#e74c3c; 
-  color: #fff; 
-}
-.btn.danger:hover { background:#c0392b; }
-
-.btn.success {
-  margin-top: 15px;
-  background-color: #28a745;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  width: 100%;
-  transition: background-color 0.3s ease;
-}
-.btn.success:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-.btn.success:hover:enabled {
-  background-color: #218838;
-}
-
+/* Utilidades */
+.center { text-align: center; }
 .w-100 { width: 100%; }
 .mt-2 { margin-top: 12px; }
 .lbl { 
@@ -111,12 +78,6 @@ h3, h4 {
   margin: 8px 0; 
   color:#34495e; 
   font-weight:600; 
-}
-.footer-actions { 
-  display:flex; 
-  justify-content:flex-end; 
-  margin-top: 16px; 
-  width: 100%;
 }
 
 /* ====== AUTOCOMPLETE ====== */
@@ -145,6 +106,7 @@ h3, h4 {
   color: #777; 
 }
 
+/* ====== TEXTAREA PLAN ====== */
 .plan-textarea {
   width: 100%;
   max-width: calc(100% - 24px);
@@ -152,4 +114,98 @@ h3, h4 {
   min-height: 120px;
   box-sizing: border-box;
   resize: vertical;
+}
+
+/* ====== BOTONES (GENÉRICOS) ====== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease, opacity 0.2s ease;
+}
+.btn:hover { opacity: 0.92; }
+
+/* Botón eliminar (rojo) en filas */
+.btn.danger { 
+  background:#e74c3c; 
+  color: #fff; 
+}
+.btn.danger:hover { background:#c0392b; }
+
+/* Botón primario (Registrar) */
+.btn.success {
+  margin-top: 6px;
+  background-color: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+.btn.success:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.btn.success:hover:enabled {
+  background-color: #218838;
+}
+
+/* ====== ZONA FINAL DE ACCIONES ====== */
+/* Apilar en columna: Registrar (full width) + Cancelar (debajo y pequeño) */
+.footer-actions { 
+  display: flex; 
+  flex-direction: column;       /* ✅ apila vertical */
+  align-items: stretch;         /* registrar ocupa todo el ancho */
+  gap: 10px;                    /* separación entre botones */
+  margin-top: 16px; 
+  width: 100%;
+}
+
+/* Si usas <app-cancel-button>, lo hacemos compacto y alineado a la izquierda */
+.footer-actions app-cancel-button {
+  align-self: flex-start;       /* se pega a la izquierda */
+  display: inline-block;
+  transform: translateY(2px);   /* leve ajuste vertical */
+}
+
+.form-cancel {
+  display: flex;
+  justify-content: center; /* centrado debajo */
+  margin-top: 10px;
+}
+
+/* Si en algún momento usas un botón directo para cancelar, usa esta clase */
+.btn-cancel {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;            /* ✅ más pequeño que el principal */
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;              /* ✅ tipografía menor */
+  width: auto;                  /* solo el texto */
+  transition: background-color 0.2s ease;
+  align-self: flex-start;       /* alineado a la izquierda */
+}
+.btn-cancel:hover {
+  background-color: #c82333;
+}
+
+.btn-cancel:hover:enabled {
+  background-color: #940303;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 720px) {
+  .tipo-grid {
+    grid-template-columns: 1fr; /* radios uno debajo del otro en móvil */
+    gap: 10px;
+  }
+  .posologia-grid {
+    grid-template-columns: 1fr 1fr;  /* recorta columnas en pantallas pequeñas */
+  }
 }

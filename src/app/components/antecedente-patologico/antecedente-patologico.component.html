@@ -9,13 +9,13 @@
         <label for="motivoConsulta">Motivo de consulta *</label>
         <textarea id="motivoConsulta" name="motivoConsulta"
                   [(ngModel)]="antecedente.motivoConsulta"
-                  required rows="3"></textarea>
+                  required rows="6"></textarea>
       </div>
       <div class="form-group">
         <label for="enfermedadActual">Enfermedad actual *</label>
         <textarea id="enfermedadActual" name="enfermedadActual"
                   [(ngModel)]="antecedente.enfermedadActual"
-                  required rows="3"></textarea>
+                  required rows="6"></textarea>
       </div>
     </div>
 
@@ -64,7 +64,7 @@
       <div class="form-group full-width">
         <label for="revisionSintoma">Revisión de sistemas / observaciones</label>
         <textarea id="revisionSintoma" name="revisionSintoma"
-                  [(ngModel)]="antecedente.revisionSintoma" rows="3"></textarea>
+                  [(ngModel)]="antecedente.revisionSintoma" rows="6"></textarea>
       </div>
     </div>
 
@@ -80,5 +80,22 @@
         Siguiente
       </button>
     </div>
+
+    <div class="form-row form-cancel">
+      <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
+        Cancelar
+      </button>
+    </div>
   </form>
 </div>
+
+
+<!-- POPUP de confirmación -->
+<app-popup
+  *ngIf="isPopupOpen"
+  [message]="'¿Deseas abandonar el registro?'"
+  [confirmText]="'SI'"
+  [cancelText]="'NO'"
+  (onConfirm)="confirmarSalida()"
+  (onCancel)="cerrarPopup()">
+</app-popup>

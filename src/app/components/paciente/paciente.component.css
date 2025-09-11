@@ -70,3 +70,29 @@
     background-color: #218838;
   }
   
+  /* Fila del botón cancelar */
+.form-cancel {
+  justify-content: center; /* centrar el cancelar */
+  margin-top: 10px;
+}
+
+.btn-cancel {
+  background-color: #dc3545;  /* rojo */
+  color: #fff;
+  border: none;
+  padding: 6px 14px;          /* más pequeño */
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;            /* más pequeño que el de Siguiente */
+  width: auto;                /* solo lo necesario */
+  transition: background-color 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #c82333;
+}
+
+.btn-cancel:hover:enabled {
+  background-color: #940303;
+}
+  

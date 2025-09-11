@@ -80,7 +80,5 @@ export class MenuPrincipalComponent {
     this.isPopupVisible = false;
   }
 
-  cancelarPopup(): void {
-    this.isPopupVisible = false;
-  }
+  
 }

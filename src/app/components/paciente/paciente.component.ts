@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, HostListener, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { PacienteService } from 'src/app/services/paciente.service';
@@ -26,6 +26,9 @@ export class PacienteComponent {
     antecedentesPatologicos: [],
     antecedentePersonal: []
   };
+
+  /** Estado del popup */
+  isPopupOpen = false;
 
   constructor(
     private pacienteService: PacienteService,
@@ -61,5 +64,33 @@ export class PacienteComponent {
       }
     });
   }
+
+   /** Antes navegabas directo; ahora solo abre el popup */
+   abrirPopupCancelar() {
+    this.isPopupOpen = true;
+  }
+
+  /** Cierra el popup sin salir */
+  cerrarPopup() {
+    this.isPopupOpen = false;
+  }
+
+  /** Si el usuario confirma, navega fuera (abandonar) */
+  confirmarSalida() {
+    this.isPopupOpen = false;
+    this.router.navigate(['/menu-principal']);
+  }
+
+  /** Si en algún lugar aún llamas a cancelar(), redirige a abrir el popup */
+  cancelar() {
+    this.abrirPopupCancelar();
+  }
+
+  /** UX extra: tecla ESC cierra el popup */
+  @HostListener('document:keydown.escape')
+  onEsc() {
+    if (this.isPopupOpen) this.cerrarPopup();
+  }
   
+
 }

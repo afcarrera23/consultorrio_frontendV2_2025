@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { AntecedentePersonalDTO } from 'src/app/models/antecedente-personal.model';
@@ -30,6 +30,9 @@ export class AntecedentePersonalComponent implements OnInit {
     fechaConsulta: new Date().toISOString().slice(0,16),
     usuarioId: 0
   };
+
+  /** Estado del popup */
+  isPopupOpen = false;
 
   constructor(
     private router: Router,
@@ -69,5 +72,32 @@ export class AntecedentePersonalComponent implements OnInit {
     // Redirigir al examen físico
     this.router.navigate([`/examen-fisico/${this.paciente.id}`]);
   }
+
+    /** Antes navegabas directo; ahora solo abre el popup */
+    abrirPopupCancelar() {
+      this.isPopupOpen = true;
+    }
+  
+    /** Cierra el popup sin salir */
+    cerrarPopup() {
+      this.isPopupOpen = false;
+    }
+  
+    /** Si el usuario confirma, navega fuera (abandonar) */
+    confirmarSalida() {
+      this.isPopupOpen = false;
+      this.router.navigate(['/menu-principal']);
+    }
+  
+    /** Si en algún lugar aún llamas a cancelar(), redirige a abrir el popup */
+    cancelar() {
+      this.abrirPopupCancelar();
+    }
+  
+    /** UX extra: tecla ESC cierra el popup */
+    @HostListener('document:keydown.escape')
+    onEsc() {
+      if (this.isPopupOpen) this.cerrarPopup();
+    }
   
 }
