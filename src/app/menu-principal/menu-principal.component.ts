@@ -1,8 +1,13 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+
 import { AuthService } from '../services/auth.service';
-import { PacienteListadoDTO } from '../models/paciente.model'; // importa tu interfaz
+import { PacienteListadoDTO, PacienteRegistroDTO } from '../models/paciente.model';
+
+// 👇 agrega estos dos servicios para manejar el flujo y el estado temporal
+import { HistoriaFlowService } from '../services/historia-flow.service';
+import { RegistroTempService } from '../services/registro-temporal';
 
 @Component({
   selector: 'app-menu-principal',
@@ -15,10 +20,15 @@ export class MenuPrincipalComponent {
   searchQuery: string = '';
   isPopupVisible: boolean = false;
 
+  // si usas environments, cámbialo por environment.apiUrl
+  private apiBase = 'http://localhost:8080';
+
   constructor(
     private router: Router,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private flow: HistoriaFlowService,          // ⬅️ nuevo
+    private registroTemp: RegistroTempService,  // ⬅️ nuevo
   ) {}
 
   ngOnInit(): void {
@@ -30,12 +40,13 @@ export class MenuPrincipalComponent {
     }
   }
 
+  /** =========== Data =========== */
   obtenerPacientes(): void {
-    this.http.get<PacienteListadoDTO[]>('http://localhost:8080/pacientes/listar')
+    this.http.get<PacienteListadoDTO[]>(`${this.apiBase}/pacientes/listar`)
       .subscribe({
         next: (data) => {
-          this.pacientes = data;
-          this.pacientesFiltrados = data;
+          this.pacientes = data || [];
+          this.pacientesFiltrados = data || [];
         },
         error: (error) => {
           console.error('Error al obtener pacientes:', error);
@@ -44,32 +55,83 @@ export class MenuPrincipalComponent {
   }
 
   buscarPaciente(): void {
-    const query = this.searchQuery.trim().toLowerCase();
-    this.pacientesFiltrados = this.pacientes.filter(paciente =>
-      paciente.nombreCompleto.toLowerCase().includes(query) ||
-      paciente.apellidoCompleto.toLowerCase().includes(query) ||
-      paciente.identificacion.includes(query)
+    const query = (this.searchQuery || '').trim().toLowerCase();
+    if (!query) {
+      this.pacientesFiltrados = this.pacientes.slice();
+      return;
+    }
+    this.pacientesFiltrados = this.pacientes.filter(p =>
+      (p.nombreCompleto || '').toLowerCase().includes(query) ||
+      (p.apellidoCompleto || '').toLowerCase().includes(query) ||
+      (p.identificacion || '').toLowerCase().includes(query)
     );
   }
 
-  agregarPaciente() {
+  /** =========== Flujo: Paciente nuevo =========== */
+  agregarPaciente(): void {
+    // 1) inicializa el flujo como NUEVO PACIENTE
+    const medico = this.authService.getMedicoLogueado();
+    const usuarioId = Number(medico?.id || medico?.usuarioId || 0); // ajusta según tu AuthService
+    this.flow.initNew(usuarioId);
+
+    // 2) limpia cualquier rastro de paciente previo en el registro temporal
+    this.registroTemp.limpiarPaciente?.();
+
+    // 3) navega al registro del paciente (primer paso del flujo)
     this.router.navigate(['/registro-paciente']);
-  }  
-
-  editarPaciente(paciente: PacienteListadoDTO): void {
-    console.log('Editar paciente', paciente);
   }
 
-  verPaciente(paciente: PacienteListadoDTO): void {
-    console.log('Ver paciente', paciente);
+  /** =========== Flujo: Nueva historia para paciente existente =========== */
+  async editarPaciente(paciente: PacienteListadoDTO): Promise<void> {
+    try {
+      // 1) trae el detalle completo del paciente (para prellenar y mantener consistencia)
+      const detalle = await this.http
+        .get<PacienteRegistroDTO>(`${this.apiBase}/pacientes/${paciente.id}`)
+        .toPromise();
+
+      if (!detalle?.id) {
+        alert('No se pudo cargar el detalle del paciente.');
+        return;
+      }
+
+      // 2) guarda el paciente en el registro temporal (para que lo lean los demás pasos)
+      this.registroTemp.setPaciente(detalle);
+
+      // 3) inicializa el flujo como EXISTING_PATIENT
+      const medico = this.authService.getMedicoLogueado();
+      const usuarioId = Number(medico?.id || medico?.usuarioId || 0); // ajusta según tu AuthService
+      this.flow.initExisting(detalle.id, usuarioId, detalle);
+
+      // 4) opcional: limpia borradores previos para evitar arrastres de otro paciente
+      this.registroTemp.resetDrafts?.(); // si tienes un método así; si no, remueve esta línea
+
+      // 5) navega al PRIMER paso del flujo de historia clínica
+      //    si tu primer paso es antecedente patológico:
+      this.router.navigate([`/antecedente-patologico/${detalle.id}`]);
+
+      //    si tu primer paso es otro, ajusta la ruta:
+      // this.router.navigate([`/examen-fisico/${detalle.id}`]);
+      // this.router.navigate([`/diagnostico/${detalle.id}`]);
+
+    } catch (e) {
+      console.error('Error al abrir historia para paciente existente:', e);
+      alert('No fue posible abrir la historia. Intenta de nuevo.');
+    }
   }
 
-  imprimirReceta(paciente: PacienteListadoDTO): void {
-    console.log('Imprimir receta de', paciente);
+  /** =========== Otras acciones (pendientes de implementar) =========== */
+  verPaciente(p: PacienteListadoDTO): void {
+    // Vista de solo lectura (opcional)
+    // this.router.navigate([`/paciente/${p.id}`]);
+    console.log('Ver paciente', p);
   }
 
-  eliminarPaciente(){
+  imprimirReceta(p: PacienteListadoDTO): void {
+    console.log('Imprimir receta de', p);
+  }
 
+  eliminarPaciente(): void {
+    // Implementa confirmación + DELETE si aplica
   }
 
   mostrarPopup(): void {
@@ -79,6 +141,4 @@ export class MenuPrincipalComponent {
   cerrarSesion(): void {
     this.isPopupVisible = false;
   }
-
-  
 }

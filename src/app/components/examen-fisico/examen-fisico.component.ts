@@ -150,6 +150,7 @@ export class ExamenFisicoComponent implements OnInit {
   confirmarSalida() {
     this.isPopupOpen = false;
     this.router.navigate(["/menu-principal"]);
+    this.registroTemp.limpiarPaciente();
   }
 
   @HostListener("document:keydown.escape")

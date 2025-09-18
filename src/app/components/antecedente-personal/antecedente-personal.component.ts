@@ -111,6 +111,7 @@ export class AntecedentePersonalComponent implements OnInit {
   confirmarSalida() {
     this.isPopupOpen = false;
     this.router.navigate(['/menu-principal']);
+    this.registroTemp.limpiarPaciente();
   }
 
   /* UX extra: tecla ESC cierra el popup */

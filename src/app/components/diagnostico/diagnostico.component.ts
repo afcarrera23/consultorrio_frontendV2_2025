@@ -10,12 +10,16 @@ import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { PacienteService } from '../../services/paciente.service';
 import { CodigoDiagnosticoService } from 'src/app/services/codigo-diagnostico.service';
 import { RegistroTempService } from 'src/app/services/registro-temporal';
+import { HistoriaFlowService } from 'src/app/services/historia-flow.service';
+// ⬇️ Ajusta esta ruta/nombre si tu archivo se llama diferente:
+
 
 type DiagnosticoFila = {
   codigoDiagnosticoId?: number;
   codigo?: string;
   descripcion?: string;
 };
+import { HistoriaMedicaService } from 'src/app/services/historia-medica-service';
 
 @Component({
   selector: 'app-diagnostico',
@@ -27,19 +31,19 @@ export class DiagnosticoComponent implements OnInit {
   usuarioId = 2;
 
   // filas de diagnósticos
-  diagnosticos: DiagnosticoFila[] = [ {} ];
+  diagnosticos: DiagnosticoFila[] = [{}];
   // controles por fila (para mostrar el texto tipeado)
-  diagControls: FormControl[] = [ new FormControl('') ];
+  diagControls: FormControl[] = [new FormControl('')];
   // resultados filtrados por fila
-  diagFiltrados: CodigoDiagnostico[][] = [ [] ];
+  diagFiltrados: CodigoDiagnostico[][] = [[]];
   // dropdown abierto por fila
-  diagMenuOpen: boolean[] = [ false ];
+  diagMenuOpen: boolean[] = [false];
 
   // catálogo completo
   catalogoDiagnosticos: CodigoDiagnostico[] = [];
 
   // medicamentos
-  medicamentos: DiagnosticoMedicamento[] = [ this.nuevoMedicamento() ];
+  medicamentos: DiagnosticoMedicamento[] = [this.nuevoMedicamento()];
 
   // cabeceras comunes
   tipoDiagnostico = 1;
@@ -54,6 +58,8 @@ export class DiagnosticoComponent implements OnInit {
     private pacienteService: PacienteService,
     private codigoService: CodigoDiagnosticoService,
     private registroTemp: RegistroTempService,
+    private flow: HistoriaFlowService,
+    private historiaApi: HistoriaMedicaService,
   ) {}
 
   ngOnInit(): void {
@@ -86,7 +92,7 @@ export class DiagnosticoComponent implements OnInit {
       this.tipoDiagnostico = draft[0].tipoDiagnostico ?? 1;
       this.medicamentos = (draft[0].medicamentos && draft[0].medicamentos.length)
         ? [...draft[0].medicamentos]
-        : [ this.nuevoMedicamento() ];
+        : [this.nuevoMedicamento()];
 
       // Reconstruye filas sólo con los ids; luego, al tener el catálogo, ponemos codigo/descripcion
       this.diagnosticos = draft.map(d => ({ codigoDiagnosticoId: d.codigoDiagnosticoId }));
@@ -227,70 +233,68 @@ export class DiagnosticoComponent implements OnInit {
 
   // === guardar (finalizar) ===
   guardarTodo() {
-    const paciente = this.registroTemp.obtenerPaciente();
-    if (!paciente) {
-      alert('❌ No hay paciente en memoria. Regresa al primer paso.');
-      return;
+    const paciente: PacienteRegistroDTO | null = this.registroTemp.obtenerPaciente();
+    if (!paciente) { alert('❌ No hay paciente en memoria.'); return; }
+
+    const antPatUsar = this.registroTemp.getDraftAntecedentePatologico() ?? this.registroTemp.obtenerAntecedentes().slice(-1)[0];
+    const antPerUsar = this.registroTemp.getDraftAntecedentePersonal() ?? this.registroTemp.obtenerAntecedentesPersonales().slice(-1)[0];
+    const exUsar     = this.registroTemp.getDraftExamenFisico() ?? this.registroTemp.obtenerExamenesFisicos().slice(-1)[0];
+    const diagnosticoItems = this.construirDraftDesdeUI();
+
+    if (!exUsar) { alert('❌ Falta examen físico.'); return; }
+    if (!diagnosticoItems.length) { alert('⚠️ Agrega al menos un diagnóstico.'); return; }
+
+    const mode = this.flow.mode;
+
+    if (mode === 'NEW_PATIENT') {
+      // 🔵 Caso A: Paciente nuevo (igual que hoy)
+      const payload = {
+        ...paciente,
+        id: paciente.id, // si ya existe id en el DTO, backend lo respeta
+        usuarioRegistroId: paciente.usuarioRegistroId,
+        antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
+        antecedentePersonal:     antPerUsar ? [antPerUsar] : [],
+        examenFisico: exUsar,
+        diagnostico: diagnosticoItems
+      };
+
+      this.pacienteService.registrarConTodo(payload).subscribe({
+        next: () => this.finalizarOk(),
+        error: (e) => this.finalizaError(e) // ✅ corregido (antes decía finalizarError)
+      });
+
+    } else if (mode === 'EXISTING_PATIENT') {
+      // 🟢 Caso B: Paciente existente (NO crear paciente otra vez)
+      const dto = {
+        pacienteId: paciente.id!,
+        usuarioId: paciente.usuarioRegistroId!,
+        motivoConsulta: antPatUsar?.motivoConsulta, // opcional
+        antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
+        antecedentesPersonales:  antPerUsar ? [antPerUsar] : [],
+        examenFisico: exUsar,
+        diagnosticos: diagnosticoItems
+      };
+
+      this.historiaApi.crearHistoriaCompleta(dto).subscribe({
+        next: () => this.finalizarOk(),
+        error: (e) => this.finalizaError(e) // ✅ corregido
+      });
+
+    } else {
+      alert('⚠️ Modo de flujo no definido.');
     }
+  }
 
-    // Siempre guarda un draft antes
-    this.guardarDraftActual();
+  private finalizarOk() {
+    alert('✅ Registro guardado correctamente.');
+    this.registroTemp.limpiarPaciente?.();
+    this.flow.clear();
+    this.router.navigate(['/menu-principal']);
+  }
 
-    // ====== Opción A: preferir DRAFTS y caer al ÚLTIMO DEL HISTORIAL ======
-    // Antecedente Patológico
-    const antPatDraft = this.registroTemp.getDraftAntecedentePatologico();
-    const antPatHist  = this.registroTemp.obtenerAntecedentes();
-    const antPatUsar  = antPatDraft ?? (antPatHist.length ? antPatHist[antPatHist.length - 1] : undefined);
-
-    // Antecedente Personal
-    const antPerDraft = this.registroTemp.getDraftAntecedentePersonal();
-    const antPerHist  = this.registroTemp.obtenerAntecedentesPersonales();
-    const antPerUsar  = antPerDraft ?? (antPerHist.length ? antPerHist[antPerHist.length - 1] : undefined);
-
-    // Examen Físico
-    const exDraft = this.registroTemp.getDraftExamenFisico();
-    const exHist  = this.registroTemp.obtenerExamenesFisicos();
-    const examenFisicoUnico = exDraft ?? (exHist.length ? exHist[exHist.length - 1] : undefined);
-
-    if (!examenFisicoUnico) {
-      alert('❌ Falta el examen físico. Guarda ese panel antes de continuar.');
-      return;
-    }
-
-    const diagnosticoItems: DiagnosticoItem[] = this.construirDraftDesdeUI();
-    if (!diagnosticoItems.length) {
-      alert('⚠️ Debes agregar al menos un diagnóstico antes de guardar todo.');
-      return;
-    }
-
-    const payload: PacienteRegistroDTO = {
-      ...paciente,
-      id: paciente.id,
-      usuarioRegistroId: paciente.usuarioRegistroId,
-      antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
-      antecedentePersonal:     antPerUsar ? [antPerUsar] : [],
-      examenFisico: examenFisicoUnico,
-      diagnostico: diagnosticoItems
-    };
-
-    // Logs útiles de depuración
-    console.log('👉 antecedentePatológico a enviar:', antPatUsar);
-    console.log('👉 antecedentePersonal a enviar:', antPerUsar);
-    console.log('👉 examenFísico a enviar:', examenFisicoUnico);
-    console.log('👉 diagnosticos a enviar:', diagnosticoItems);
-    console.log('🚚 PAYLOAD FINAL:', payload);
-
-    this.pacienteService.registrarConTodo(payload).subscribe({
-      next: () => {
-        alert('✅ Registro completo guardado correctamente.');
-        this.registroTemp.limpiarPaciente?.();
-        this.router.navigate(['/menu-principal']);
-      },
-      error: (err) => {
-        console.error('❌ Error al guardar todo:', err);
-        alert('❌ Ocurrió un error guardando el registro completo.');
-      }
-    });
+  private finalizaError(e: any) {
+    console.error('❌ Error al guardar:', e);
+    alert('❌ Error al guardar.');
   }
 
   /** ===== ATRÁS → vuelve a Examen Físico guardando el borrador ===== */
@@ -305,6 +309,7 @@ export class DiagnosticoComponent implements OnInit {
   confirmarSalida() {
     this.isPopupOpen = false;
     this.router.navigate(['/menu-principal']);
+    this.registroTemp.limpiarPaciente();
   }
   cancelar() { this.abrirPopupCancelar(); }
 

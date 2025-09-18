@@ -211,4 +211,23 @@ export class RegistroTempService {
     localStorage.removeItem(this.DRAFT_EXA_FIS_KEY);
     localStorage.removeItem(this.DRAFT_DIAG_KEY);
   }
+
+  // Alias cómodo para no cambiar tus llamados
+setPaciente(paciente: PacienteRegistroDTO) {
+  this.guardarPaciente(paciente);
+}
+
+/** Limpia SOLO borradores, conservando el paciente y el historial cargado */
+resetDrafts() {
+  this.draftAntPatologico = undefined;
+  this.draftAntPersonal = undefined;
+  this.draftExamenFisico = undefined;
+  this.draftDiagnosticos = undefined;
+
+  localStorage.removeItem(this.DRAFT_ANT_PAT_KEY);
+  localStorage.removeItem(this.DRAFT_ANT_PER_KEY);
+  localStorage.removeItem(this.DRAFT_EXA_FIS_KEY);
+  localStorage.removeItem(this.DRAFT_DIAG_KEY);
+}
+
 }
