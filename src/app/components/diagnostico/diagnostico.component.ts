@@ -235,55 +235,56 @@ export class DiagnosticoComponent implements OnInit {
   guardarTodo() {
     const paciente: PacienteRegistroDTO | null = this.registroTemp.obtenerPaciente();
     if (!paciente) { alert('❌ No hay paciente en memoria.'); return; }
-
+  
     const antPatUsar = this.registroTemp.getDraftAntecedentePatologico() ?? this.registroTemp.obtenerAntecedentes().slice(-1)[0];
     const antPerUsar = this.registroTemp.getDraftAntecedentePersonal() ?? this.registroTemp.obtenerAntecedentesPersonales().slice(-1)[0];
     const exUsar     = this.registroTemp.getDraftExamenFisico() ?? this.registroTemp.obtenerExamenesFisicos().slice(-1)[0];
     const diagnosticoItems = this.construirDraftDesdeUI();
-
+  
     if (!exUsar) { alert('❌ Falta examen físico.'); return; }
     if (!diagnosticoItems.length) { alert('⚠️ Agrega al menos un diagnóstico.'); return; }
-
+  
     const mode = this.flow.mode;
-
+  
     if (mode === 'NEW_PATIENT') {
-      // 🔵 Caso A: Paciente nuevo (igual que hoy)
+      // 🔵 Caso A: Paciente nuevo
       const payload = {
         ...paciente,
-        id: paciente.id, // si ya existe id en el DTO, backend lo respeta
+        id: paciente.id,
         usuarioRegistroId: paciente.usuarioRegistroId,
         antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
         antecedentePersonal:     antPerUsar ? [antPerUsar] : [],
         examenFisico: exUsar,
         diagnostico: diagnosticoItems
       };
-
+  
       this.pacienteService.registrarConTodo(payload).subscribe({
         next: () => this.finalizarOk(),
-        error: (e) => this.finalizaError(e) // ✅ corregido (antes decía finalizarError)
+        error: (e) => this.finalizaError(e)
       });
-
+  
     } else if (mode === 'EXISTING_PATIENT') {
-      // 🟢 Caso B: Paciente existente (NO crear paciente otra vez)
+      // 🟢 Caso B: Paciente existente
+      const usuarioActualId = this.flow.usuarioId ?? this.usuarioId;
       const dto = {
         pacienteId: paciente.id!,
-        usuarioId: paciente.usuarioRegistroId!,
-        motivoConsulta: antPatUsar?.motivoConsulta, // opcional
+        usuarioId: usuarioActualId,   // ✅ ahora sí guarda al usuario logueado actual
+        motivoConsulta: antPatUsar?.motivoConsulta,
         antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
         antecedentesPersonales:  antPerUsar ? [antPerUsar] : [],
         examenFisico: exUsar,
         diagnosticos: diagnosticoItems
       };
-
+  
       this.historiaApi.crearHistoriaCompleta(dto).subscribe({
         next: () => this.finalizarOk(),
-        error: (e) => this.finalizaError(e) // ✅ corregido
+        error: (e) => this.finalizaError(e)
       });
-
+  
     } else {
       alert('⚠️ Modo de flujo no definido.');
     }
-  }
+  }  
 
   private finalizarOk() {
     alert('✅ Registro guardado correctamente.');

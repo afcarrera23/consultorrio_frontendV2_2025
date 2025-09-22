@@ -84,40 +84,39 @@ export class MenuPrincipalComponent {
   /** =========== Flujo: Nueva historia para paciente existente =========== */
   async editarPaciente(paciente: PacienteListadoDTO): Promise<void> {
     try {
-      // 1) trae el detalle completo del paciente (para prellenar y mantener consistencia)
+      // 1) trae el detalle completo del paciente
       const detalle = await this.http
         .get<PacienteRegistroDTO>(`${this.apiBase}/pacientes/${paciente.id}`)
         .toPromise();
-
+  
       if (!detalle?.id) {
         alert('No se pudo cargar el detalle del paciente.');
         return;
       }
-
-      // 2) guarda el paciente en el registro temporal (para que lo lean los demás pasos)
-      this.registroTemp.setPaciente(detalle);
-
+  
+      // 2) guarda el paciente en el registro temporal
+      this.registroTemp.guardarPaciente(detalle);   // ✅ usar el método que ya tienes
+  
       // 3) inicializa el flujo como EXISTING_PATIENT
       const medico = this.authService.getMedicoLogueado();
-      const usuarioId = Number(medico?.id || medico?.usuarioId || 0); // ajusta según tu AuthService
+      const usuarioId = Number(medico?.id || medico?.usuarioId || 0);
       this.flow.initExisting(detalle.id, usuarioId, detalle);
-
-      // 4) opcional: limpia borradores previos para evitar arrastres de otro paciente
-      this.registroTemp.resetDrafts?.(); // si tienes un método así; si no, remueve esta línea
-
-      // 5) navega al PRIMER paso del flujo de historia clínica
-      //    si tu primer paso es antecedente patológico:
+  
+      // 4) limpiar borradores previos (opcional)
+      this.registroTemp.setDraftAntecedentePatologico(undefined as any);
+      this.registroTemp.setDraftAntecedentePersonal(undefined as any);
+      this.registroTemp.setDraftExamenFisico(undefined as any);
+      this.registroTemp.setDraftDiagnosticos([]);
+  
+      // 5) navega al primer paso del flujo de historia clínica
       this.router.navigate([`/antecedente-patologico/${detalle.id}`]);
-
-      //    si tu primer paso es otro, ajusta la ruta:
-      // this.router.navigate([`/examen-fisico/${detalle.id}`]);
-      // this.router.navigate([`/diagnostico/${detalle.id}`]);
-
+  
     } catch (e) {
       console.error('Error al abrir historia para paciente existente:', e);
       alert('No fue posible abrir la historia. Intenta de nuevo.');
     }
   }
+  
 
   /** =========== Otras acciones (pendientes de implementar) =========== */
   verPaciente(p: PacienteListadoDTO): void {
@@ -141,4 +140,10 @@ export class MenuPrincipalComponent {
   cerrarSesion(): void {
     this.isPopupVisible = false;
   }
+
+  verHistorias(p: PacienteListadoDTO) {
+    this.router.navigate([`/historial-medico/${p.id}`]); // ✅ ruta existente
+  }
+  
+  
 }

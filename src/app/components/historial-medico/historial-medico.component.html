@@ -1,0 +1,176 @@
+<div class="page">
+    <h2>Historias clínicas</h2>
+  
+    <ng-container *ngIf="loadingLista">
+      <div class="skeleton">Cargando historias...</div>
+    </ng-container>
+  
+    <ng-container *ngIf="errorLista">
+      <div class="alert">{{ errorLista }}</div>
+    </ng-container>
+  
+    <div class="accordion" *ngIf="!loadingLista && !errorLista">
+      <div
+        class="item"
+        *ngFor="let h of historias; trackBy: trackById"
+        [class.open]="rows[h.id]?.open"
+      >
+        <button class="header" (click)="toggleFila(h)">
+          <div class="left">
+            <div class="date">{{ h.fecha | date:'medium' }}</div>
+            <div class="meta">
+              <span *ngIf="h.usuarioNombre">Atendido por: {{ h.usuarioNombre }}</span>
+              <span *ngIf="h.motivoConsulta"> · Motivo: {{ h.motivoConsulta }}</span>
+            </div>
+          </div>
+          <div class="right">
+            <span class="chev" aria-hidden="true">▸</span>
+          </div>
+        </button>
+  
+        <div class="panel" *ngIf="rows[h.id]?.open">
+          <div *ngIf="rows[h.id]?.loading" class="skeleton">Cargando detalle...</div>
+          <div *ngIf="rows[h.id]?.error" class="alert">{{ rows[h.id]?.error }}</div>
+  
+          <ng-container *ngIf="rows[h.id]?.detalle as d">
+            <div class="section">
+              <h4>Antecedentes patológicos</h4>
+              <div *ngIf="(d.antecedentesPatologicos || []).length === 0" class="muted">Sin datos</div>
+              <div class="card" *ngFor="let a of d.antecedentesPatologicos">
+                <div><b>Motivo:</b> {{ a.motivoConsulta || '—' }}</div>
+                <div><b>Enfermedad actual:</b> {{ a.enfermedadActual || '—' }}</div>
+                <div><b>Medicamento actual:</b> {{ a.medicamentoActual || '—' }}</div>
+              </div>
+            </div>
+  
+            <div class="section">
+              <h4>Antecedentes personales</h4>
+              <div *ngIf="(d.antecedentesPersonales || []).length === 0" class="muted">Sin datos</div>
+            
+              <div class="card" *ngFor="let ap of d.antecedentesPersonales">
+                <div><b>Antecedentes personales:</b> {{ safe(ap.antecedentesPersonales) }}</div>
+                <div><b>Antecedentes familiares:</b> {{ safe(ap.antecedentesFamiliares) }}</div>
+                <div *ngIf="ap.ginecoObstetricos"><b>Gineco-obstétricos:</b> {{ ap.ginecoObstetricos }}</div>
+            
+                <div class="sub" *ngIf="hasGO(ap)">
+                  <b>Gineco-Obstétricos</b>
+                  <ul>
+                    <li *ngIf="ap.gestas != null">Gestas: {{ ap.gestas }}</li>
+                    <li *ngIf="ap.partos != null">Partos: {{ ap.partos }}</li>
+                    <li *ngIf="ap.abortos != null">Abortos: {{ ap.abortos }}</li>
+                    <li *ngIf="ap.cesareas != null">Cesáreas: {{ ap.cesareas }}</li>
+                    <li *ngIf="ap.vivos != null">Vivos: {{ ap.vivos }}</li>
+                    <li *ngIf="ap.mortinatos != null">Mortinatos: {{ ap.mortinatos }}</li>
+                  </ul>
+                </div>
+            
+                <div>
+                  <small class="muted">
+                    {{ ap.fechaConsulta ? (ap.fechaConsulta | date:'medium') : 'Fecha no registrada' }}
+                    • Usuario: {{ ap.usuarioId || '—' }}
+                  </small>
+                </div>
+              </div>
+            </div>
+            
+  
+            <div class="section">
+              <h4>Examen físico</h4>
+              <div *ngIf="!d.examenFisico" class="muted">Sin datos</div>
+            
+              <div class="card" *ngIf="d.examenFisico as ex">
+                <div class="grid">
+                  <div><b>TA:</b> {{ safe(ex.tensionSistolica) }}/{{ safe(ex.tensionDiastolica) }}</div>
+                  <div><b>FR:</b> {{ safe(ex.frecuenciaRespiratoria) }}</div>
+                  <div><b>FC:</b> {{ safe(ex.frecuenciaCardiaca) }}</div>
+                  <div><b>SatO₂:</b> {{ safe(ex.saturacion) }}</div>
+                  <div><b>Temp:</b> {{ safe(ex.temperatura) }}</div>
+                  <div><b>Peso:</b> {{ safe(ex.peso) }}</div>
+                  <div><b>Talla:</b> {{ safe(ex.talla) }}</div>
+                  <div><b>IMC:</b> {{ safe(ex.imc) }}</div>
+                </div>
+            
+                <div class="sub">
+                  <b>Hallazgos</b>
+                  <ul>
+                    <li><b>Aspecto general:</b> {{ safe(ex.aspectoGeneral) }}</li>
+                    <li><b>Cráneo:</b> {{ safe(ex.craneoDetalle) }}</li>
+                    <li><b>Ojos:</b> {{ safe(ex.ojosDetalle) }}</li>
+                    <li><b>Oído:</b> {{ safe(ex.oidoDetalle) }}</li>
+                    <li><b>Cuello:</b> {{ safe(ex.cuelloDetalle) }}</li>
+                    <li><b>Cardiopulmonar:</b> {{ safe(ex.cardioPulmonarDetalle) }}</li>
+                    <li><b>Senos:</b> {{ safe(ex.senosDetalle) }}</li>
+                    <li><b>Abdomen:</b> {{ safe(ex.abdomenDetalle) }}</li>
+                    <li><b>Genitales:</b> {{ safe(ex.genitalesDetalle) }}</li>
+                    <li><b>Rectal:</b> {{ safe(ex.examenRectalDetalle) }}</li>
+                    <li><b>Neurológico:</b> {{ safe(ex.neurologicoDetalle) }}</li>
+                    <li><b>Extremidades/osteoarticular:</b> {{ safe(ex.extremidadesOsteoarticularDetalle) }}</li>
+                    <li *ngIf="ex.otrosHallazgos"><b>Otros:</b> {{ ex.otrosHallazgos }}</li>
+                  </ul>
+                </div>
+            
+                <div>
+                  <small class="muted">
+                    {{ ex.fechaExamen ? (ex.fechaExamen | date:'medium') : 'Fecha no registrada' }}
+                    • Usuario: {{ ex.usuarioId || '—' }}
+                  </small>
+                </div>
+              </div>
+            </div>
+            
+  
+            <div class="section">
+              <h4>Diagnósticos</h4>
+              <div *ngIf="(d.diagnosticos || []).length === 0" class="muted">Sin datos</div>
+              <div class="card" *ngFor="let dx of d.diagnosticos">
+                <div><b>Tipo:</b> {{ dx.tipoDiagnostico || '—' }}</div>
+                <div><b>Plan:</b> {{ dx.plan || '—' }}</div>
+  
+                <div class="sub">
+                  <b>Medicamentos</b>
+                
+                  <div *ngIf="!(dx.medicamentos?.length)" class="muted">Sin medicamentos</div>
+                
+                  <div class="table-wrap" *ngIf="dx.medicamentos?.length">
+                    <table class="meds-table">
+                      <thead>
+                        <tr>
+                          <th>Medicamento</th>
+                          <th>Vía administración</th>
+                          <th>Cantidad</th>
+                          <th>Posología y duración</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let m of dx.medicamentos">
+                          <td>{{ m.nombreMedicamentoManual || '—' }}</td>
+                          <td>{{ m.via || '—' }}</td>
+                          <td>
+                            <ng-container *ngIf="m.dosisCantidad || m.dosisDescripcion; else noCant">
+                              {{ m.dosisCantidad || '' }} {{ m.dosisDescripcion || '' }}
+                            </ng-container>
+                            <ng-template #noCant>—</ng-template>
+                          </td>
+                          <td>
+                            <ng-container *ngIf="m.dosificacion || m.frecuenciaHoras || m.frecuenciaTiempo || m.diasTratamiento; else noPoso">
+                              {{ m.dosificacion || '' }}
+                              <span *ngIf="m.frecuenciaHoras || m.frecuenciaTiempo"> • c/ {{ m.frecuenciaHoras || '' }} {{ m.frecuenciaTiempo || '' }}</span>
+                              <span *ngIf="m.diasTratamiento"> • {{ m.diasTratamiento }} días</span>
+                            </ng-container>
+                            <ng-template #noPoso>—</ng-template>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+  
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+  

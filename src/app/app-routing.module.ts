@@ -10,6 +10,7 @@ import { AntecedentePatologicoComponent } from './components/antecedente-patolog
 import { AntecedentePersonalComponent } from './components/antecedente-personal/antecedente-personal.component';
 import { ExamenFisicoComponent } from './components/examen-fisico/examen-fisico.component';
 import { DiagnosticoComponent } from './components/diagnostico/diagnostico.component';
+import { HistorialMedicoComponent } from './components/historial-medico/historial-medico.component';
 
 const routes: Routes = [
   { path: 'iniciar-sesion', component: IniciarSesionComponent },
@@ -19,6 +20,7 @@ const routes: Routes = [
   { path: 'antecedente-personal/:pacienteId', component: AntecedentePersonalComponent, canActivate: [AuthGuard] },
   { path: 'examen-fisico/:pacienteId', component: ExamenFisicoComponent, canActivate: [AuthGuard] },
   { path: 'diagnostico/:pacienteId', component: DiagnosticoComponent, canActivate: [AuthGuard] },
+  { path: 'historial-medico/:pacienteId', component: HistorialMedicoComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: 'iniciar-sesion', pathMatch: 'full' }, // redirección por defecto
   { path: '**', redirectTo: 'iniciar-sesion' } // ruta para errores
 ];

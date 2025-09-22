@@ -1,0 +1,207 @@
+/* ====== THEME BASE (alineado con diag-wrapper) ====== */
+:root {
+  --ui-text: #2c3e50;
+  --ui-text-muted: #6b7280;      /* gris medio */
+  --ui-border: #54ec01;          /* gris claro */
+  --ui-border-2: #5df31d;
+  --ui-bg: #08b44d;
+  --ui-bg-soft: #969191;
+  --ui-bg-soft-2: #787878;
+  --ui-head: #34495e;
+  --ui-primary: #3498db;
+  --ui-danger: #e74c3c;
+  --ui-danger-dark: #c0392b;
+  --ui-shadow: 0 6px 16px rgba(0,0,0,.08);
+}
+
+/* ====== CONTENEDOR Y TITULOS ====== */
+.page {
+  max-width: 1100px;             /* mismo ancho visual que .diag-wrapper */
+  margin: 20px auto;
+  padding: 20px;
+  background: var(--ui-bg);
+  border-radius: 14px;
+  box-shadow: var(--ui-shadow);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  color: var(--ui-text);
+}
+h2 {
+  margin: 8px 0 14px;
+  color: var(--ui-head);
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+/* ====== ALERTAS ====== */
+.alert {
+  background: #fff1f2;           /* suave, acorde al rojo del tema */
+  color: var(--ui-danger-dark);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #7b7a7a;
+  margin: 10px 0;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, .06);
+}
+
+/* ====== SKELETON / PLACEHOLDER ====== */
+.skeleton {
+  background: var(--ui-bg-soft);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-border);
+}
+
+/* ====== ACCORDION ====== */
+.accordion .item {
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  border-color: #555;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: var(--ui-bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+}
+
+.accordion .item.open .panel {
+  background-color: #ecebeb;
+}
+
+/* Cabecera del ítem */
+.header {
+  width: 100%;
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--ui-bg-soft);
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.header:hover { 
+  background: var(--ui-bg-soft-2); 
+}
+
+/* Lado izquierdo: fecha + meta */
+.header .left .date { 
+  font-weight: 700; 
+  color: var(--ui-head);
+}
+.header .left .meta { 
+  color: var(--ui-text-muted); 
+  font-size: 13px; 
+  margin-top: 2px; 
+}
+
+/* Lado derecho: chevron */
+.header .right .chev { 
+  transition: transform .2s ease; 
+  flex-shrink: 0;
+  transform-origin: center;
+}
+.item.open .chev { 
+  transform: rotate(90deg); 
+}
+
+/* Panel (contenido expandido) */
+.panel { 
+  padding: 14px 16px; 
+  background: var(--ui-bg); 
+  border-top: 1px solid var(--ui-border);
+}
+
+/* ====== SECCIONES Y TARJETAS ====== */
+.section { 
+  margin-top: 12px; 
+}
+.section h4 { 
+  margin: 0 0 8px; 
+  color: var(--ui-head); 
+}
+
+.card { 
+  border: 1px solid var(--ui-border);
+  border-radius: 10px; 
+  padding: 12px 14px; 
+  margin: 8px 0; 
+  background: var(--ui-bg-soft);
+}
+
+/* ====== UTILIDADES ====== */
+.sub { margin-top: 8px; }
+.muted { color: var(--ui-text-muted); font-style: italic; }
+
+/* ====== ESTADOS DE FOCO (accesibilidad) ====== */
+.header:focus-visible,
+.card:focus-visible,
+.alert:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52,152,219,.18);
+  border-color: var(--ui-primary);
+  position: relative;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 720px) {
+  .page { 
+    padding: 16px; 
+    border-radius: 12px;
+  }
+  .header { 
+    padding: 12px 14px; 
+  }
+  .panel { 
+    padding: 12px 14px; 
+  }
+}
+
+/* contenedor con scroll horizontal en móviles */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #b5b5b5; 
+}
+
+/* tabla de medicamentos */
+.meds-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--ui-bg-soft);
+  border: 1px solid #b5b5b5;      /* borde un poco más oscuro */
+  border-radius: 10px;
+  overflow: hidden;                /* respeta bordes redondeados */
+}
+
+/* celdas */
+.meds-table th,
+.meds-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #cfcfcf;
+  vertical-align: middle;
+}
+
+/* encabezado */
+.meds-table thead th {
+  background: var(--ui-bg-soft-2);
+  text-align: left;
+  font-weight: 600;
+  color: var(--ui-head);
+}
+
+/* zebra opcional para legibilidad */
+.meds-table tbody tr:nth-child(even) {
+  background: #efefef;
+}
+
+/* hover suave */
+.meds-table tbody tr:hover {
+  background: #e9e9e9;
+}
+
+/* responsive: reduce padding en pantallas pequeñas */
+@media (max-width: 720px) {
+  .meds-table th, .meds-table td { padding: 8px 10px; }
+}
+

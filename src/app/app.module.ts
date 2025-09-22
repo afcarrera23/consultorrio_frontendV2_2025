@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CancelButtonComponent } from './shared/cancel-button/cancel-button.component';
+import { HistorialMedicoComponent } from './components/historial-medico/historial-medico.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { CancelButtonComponent } from './shared/cancel-button/cancel-button.comp
     AntecedentePersonalComponent,
     ExamenFisicoComponent,
     DiagnosticoComponent,
-    CancelButtonComponent
+    CancelButtonComponent,
+    HistorialMedicoComponent
   ],
   imports: [
     BrowserModule,
