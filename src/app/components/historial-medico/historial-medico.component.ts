@@ -9,6 +9,7 @@ import { PacienteService } from 'src/app/services/paciente.service';
 import { HistoriaDetalleDTO, HistoriaResumenDTO } from 'src/app/models/historia-medica-lectura.model';
 import { PacienteDTO } from 'src/app/interfaces/PacienteDTO';
 import { exportarHistorialPDF } from 'src/app/utils/pdf-historial.util';
+import { esHistoriaVacia } from 'src/app/utils/historia-helpers'; // ⬅️ NUEVO
 
 type RowState = {
   open: boolean;
@@ -62,20 +63,81 @@ export class HistorialMedicoComponent implements OnInit {
     this.errorLista = null;
     this.api.listarHistoriasResumen(this.pacienteId).subscribe({
       next: (res) => {
+        // Ordena desc por fecha
         this.historias = (res || []).sort(
           (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
         );
-        // inicializa filas
+
+        // Inicializa filas
         this.rows = {};
         this.historias.forEach(h => {
           this.rows[h.id] = { open: false, loading: false, error: null, detalle: undefined };
         });
+
         this.loadingLista = false;
+
+        // ⬇️ Prefetch de detalles + filtro de historias vacías (solo UI)
+        this.prefetchYFiltraVacias();
       },
       error: (e) => {
         console.error(e);
         this.errorLista = 'No fue posible cargar las historias.';
         this.loadingLista = false;
+      }
+    });
+  }
+
+  /**
+   * Carga en paralelo el DETALLE de cada historia para:
+   *  - eliminar en la UI las historias vacías (esHistoriaVacia)
+   *  - cachear el detalle de las no vacías y evitar recargas al abrir
+   */
+  private prefetchYFiltraVacias(): void {
+    const ids = this.historias.map(h => h.id);
+    if (!ids.length) return;
+
+    const requests = ids.map(id =>
+      this.api.obtenerDetalle(id).pipe(
+        map(det => ({ id, det })),
+        catchError(err => {
+          console.warn('Detalle falló para historia', id, err);
+          // Si falla, no la marcamos como vacía por precaución
+          return of({ id, det: undefined as unknown as HistoriaDetalleDTO });
+        })
+      )
+    );
+
+    forkJoin(requests).subscribe({
+      next: (results) => {
+        const vacias = new Set<number>();
+
+        results.forEach(({ id, det }) => {
+          if (det) {
+            // Guarda el detalle para no recargar al abrir
+            const r = this.rows[id] || { open: false, loading: false };
+            this.rows[id] = { ...r, detalle: det, loading: false, error: null };
+            this.indexUserNames(det);
+
+            // Marca como vacía si corresponde
+            if (esHistoriaVacia(det as any)) {
+              vacias.add(id);
+            }
+          }
+        });
+
+        if (vacias.size) {
+          // Filtra lista visible
+          this.historias = this.historias.filter(h => !vacias.has(h.id));
+          // Limpia filas de las eliminadas
+          for (const idStr of Object.keys(this.rows)) {
+            const idNum = Number(idStr);
+            if (vacias.has(idNum)) delete this.rows[idNum];
+          }
+        }
+      },
+      error: (e) => {
+        console.error('Prefetch de detalles falló:', e);
+        // No interrumpimos la UI; el acordeón seguirá cargando on-demand
       }
     });
   }
@@ -116,7 +178,7 @@ export class HistorialMedicoComponent implements OnInit {
       }
     };
 
-    // Ajusta a lo que realmente trae tu backend:
+    // Si tu backend envía estos, descomenta:
     // put(det.usuarioId, det.usuarioNombre);
 
     det.antecedentesPatologicos?.forEach(ap => {
@@ -169,7 +231,7 @@ export class HistorialMedicoComponent implements OnInit {
   safe(value: any): string {
     return (value === null || value === undefined || value === '') ? '—' : String(value);
   }
-  
+
   hasGO(ap: any): boolean {
     return [ap?.gestas, ap?.partos, ap?.abortos, ap?.cesareas, ap?.vivos, ap?.mortinatos]
       .some(v => v !== null && v !== undefined);
@@ -208,6 +270,7 @@ export class HistorialMedicoComponent implements OnInit {
       const pacienteInfo = {
         id: this.pacienteId,
         nombreCompleto: this.paciente?.nombreCompleto,
+        apellidoCompleto: this.paciente?.apellidoCompleto,
         identificacion: this.paciente?.identificacion,
         fechaNacimiento: this.paciente?.fechaNacimiento,
       };
@@ -239,4 +302,89 @@ export class HistorialMedicoComponent implements OnInit {
       }
     });
   }
+
+  /* ========= NUEVO: helper usado por el template para calcular edad ========= */
+  edad(fecha?: string | Date | null): number | null {
+    if (!fecha) return null;
+    const f = new Date(fecha);
+    if (isNaN(f.getTime())) return null;
+    const hoy = new Date();
+    let e = hoy.getFullYear() - f.getFullYear();
+    const m = hoy.getMonth() - f.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < f.getDate())) e--;
+    return e;
+  }
+
+  nombreApellido(p?: { nombreCompleto?: string | null; apellidoCompleto?: string | null }): string {
+    if (!p) return '—';
+    const nombre = (p.nombreCompleto ?? '').trim();
+    const apellido = (p.apellidoCompleto ?? '').trim();
+    if (nombre && apellido) return `${nombre} ${apellido}`;
+    if (nombre) return nombre;
+    if (apellido) return apellido;
+    return '—';
+  }
+
+  /* ✅ Lista de síntomas (booleans verdaderos → etiquetas) */
+syms(ap: any): string[] {
+  if (!ap) return [];
+  const map: [keyof any, string][] = [
+    ['covid', 'COVID-19'],
+    ['cefalea', 'Cefalea'],
+    ['tos', 'Tos'],
+    ['rinorrea', 'Rinorrea'],
+    ['mialgia', 'Mialgia'],
+    ['dolorToraxico', 'Dolor torácico'],
+    ['nausea', 'Náusea'],
+    ['vomito', 'Vómito'],
+    ['fiebre', 'Fiebre'],
+    ['odinofagia', 'Odinofagia'],
+    ['disnea', 'Disnea'],
+    ['anosmia', 'Anosmia'],
+    ['conjuntivitis', 'Conjuntivitis'],
+    ['diarrea', 'Diarrea'],
+    ['disgeusia', 'Disgeusia'],
+  ];
+  return map.filter(([k]) => ap?.[k] === true).map(([, label]) => label);
+}
+
+/* ✅ Flags extra (si aplica) */
+flags(ap: any): string[] {
+  if (!ap) return [];
+  const out: string[] = [];
+  if (ap.sintomaticoRespiratorio) out.push('Sintomático respiratorio');
+  if (ap.sintomaticoPiel) out.push('Sintomático de piel');
+  if (ap.victimaViolencia) out.push('Víctima de violencia');
+  return out;
+}
+
+/* ✅ Texto de revisión/observaciones (soporta nombre alterno si cambiara en el backend) */
+revisionTexto(ap: any): string {
+  return String(ap?.revisionSintoma ?? ap?.revisionPorSistemas ?? ap?.observaciones ?? '')
+    .trim();
+}
+
+/** Texto legible para el diagnóstico (combina código + descripción si existen) */
+diagnosticoTexto(dx: any): string {
+  if (!dx) return '—';
+  const codigo =
+    dx.codigo ??
+    dx.codigoCIE ??
+    dx.codigoDiagnostico ??
+    dx.cie10 ??
+    dx.cie ??
+    null;
+
+  const desc =
+    dx.descripcion ??
+    dx.diagnostico ??
+    dx.nombreDiagnostico ??
+    dx.descripcionDiagnostico ??
+    dx.cie10Descripcion ??
+    null;
+
+  if (codigo && desc) return `${codigo} — ${desc}`;
+  return (desc || codigo || '—').toString();
+}
+
 }

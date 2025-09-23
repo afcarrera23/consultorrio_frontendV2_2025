@@ -11,6 +11,7 @@ type HistoriaDet = {
     motivoConsulta?: string;
     enfermedadActual?: string;
     medicamentoActual?: string;
+    // Si luego quieres síntomas/revisión, aquí podrías añadir campos.
   }>;
 
   antecedentesPersonales?: Array<{
@@ -19,8 +20,8 @@ type HistoriaDet = {
     ginecoObstetricos?: string;
     gestas?: number; partos?: number; abortos?: number; cesareas?: number;
     vivos?: number; mortinatos?: number;
-    fechaConsulta?: string | Date;
-    usuarioId?: string | number;
+    fechaConsulta?: string | Date;      // ⬅ (ya no se imprimirá)
+    usuarioId?: string | number;        // ⬅ (ya no se imprimirá)
   }>;
 
   examenFisico?: {
@@ -28,18 +29,32 @@ type HistoriaDet = {
     frecuenciaRespiratoria?: string|number; frecuenciaCardiaca?: string|number;
     saturacion?: string|number; temperatura?: string|number;
     peso?: string|number; talla?: string|number; imc?: string|number;
+    perimetroCefalico?: string|number; // ⬅️ NUEVO (si tu DTO usa otro nombre, cámbialo)
+
     aspectoGeneral?: string; craneoDetalle?: string; ojosDetalle?: string; oidoDetalle?: string;
     cuelloDetalle?: string; cardioPulmonarDetalle?: string; senosDetalle?: string;
     abdomenDetalle?: string; genitalesDetalle?: string; examenRectalDetalle?: string;
     neurologicoDetalle?: string; extremidadesOsteoarticularDetalle?: string;
     otrosHallazgos?: string;
-    fechaExamen?: string | Date;
-    usuarioId?: string | number;
+
+    fechaExamen?: string | Date;        // ⬅ (se usará h.fecha como “Fecha registro”)
+    usuarioId?: string | number;        // ⬅ (se usará h.usuarioNombre)
   };
 
   diagnosticos?: Array<{
-    tipoDiagnostico?: string;
-    plan?: string;
+    // tipoDiagnostico?: string;       // ⬅ ya no se imprime
+    codigo?: string;                   // ⬅ soportado para armar “Diagnóstico”
+    codigoCIE?: string;
+    codigoDiagnostico?: string;
+    cie10?: string;
+    cie?: string;
+    descripcion?: string;
+    diagnostico?: string;
+    nombreDiagnostico?: string;
+    descripcionDiagnostico?: string;
+    cie10Descripcion?: string;
+
+    plan?: string;                     // ⬅ se imprime con label nuevo
     medicamentos?: Array<{
       nombreMedicamentoManual?: string;
       via?: string;
@@ -54,56 +69,104 @@ type HistoriaDet = {
 };
 
 type PacienteInfo = {
-  id?: number|string;
+  id?: number|string;               // Reg. #
   nombreCompleto?: string;
+  apellidoCompleto?: string;        // ⬅️ opcional por si lo pasas desde el componente
   identificacion?: string;
   fechaNacimiento?: string|Date;
-  sexo?: string;
+  // sexo?: string;                  // ⬅️ eliminado del header
 };
 
 /** ===== Utiles de formato ===== */
 const fmt = (v: any) => (v === null || v === undefined || v === "" ? "—" : String(v));
+
 const fmtDate = (d?: string | Date) => {
   if (!d) return "—";
   const date = (d instanceof Date) ? d : new Date(d);
   if (isNaN(date.getTime())) return fmt(d);
-  return date.toLocaleString();
+  return date.toLocaleString(); // fecha + hora
+};
+
+const fmtDateOnly = (d?: string | Date) => {
+  if (!d) return "—";
+  const date = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(date.getTime())) return fmt(d);
+  return date.toLocaleDateString(); // solo fecha
+};
+
+// Une nombre + apellido si existen
+const nombreApellido = (p?: PacienteInfo) => {
+  const nombre = (p?.nombreCompleto ?? '').toString().trim();
+
+  // Probamos distintas claves comunes para el apellido
+  const apellido =
+    (p as any)?.apellidoCompleto ??
+    (p as any)?.apellidos ??
+    (p as any)?.apellido ??
+    '';
+
+  const apStr = (apellido ?? '').toString().trim();
+
+  // Fallback: si no hay apellido explícito, intenta tomar la última palabra del nombre
+  if (!apStr && nombre.includes(' ')) {
+    const parts = nombre.split(/\s+/);
+    const last = parts[parts.length - 1];
+    return `${nombre} ${last}`.trim();
+  }
+
+  // Resultado normal
+  return (nombre && apStr) ? `${nombre} ${apStr}`.trim()
+       : (nombre || apStr || '—');
+};
+
+// Texto legible del diagnóstico (código + descripción si hay)
+const dxTexto = (dx: any): string => {
+  if (!dx) return "—";
+  const codigo =
+    dx.codigo ?? dx.codigoCIE ?? dx.codigoDiagnostico ?? dx.cie10 ?? dx.cie ?? null;
+  const desc =
+    dx.descripcion ?? dx.diagnostico ?? dx.nombreDiagnostico ?? dx.descripcionDiagnostico ?? dx.cie10Descripcion ?? null;
+  if (codigo && desc) return `${codigo} — ${desc}`;
+  return (desc || codigo || "—").toString();
 };
 
 /** ===== Layout ===== */
 const MARG = { left: 14, right: 14, top: 72, bottom: 56 };
-const VALUE_X = 40; // indent donde empieza el valor respecto al label
 
 const lineHeight = (doc: jsPDF) => doc.getFontSize() * 1.2;
 
-function ensureSpace(doc: jsPDF, cursorY: number, needed: number, paciente?: PacienteInfo): number
- {
-    const pageH = doc.internal.pageSize.getHeight();
-    if (cursorY + needed > pageH - MARG.bottom) {
-      doc.addPage();
-      addHeader(doc, paciente);
-      return MARG.top;
-    }
-    return cursorY;
+function ensureSpace(doc: jsPDF, cursorY: number, needed: number, paciente?: PacienteInfo): number {
+  const pageH = doc.internal.pageSize.getHeight();
+  if (cursorY + needed > pageH - MARG.bottom) {
+    doc.addPage();
+    addHeader(doc, paciente);
+    return MARG.top;
   }
+  return cursorY;
+}
 
-  function addHeader(doc: jsPDF, paciente?: PacienteInfo) {
-    const w = doc.internal.pageSize.getWidth();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.text("Historial clínico", MARG.left, 30);
-  
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    const p1 = `Paciente: ${fmt(paciente?.nombreCompleto)}  |  ID: ${fmt(paciente?.identificacion ?? paciente?.id)}`;
-    doc.text(p1, MARG.left, 42);
-    const p2 = `Nacimiento: ${fmtDate(paciente?.fechaNacimiento)}  |  Sexo: ${fmt(paciente?.sexo)}`;
-    doc.text(p2, MARG.left, 54);
-  
-    doc.setDrawColor(200);
-    doc.line(MARG.left, 60, w - MARG.right, 60);
-  }
+function addHeader(doc: jsPDF, paciente?: PacienteInfo) {
+  const w = doc.internal.pageSize.getWidth();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.text("Historial clínico", MARG.left, 30);
 
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  // Línea 1: Paciente + Identificación + Reg. #
+  const p1 = `Paciente: ${nombreApellido(paciente)}  |  Identificación: ${fmt(paciente?.identificacion)}  |  Reg. #${fmt(paciente?.id)}`;
+  doc.text(p1, MARG.left, 42);
+
+  // Línea 2: Fecha de nacimiento (sin hora)
+  const p2 = `Fecha de nacimiento: ${fmtDateOnly(paciente?.fechaNacimiento)}`;
+  doc.text(p2, MARG.left, 54);
+
+  doc.setDrawColor(200);
+  doc.line(MARG.left, 60, w - MARG.right, 60);
+}
+
+/** ===== Footer con numeración y fecha de export ===== */
 function addFooter(doc: jsPDF) {
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
@@ -119,73 +182,51 @@ function addFooter(doc: jsPDF) {
 
 /** ===== Título de sección con salto seguro ===== */
 function sectionTitle(doc: jsPDF, text: string, cursorY: number, paciente?: PacienteInfo) {
-    cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 2, paciente);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(44, 62, 80);
-    doc.text(text, MARG.left, cursorY);
-    cursorY += lineHeight(doc) + 2;   // ⬅️ pequeño extra
-    return cursorY;
-  }
+  cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 2, paciente);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(44, 62, 80);
+  doc.text(text, MARG.left, cursorY);
+  cursorY += lineHeight(doc) + 2;
+  return cursorY;
+}
 
-/** ===== Par label: valor con wrapping y salto seguro (soporta label vacío) ===== */
+/** Label arriba y valor en la línea siguiente (bloque) */
 function keyValue(
-    doc: jsPDF,
-    label: string,
-    value: string,
-    cursorY: number,
-    paciente?: PacienteInfo
-  ) {
-    const pageW = doc.internal.pageSize.getWidth();
-  
-    // ¿hay etiqueta?
-    const hasLabel = !!label;
-    const labelText = hasLabel ? `${label}:` : "";
-  
-    // medir etiqueta solo si existe
-    let valueX = MARG.left;
-    if (hasLabel) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      const labelW = doc.getTextWidth(labelText);
-  
-      // desplazamiento mínimo/máximo para no empujar demasiado el valor
-      const MIN_OFFSET = 26;   // ~ (40 - 14)
-      const MAX_OFFSET = 180;  // tope para labels largas
-      const offset = Math.max(MIN_OFFSET, Math.min(labelW + 8, MAX_OFFSET));
-      valueX = MARG.left + offset;
-    }
-  
-    // ancho disponible para el valor
-    const maxW = Math.max(pageW - valueX - MARG.right, 20);
-  
-    // envolver valor con la fuente del valor
-    doc.setFont("helvetica", "normal");
-    const wrapped = doc.splitTextToSize(value || "—", maxW);
-  
-    // asegurar espacio
-    const h = lineHeight(doc);
-    const needed = h * Math.max(wrapped.length, 1) + 2;
-    cursorY = ensureSpace(doc, cursorY, needed, paciente);
-  
-    // dibujar
-    if (hasLabel) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(44, 62, 80);
-      doc.text(labelText, MARG.left, cursorY);
-    }
-  
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(33);
-    doc.text(wrapped, valueX, cursorY);
-  
-    // avanzar cursor según líneas
-    cursorY += h * Math.max(wrapped.length, 1) + 2;
-    return cursorY;
-  }
-  
-  
+  doc: jsPDF,
+  label: string,
+  value: string,
+  cursorY: number,
+  paciente?: PacienteInfo
+) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const availW = pageW - MARG.left - MARG.right;
+  const h = lineHeight(doc);
+
+  // Prepara el valor envuelto
+  doc.setFont("helvetica", "normal");
+  const wrapped = doc.splitTextToSize(value || "—", availW);
+
+  // Asegura espacio: una línea para label + n líneas de valor
+  const needed = h * (1 + Math.max(wrapped.length, 1)) + 2;
+  cursorY = ensureSpace(doc, cursorY, needed, paciente);
+
+  // Label
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(44, 62, 80);
+  doc.text(`${label}:`, MARG.left, cursorY);
+
+  // Valor en la siguiente línea
+  cursorY += h;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(33);
+  doc.text(wrapped, MARG.left, cursorY);
+
+  cursorY += h * Math.max(wrapped.length, 1) + 2;
+  return cursorY;
+}
+
 
 export function exportarHistorialPDF(
   paciente: PacienteInfo | undefined,
@@ -205,30 +246,29 @@ export function exportarHistorialPDF(
   }
 
   historias.forEach((h, idx) => {
-    if (idx > 0) {                 // ⬅️ NUEVO
+    if (idx > 0) {
       doc.addPage();
       addHeader(doc, paciente);
       cursorY = MARG.top;
     }
-    
+
     cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 3, paciente);
-  
+
+    // Encabezado de cada historia
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(44, 62, 80);
     doc.text(`Historia #${idx + 1}`, MARG.left, cursorY);
     cursorY += lineHeight(doc) * 0.9;
-  
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(33);
-    const resumen = `Fecha: ${fmtDate(h.fecha)}  •  Profesional: ${fmt(h.usuarioNombre)}`;
-    cursorY = keyValue(doc, "", resumen, cursorY, paciente);
     if (h.motivoConsulta) {
       cursorY = keyValue(doc, "Motivo consulta", fmt(h.motivoConsulta), cursorY, paciente);
     }
-  
-    // ====== Antecedentes patológicos
+
+    // ===== Antecedentes patológicos
     cursorY += 2;
     cursorY = sectionTitle(doc, "Antecedentes patológicos", cursorY, paciente);
     const aps = h.detalle?.antecedentesPatologicos ?? [];
@@ -245,8 +285,8 @@ export function exportarHistorialPDF(
         cursorY += 2;
       });
     }
-  
-    // ====== Antecedentes personales
+
+    // ===== Antecedentes personales
     cursorY += 2;
     cursorY = sectionTitle(doc, "Antecedentes personales", cursorY, paciente);
     const apers = h.detalle?.antecedentesPersonales ?? [];
@@ -260,7 +300,7 @@ export function exportarHistorialPDF(
         cursorY = keyValue(doc, "Antecedentes personales", fmt(ap.antecedentesPersonales), cursorY, paciente);
         cursorY = keyValue(doc, "Antecedentes familiares", fmt(ap.antecedentesFamiliares), cursorY, paciente);
         if (ap.ginecoObstetricos) cursorY = keyValue(doc, "Gineco-obstétricos", fmt(ap.ginecoObstetricos), cursorY, paciente);
-  
+
         const resumenGO = [
           ap.gestas!=null?`Gestas: ${ap.gestas}`:null,
           ap.partos!=null?`Partos: ${ap.partos}`:null,
@@ -270,14 +310,13 @@ export function exportarHistorialPDF(
           ap.mortinatos!=null?`Mortinatos: ${ap.mortinatos}`:null,
         ].filter(Boolean).join("  •  ");
         if (resumenGO) cursorY = keyValue(doc, "Resumen GO", resumenGO, cursorY, paciente);
-  
-        cursorY = keyValue(doc, "Fecha consulta", fmtDate(ap.fechaConsulta), cursorY, paciente);
-        cursorY = keyValue(doc, "Usuario", fmt(ap.usuarioId), cursorY, paciente);
+
+        // ⬅️ Se elimina “Fecha consulta” y “Usuario” aquí
         cursorY += 2;
       });
     }
-  
-    // ====== Examen físico
+
+    // ===== Examen físico
     cursorY += 2;
     cursorY = sectionTitle(doc, "Examen físico", cursorY, paciente);
     const ex = h.detalle?.examenFisico;
@@ -287,42 +326,41 @@ export function exportarHistorialPDF(
       doc.text("Sin datos", MARG.left, cursorY);
       cursorY += lineHeight(doc);
     } else {
-      const vitales = [
-        `TA: ${fmt(ex.tensionSistolica)}/${fmt(ex.tensionDiastolica)}`,
-        `FR: ${fmt(ex.frecuenciaRespiratoria)}`,
-        `FC: ${fmt(ex.frecuenciaCardiaca)}`,
-        `SatO₂: ${fmt(ex.saturacion)}`,
-        `Temp: ${fmt(ex.temperatura)}`,
-        `Peso: ${fmt(ex.peso)}`,
-        `Talla: ${fmt(ex.talla)}`,
-        `IMC: ${fmt(ex.imc)}`
-      ].join("  •  ");
-      cursorY = keyValue(doc, "Signos vitales", vitales, cursorY, paciente);
-  
+      // ✅ Todos los campos individuales como en el historial
+      cursorY = keyValue(doc, "Tensión Sistólica", fmt(ex.tensionSistolica), cursorY, paciente);
+      cursorY = keyValue(doc, "Tensión Diastólica", fmt(ex.tensionDiastolica), cursorY, paciente);
+      cursorY = keyValue(doc, "Frecuencia Respiratoria", fmt(ex.frecuenciaRespiratoria), cursorY, paciente);
+      cursorY = keyValue(doc, "Frecuencia Cardíaca", fmt(ex.frecuenciaCardiaca), cursorY, paciente);
+      cursorY = keyValue(doc, "Temperatura", fmt(ex.temperatura), cursorY, paciente);
+      cursorY = keyValue(doc, "Saturación O₂", fmt(ex.saturacion), cursorY, paciente);
+      cursorY = keyValue(doc, "Peso (kg)", fmt(ex.peso), cursorY, paciente);
+      cursorY = keyValue(doc, "Talla (cm)", fmt(ex.talla), cursorY, paciente);
+      cursorY = keyValue(doc, "IMC", fmt(ex.imc), cursorY, paciente);
+      cursorY = keyValue(doc, "Perímetro Cefálico (cm)", fmt(ex.perimetroCefalico), cursorY, paciente);
+
       const hallazgos: [string, any][] = [
-        ["Aspecto general", ex.aspectoGeneral],
+        ["Aspecto General", ex.aspectoGeneral],
         ["Cráneo", ex.craneoDetalle],
         ["Ojos", ex.ojosDetalle],
         ["Oído", ex.oidoDetalle],
         ["Cuello", ex.cuelloDetalle],
-        ["Cardiopulmonar", ex.cardioPulmonarDetalle],
+        ["Cardio-Pulmonar", ex.cardioPulmonarDetalle],
         ["Senos", ex.senosDetalle],
         ["Abdomen", ex.abdomenDetalle],
         ["Genitales", ex.genitalesDetalle],
-        ["Rectal", ex.examenRectalDetalle],
+        ["Examen Rectal", ex.examenRectalDetalle],
         ["Neurológico", ex.neurologicoDetalle],
-        ["Extremidades/osteoarticular", ex.extremidadesOsteoarticularDetalle],
-        ["Otros", ex.otrosHallazgos],
+        ["Extremidades Osteoarticulares", ex.extremidadesOsteoarticularDetalle],
+        ["Otros Hallazgos", ex.otrosHallazgos],
       ];
       hallazgos.forEach(([k, v]) => {
         if (v) cursorY = keyValue(doc, k, fmt(v), cursorY, paciente);
       });
-  
-      cursorY = keyValue(doc, "Fecha examen", fmtDate(ex.fechaExamen), cursorY, paciente);
-      cursorY = keyValue(doc, "Usuario", fmt(ex.usuarioId), cursorY, paciente);
+
+      // ⬅️ Se elimina “Fecha examen” y “Usuario” de esta sección
     }
-  
-    // ====== Diagnósticos
+
+    // ===== Diagnósticos
     cursorY += 4;
     cursorY = sectionTitle(doc, "Diagnósticos", cursorY, paciente);
     const dxs = h.detalle?.diagnosticos ?? [];
@@ -332,15 +370,21 @@ export function exportarHistorialPDF(
       doc.text("Sin datos", MARG.left, cursorY);
       cursorY += lineHeight(doc);
     } else {
-      dxs.forEach((dx, iDx) => {
-        cursorY = keyValue(doc, `Diagnóstico ${iDx + 1} - Tipo`, fmt(dx.tipoDiagnostico), cursorY, paciente);
-        if (dx.plan) cursorY = keyValue(doc, "Plan", fmt(dx.plan), cursorY, paciente);
-  
-        const meds = dx.medicamentos ?? [];
+      dxs.forEach((_dx, iDx) => {
+        // Diagnóstico (código + descripción si hay)
+        cursorY = keyValue(doc, `Diagnóstico ${iDx + 1}`, dxTexto(_dx), cursorY, paciente);
+
+        // Recomendaciones, plan de tratamiento
+        if (_dx.plan) {
+          cursorY = keyValue(doc, "Recomendaciones, plan de tratamiento", fmt(_dx.plan), cursorY, paciente);
+        }
+
+        // Tabla de medicamentos
+        const meds = _dx.medicamentos ?? [];
         if (meds.length) {
           const pageH = doc.internal.pageSize.getHeight();
           if (cursorY > pageH - 160) { doc.addPage(); addHeader(doc, paciente); cursorY = MARG.top; }
-  
+
           const head = [["Medicamento", "Vía administración", "Cantidad", "Posología y duración"]];
           const body: RowInput[] = meds.map(m => ([
             fmt(m.nombreMedicamentoManual),
@@ -352,9 +396,9 @@ export function exportarHistorialPDF(
               m.diasTratamiento ? `${m.diasTratamiento} días` : ""
             ].filter(Boolean).join(" • ") || "—"
           ]));
-  
+
           autoTable(doc, {
-            startY: cursorY + 6,              // un poco más de separación antes de la tabla
+            startY: cursorY + 6,
             head,
             body,
             styles: { fontSize: 9, cellPadding: 4 },
@@ -363,13 +407,18 @@ export function exportarHistorialPDF(
             margin: { left: MARG.left, right: MARG.right },
             didDrawPage: (data) => { if (data.pageNumber > 1) addHeader(doc, paciente); }
           });
-  
+
           cursorY = (doc as any).lastAutoTable.finalY + 14;
           cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 1.5, paciente);
         }
       });
     }
-  
+
+    // ===== Meta final de la historia: Fecha registro + Usuario (nombre y apellido)
+    cursorY += 4;
+    cursorY = keyValue(doc, "Fecha registro", fmtDate(h.fecha), cursorY, paciente);
+    cursorY = keyValue(doc, "Usuario", fmt(h.usuarioNombre), cursorY, paciente);
+
     // Separador entre historias
     cursorY += 4;
     doc.setDrawColor(220);
@@ -377,7 +426,6 @@ export function exportarHistorialPDF(
     doc.line(MARG.left, cursorY, w - MARG.right, cursorY);
     cursorY += 10;
   });
-  
 
   addFooter(doc);
   const nombre = `Historial_${fmt(paciente?.identificacion ?? paciente?.id)}.pdf`;
