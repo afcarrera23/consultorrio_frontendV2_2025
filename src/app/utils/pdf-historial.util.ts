@@ -417,7 +417,7 @@ export function exportarHistorialPDF(
     // ===== Meta final de la historia: Fecha registro + Usuario (nombre y apellido)
     cursorY += 4;
     cursorY = keyValue(doc, "Fecha registro", fmtDate(h.fecha), cursorY, paciente);
-    cursorY = keyValue(doc, "Usuario", fmt(h.usuarioNombre), cursorY, paciente);
+    cursorY = keyValue(doc, "Registro", fmt(h.usuarioNombre), cursorY, paciente);
 
     // Separador entre historias
     cursorY += 4;

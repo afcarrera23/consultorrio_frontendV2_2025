@@ -152,3 +152,56 @@ textarea:focus {
     padding: 6px 12px;
   }
 }
+
+/* Acciones principales: Siguiente arriba (full width) */
+.form-actions { margin-top: 6px; }
+.form-actions .btn.btn-primary { width: 100%; }
+
+/* Fila inferior con Atrás (izq) y Cancelar (der) */
+.form-bottom {
+  display: flex;
+  justify-content: space-between; /* Atrás a la izq, Cancelar a la der */
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Tamaño compacto y consistencia entre Atrás y Cancelar */
+.btn-back,
+.btn-cancel {
+  padding: 6px 14px;      /* mismo tamaño */
+  font-size: 14px;
+  border-radius: 6px;
+  width: auto;            /* no full width */
+}
+
+/* Estilo de Atrás (neutro) */
+.btn-back {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+.btn-back:hover { background: #e5e7eb; }
+
+/* Estilo de Cancelar (rojo) */
+.btn-cancel {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+.btn-cancel:hover { background-color: #c82333; }
+
+/* Responsive: apila en pantallas pequeñas */
+@media (max-width: 560px) {
+  .form-bottom {
+    gap: 10px;
+    justify-content: center;
+  }
+  .btn-back, .btn-cancel {
+    flex: 1 1 auto;       /* ocupan mitad y mitad */
+    text-align: center;
+  }
+}

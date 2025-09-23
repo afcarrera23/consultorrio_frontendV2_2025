@@ -73,13 +73,14 @@
               [disabled]="!antPersForm.form.valid">
         Siguiente
       </button>
-
-      <button type="button" class="btn-outline" (click)="atras()">
-        Atrás
-      </button>
     </div>
 
-    <div class="form-row form-cancel">
+    <!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
+    <div class="form-row form-bottom">
+      <button type="button" class="btn-back" (click)="atras()">
+        ← Atrás
+      </button>
+
       <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
         Cancelar
       </button>

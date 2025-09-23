@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -43,6 +43,7 @@ export class HistorialMedicoComponent implements OnInit {
   usuariosById: Record<string | number, string> = {};
 
   constructor(
+    private router: Router,
     private route: ActivatedRoute,
     private api: HistoriaLecturaApiService,
     private pacientes: PacienteService
@@ -386,5 +387,10 @@ diagnosticoTexto(dx: any): string {
   if (codigo && desc) return `${codigo} — ${desc}`;
   return (desc || codigo || '—').toString();
 }
+
+volverAlMenu(): void {
+  this.router.navigate(['/menu-principal']);
+}
+
 
 }
