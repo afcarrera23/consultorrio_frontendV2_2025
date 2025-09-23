@@ -15,7 +15,8 @@ export interface PacienteListadoDTO {
     id?: number;
     identificacion: string;
     tipoIdentificacion: string;
-    edad: number;
+    fechaNacimiento?: string;
+    edad?: number;
     nombreCompleto: string;
     apellidoCompleto: string;
     genero: string;

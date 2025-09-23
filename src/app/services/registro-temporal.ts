@@ -67,7 +67,12 @@ export class RegistroTempService {
 
   /* ================== ANTECEDENTE PATOLÓGICO ================== */
   // Draft (para precargar el formulario al volver)
-  setDraftAntecedentePatologico(a: AntecedentePatologicoDTO) {
+  setDraftAntecedentePatologico(a?: AntecedentePatologicoDTO | null) {
+    if (!a) { // si viene undefined/null → limpiar
+      this.draftAntPatologico = undefined;
+      localStorage.removeItem(this.DRAFT_ANT_PAT_KEY);
+      return;
+    }
     a.pacienteId = this.paciente?.id ?? a.pacienteId ?? 0;
     this.draftAntPatologico = { ...a };
     localStorage.setItem(this.DRAFT_ANT_PAT_KEY, JSON.stringify(this.draftAntPatologico));
@@ -99,7 +104,12 @@ export class RegistroTempService {
   }
 
   /* ================== ANTECEDENTE PERSONAL ================== */
-  setDraftAntecedentePersonal(a: AntecedentePersonalDTO) {
+  setDraftAntecedentePersonal(a?: AntecedentePersonalDTO | null) {
+    if (!a) {
+      this.draftAntPersonal = undefined;
+      localStorage.removeItem(this.DRAFT_ANT_PER_KEY);
+      return;
+    }
     a.pacienteId = this.paciente?.id ?? a.pacienteId ?? 0;
     this.draftAntPersonal = { ...a };
     localStorage.setItem(this.DRAFT_ANT_PER_KEY, JSON.stringify(this.draftAntPersonal));
@@ -129,7 +139,12 @@ export class RegistroTempService {
   }
 
   /* ================== EXAMEN FÍSICO ================== */
-  setDraftExamenFisico(ex: ExamenFisicoDTO) {
+  setDraftExamenFisico(ex?: ExamenFisicoDTO | null) {
+    if (!ex) {
+      this.draftExamenFisico = undefined;
+      localStorage.removeItem(this.DRAFT_EXA_FIS_KEY);
+      return;
+    }
     ex.pacienteId = this.paciente?.id ?? ex.pacienteId ?? 0;
     this.draftExamenFisico = { ...ex };
     localStorage.setItem(this.DRAFT_EXA_FIS_KEY, JSON.stringify(this.draftExamenFisico));
@@ -159,7 +174,12 @@ export class RegistroTempService {
   }
 
   /* ================== DIAGNÓSTICOS ================== */
-  setDraftDiagnosticos(dxs: DiagnosticoItem[]) {
+  setDraftDiagnosticos(dxs?: DiagnosticoItem[] | null) {
+    if (!dxs) {
+      this.draftDiagnosticos = undefined;
+      localStorage.removeItem(this.DRAFT_DIAG_KEY);
+      return;
+    }
     this.draftDiagnosticos = [...dxs];
     localStorage.setItem(this.DRAFT_DIAG_KEY, JSON.stringify(this.draftDiagnosticos));
   }
@@ -212,22 +232,21 @@ export class RegistroTempService {
     localStorage.removeItem(this.DRAFT_DIAG_KEY);
   }
 
-  // Alias cómodo para no cambiar tus llamados
-setPaciente(paciente: PacienteRegistroDTO) {
-  this.guardarPaciente(paciente);
-}
+  // Alias cómodo (mantener compatibilidad con llamadas existentes)
+  setPaciente(paciente: PacienteRegistroDTO) {
+    this.guardarPaciente(paciente);
+  }
 
-/** Limpia SOLO borradores, conservando el paciente y el historial cargado */
-resetDrafts() {
-  this.draftAntPatologico = undefined;
-  this.draftAntPersonal = undefined;
-  this.draftExamenFisico = undefined;
-  this.draftDiagnosticos = undefined;
+  /** Limpia SOLO borradores, conservando el paciente y el historial cargado */
+  resetDrafts() {
+    this.draftAntPatologico = undefined;
+    this.draftAntPersonal = undefined;
+    this.draftExamenFisico = undefined;
+    this.draftDiagnosticos = undefined;
 
-  localStorage.removeItem(this.DRAFT_ANT_PAT_KEY);
-  localStorage.removeItem(this.DRAFT_ANT_PER_KEY);
-  localStorage.removeItem(this.DRAFT_EXA_FIS_KEY);
-  localStorage.removeItem(this.DRAFT_DIAG_KEY);
-}
-
+    localStorage.removeItem(this.DRAFT_ANT_PAT_KEY);
+    localStorage.removeItem(this.DRAFT_ANT_PER_KEY);
+    localStorage.removeItem(this.DRAFT_EXA_FIS_KEY);
+    localStorage.removeItem(this.DRAFT_DIAG_KEY);
+  }
 }

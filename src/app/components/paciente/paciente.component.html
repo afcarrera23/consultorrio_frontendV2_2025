@@ -24,29 +24,47 @@
       </div>
     </div>
 
-    <!-- Fila 2: Edad y nombre completo -->
+    <!-- Fila 2: Fecha de nacimiento y edad (solo lectura) -->
     <div class="form-row">
       <div class="form-group">
-        <label for="edad">Edad *:</label>
-        <input type="number" id="edad" name="edad"
-               [(ngModel)]="paciente.edad" required>
+        <label for="fechaNacimiento">Fecha de nacimiento *:</label>
+        <input type="date"
+               id="fechaNacimiento"
+               name="fechaNacimiento"
+               [(ngModel)]="paciente.fechaNacimiento"
+               (change)="onFechaChange()"
+               [max]="todayISO"
+               required>
       </div>
 
+      <div class="form-group">
+        <label for="edad">Edad (auto):</label>
+        <input type="number" id="edad" name="edad"
+               [value]="edadCalculada ?? ''"
+               disabled>
+        <!-- Si prefieres un <span>:
+        <div class="readonly">{{ edadCalculada ?? '—' }}</div>
+        -->
+      </div>
+    </div>
+
+    <!-- Fila 3: Nombre y género -->
+    <div class="form-row">
       <div class="form-group">
         <label for="nombreCompleto">Nombre completo *:</label>
         <input type="text" id="nombreCompleto" name="nombreCompleto"
                [(ngModel)]="paciente.nombreCompleto" required>
       </div>
-    </div>
 
-    <!-- Fila 3: Apellidos y género -->
-    <div class="form-row">
       <div class="form-group">
         <label for="apellidoCompleto">Apellidos *:</label>
         <input type="text" id="apellidoCompleto" name="apellidoCompleto"
                [(ngModel)]="paciente.apellidoCompleto" required>
       </div>
+    </div>
 
+    <!-- Fila 4: Sexo y profesión -->
+    <div class="form-row">
       <div class="form-group">
         <label for="genero">Sexo *:</label>
         <select id="genero" name="genero" [(ngModel)]="paciente.genero" required>
@@ -56,40 +74,37 @@
           <option value="Otro">Otro</option>
         </select>
       </div>
-    </div>
 
-    <!-- Fila 4: Profesión y teléfono -->
-    <div class="form-row">
       <div class="form-group">
         <label for="profesion">Profesión / ocupación:</label>
         <input type="text" id="profesion" name="profesion"
                [(ngModel)]="paciente.profesion">
       </div>
+    </div>
 
+    <!-- Fila 5: Teléfono y dirección -->
+    <div class="form-row">
       <div class="form-group">
         <label for="numeroTelefono">Teléfono *:</label>
         <input type="text" id="numeroTelefono" name="numeroTelefono"
                [(ngModel)]="paciente.numeroTelefono" required>
       </div>
-    </div>
 
-    <!-- Fila 5: Dirección y acompañante -->
-    <div class="form-row">
       <div class="form-group">
         <label for="direccion">Dirección:</label>
         <input type="text" id="direccion" name="direccion"
                [(ngModel)]="paciente.direccion">
       </div>
+    </div>
 
+    <!-- Fila 6: Acompañante y correo -->
+    <div class="form-row">
       <div class="form-group">
         <label for="nombreAcompanante">Nombre del acompañante:</label>
         <input type="text" id="nombreAcompanante" name="nombreAcompanante"
                [(ngModel)]="paciente.nombreAcompanante">
       </div>
-    </div>
 
-    <!-- Fila 6: Correo -->
-    <div class="form-row">
       <div class="form-group">
         <label for="correo">Correo electrónico:</label>
         <input type="email" id="correo" name="correo"
@@ -97,7 +112,6 @@
       </div>
     </div>
 
-    <!-- Campo oculto: ID del usuario que registra -->
     <input type="hidden" [(ngModel)]="paciente.usuarioRegistroId" name="usuarioRegistroId">
 
     <!-- Botón Siguiente -->
@@ -109,6 +123,7 @@
               {{ paciente.id ? 'Continuar' : 'Siguiente' }}
       </button>
     </div>
+
     <div class="form-row form-cancel">
       <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
         Cancelar
@@ -117,7 +132,6 @@
   </form>
 </div>
 
-<!-- POPUP de confirmación -->
 <app-popup
   *ngIf="isPopupOpen"
   [message]="'¿Deseas abandonar el registro?'"

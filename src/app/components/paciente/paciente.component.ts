@@ -1,3 +1,4 @@
+// src/app/pages/paciente/paciente.component.ts
 import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
@@ -13,7 +14,11 @@ export class PacienteComponent implements OnInit {
   paciente: PacienteRegistroDTO = {
     identificacion: '',
     tipoIdentificacion: '',
-    edad: 0,
+    // ⬇️ nuevo
+    fechaNacimiento: '', // ISO (YYYY-MM-DD). Úsalo con <input type="date">
+    // ⬇️ ahora opcional
+    edad: undefined,
+
     nombreCompleto: '',
     apellidoCompleto: '',
     genero: '',
@@ -30,6 +35,9 @@ export class PacienteComponent implements OnInit {
   isPopupOpen = false;
   isSubmitting = false;
 
+  // Para limitar el datepicker
+  todayISO = '';
+
   constructor(
     private pacienteService: PacienteService,
     private router: Router,
@@ -37,11 +45,11 @@ export class PacienteComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Precarga si existe guardado/draft
+    this.todayISO = new Date().toISOString().slice(0, 10);
+
     const guardado = this.registroTemp.obtenerPaciente();
     if (guardado) this.paciente = { ...this.paciente, ...guardado };
 
-    // Asegura usuarioRegistroId
     if (!this.paciente.usuarioRegistroId) {
       const usuarioId = Number(localStorage.getItem('usuarioId'));
       if (usuarioId > 0) this.paciente.usuarioRegistroId = usuarioId;
@@ -49,21 +57,45 @@ export class PacienteComponent implements OnInit {
     }
   }
 
+  /** Edad calculada para mostrar (no obligatoria para el back) */
+  get edadCalculada(): number | null {
+    const fn = this.paciente.fechaNacimiento;
+    if (!fn) return null;
+    // fn debe ser 'YYYY-MM-DD'
+    const [y, m, d] = fn.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - y;
+    const cumpleEsteAño = new Date(hoy.getFullYear(), m - 1, d);
+    if (hoy < cumpleEsteAño) edad -= 1;
+    return edad < 0 ? null : edad;
+  }
+
+  onFechaChange() {
+    // opcional: si quieres reflejar la edad calculada en el modelo
+    // sin enviarla al backend:
+    this.paciente.edad = this.edadCalculada ?? undefined;
+  }
+
   /** Paso 1 → Paso 2 */
   siguientePanelAntecedentes(): void {
-    // guarda siempre el estado actual
+    // guarda draft
     this.registroTemp.guardarPaciente(this.paciente);
 
-    // si ya se registró antes y tiene id, no re-posteamos
     const idExistente = (this.paciente as any).id;
     if (idExistente) {
       this.router.navigate([`/antecedente-patologico/${idExistente}`]);
       return;
     }
 
-    // registrar contra /registrar-con-antecedentes
+    // construir payload: si hay fechaNacimiento, NO mandar edad
+    const payload: PacienteRegistroDTO = { ...this.paciente };
+    if (payload.fechaNacimiento) {
+      delete payload.edad; // el back la calculará
+    }
+
     this.isSubmitting = true;
-    this.pacienteService.registrar(this.paciente).subscribe({
+    this.pacienteService.registrar(payload).subscribe({
       next: (respuesta) => {
         const nuevoId = (respuesta as any).id;
         const pacienteConId = { ...this.paciente, id: nuevoId };

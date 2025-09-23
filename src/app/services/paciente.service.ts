@@ -8,6 +8,7 @@ import { AntecedenteRegistroDTO } from '../models/antecedente-registro.model';
 import { AntecedentePersonalDTO } from '../models/antecedente-personal.model';
 import { ExamenFisicoDTO } from '../models/examen-fisico.model';
 import { Diagnostico } from '../models/diagnostico.model';
+import { PacienteDTO } from '../interfaces/PacienteDTO'
 
 @Injectable({ providedIn: 'root' })
 export class PacienteService {
@@ -97,5 +98,9 @@ export class PacienteService {
       ...diagnostico,
       pacienteId
     });
+  }
+
+  getById(id: number): Observable<PacienteDTO> {
+    return this.http.get<PacienteDTO>(`${this.apiUrl}/${id}`);
   }
 }

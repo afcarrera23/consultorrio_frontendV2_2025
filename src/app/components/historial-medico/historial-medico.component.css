@@ -205,3 +205,17 @@ h2 {
   .meds-table th, .meds-table td { padding: 8px 10px; }
 }
 
+/* Contenedor de acciones encima del acordeón */
+.actions-row {
+  display: flex;
+  justify-content: flex-end;  /* alinea el botón a la derecha */
+  margin-bottom: 14px;
+}
+
+/* Botón de exportación específico */
+.export-btn {
+  width: auto;               /* no ocupa todo el ancho */
+  padding: 8px 16px;         /* más compacto */
+  font-size: 15px;
+}
+

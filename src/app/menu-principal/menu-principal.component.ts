@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { PacienteListadoDTO, PacienteRegistroDTO } from '../models/paciente.model';
 
-// 👇 agrega estos dos servicios para manejar el flujo y el estado temporal
+// Manejo de flujo y estado temporal
 import { HistoriaFlowService } from '../services/historia-flow.service';
 import { RegistroTempService } from '../services/registro-temporal';
 
@@ -27,8 +27,8 @@ export class MenuPrincipalComponent {
     private router: Router,
     private authService: AuthService,
     private http: HttpClient,
-    private flow: HistoriaFlowService,          // ⬅️ nuevo
-    private registroTemp: RegistroTempService,  // ⬅️ nuevo
+    private flow: HistoriaFlowService,
+    private registroTemp: RegistroTempService,
   ) {}
 
   ngOnInit(): void {
@@ -74,8 +74,8 @@ export class MenuPrincipalComponent {
     const usuarioId = Number(medico?.id || medico?.usuarioId || 0); // ajusta según tu AuthService
     this.flow.initNew(usuarioId);
 
-    // 2) limpia cualquier rastro de paciente previo en el registro temporal
-    this.registroTemp.limpiarPaciente?.();
+    // 2) limpia cualquier rastro previo en el registro temporal
+    this.registroTemp.limpiarPaciente();   // ← sin optional chaining
 
     // 3) navega al registro del paciente (primer paso del flujo)
     this.router.navigate(['/registro-paciente']);
@@ -88,35 +88,31 @@ export class MenuPrincipalComponent {
       const detalle = await this.http
         .get<PacienteRegistroDTO>(`${this.apiBase}/pacientes/${paciente.id}`)
         .toPromise();
-  
+
       if (!detalle?.id) {
         alert('No se pudo cargar el detalle del paciente.');
         return;
       }
-  
+
       // 2) guarda el paciente en el registro temporal
-      this.registroTemp.guardarPaciente(detalle);   // ✅ usar el método que ya tienes
-  
+      this.registroTemp.guardarPaciente(detalle);
+
       // 3) inicializa el flujo como EXISTING_PATIENT
       const medico = this.authService.getMedicoLogueado();
       const usuarioId = Number(medico?.id || medico?.usuarioId || 0);
       this.flow.initExisting(detalle.id, usuarioId, detalle);
-  
-      // 4) limpiar borradores previos (opcional)
-      this.registroTemp.setDraftAntecedentePatologico(undefined as any);
-      this.registroTemp.setDraftAntecedentePersonal(undefined as any);
-      this.registroTemp.setDraftExamenFisico(undefined as any);
-      this.registroTemp.setDraftDiagnosticos([]);
-  
+
+      // 4) limpiar borradores previos (SIN pasar undefined a setters)
+      this.registroTemp.resetDrafts();
+
       // 5) navega al primer paso del flujo de historia clínica
       this.router.navigate([`/antecedente-patologico/${detalle.id}`]);
-  
+
     } catch (e) {
       console.error('Error al abrir historia para paciente existente:', e);
       alert('No fue posible abrir la historia. Intenta de nuevo.');
     }
   }
-  
 
   /** =========== Otras acciones (pendientes de implementar) =========== */
   verPaciente(p: PacienteListadoDTO): void {
@@ -144,6 +140,4 @@ export class MenuPrincipalComponent {
   verHistorias(p: PacienteListadoDTO) {
     this.router.navigate([`/historial-medico/${p.id}`]); // ✅ ruta existente
   }
-  
-  
 }
