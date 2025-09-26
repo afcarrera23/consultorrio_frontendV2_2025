@@ -1,0 +1,50 @@
+<div class="hoja">
+    <!-- Encabezado propio de la hoja -->
+    <div class="brand">Consultorio Médico Las Lunas</div>
+  
+    <h1>Fórmula médica</h1>
+  
+    <div class="meta">
+      <div>
+        <b>Paciente:</b> {{ data?.pacienteNombre }} {{ data?.pacienteApellido }}
+      </div>
+      <div *ngIf="data?.pacienteDocumento">
+        <b>Documento:</b> {{ data?.pacienteDocumento }}
+      </div>
+      <div>
+        <b>Fecha:</b> {{ data?.fecha | date: 'short' }}
+      </div>
+    </div>
+  
+    <section *ngIf="data?.medicamentos?.length">
+      <h2>Medicamentos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Dosis</th>
+            <th>Vía</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of data!.medicamentos">
+            <td>{{ m.nombre }}</td>
+            <td>{{ m.dosis || '—' }}</td>
+            <td>{{ m.via || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  
+    <section>
+      <h2>Plan / Observaciones</h2>
+      <div class="box plan">{{ data?.planObservaciones }}</div>
+    </section>
+  
+    <!-- 👇 Botones de acción (solo en pantalla, no en impresión) -->
+    <div class="acciones">
+      <button class="btn-atras" (click)="volverMenu()">← Atrás</button>
+      <button class="btn-imprimir" (click)="reimprimir()">🖨️ Imprimir</button>
+    </div>
+  </div>
+  

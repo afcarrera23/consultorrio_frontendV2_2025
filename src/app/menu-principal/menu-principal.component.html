@@ -1,27 +1,55 @@
 <div class="container">
+  <!-- ===== Buscador ===== -->
   <div class="search-box">
     <div class="form-group">
       <label for="search" class="search-label">Buscar paciente:</label>
     </div>
+
     <div class="form-row">
-      <input type="text" id="search" name="search"   
-             placeholder="Número de identificación o nombre del paciente">
+      <div class="search-input">
+        <input
+          type="text"
+          id="search"
+          name="search"
+          placeholder="Número de identificación o nombre del paciente"
+          [(ngModel)]="searchQuery"
+          (input)="buscarPaciente()"
+          (keyup.enter)="buscarPaciente()"
+        />
+        <!-- Limpiar -->
+        <button
+          *ngIf="searchQuery"
+          type="button"
+          class="clear"
+          (click)="searchQuery=''; buscarPaciente()"
+          aria-label="Limpiar búsqueda"
+          title="Limpiar"
+        >
+          ×
+        </button>
+      </div>
+
       <div class="button-group">
-        <button class="btn-primary" (click)="buscarPaciente()">Buscar</button>
         <button class="btn-secondary" (click)="agregarPaciente()">Agregar paciente</button>
       </div>
     </div>
   </div>
 
+  <!-- ===== Lista ===== -->
   <div class="patient-list">
     <h3>Lista de Pacientes</h3>
-    <table>
+
+    <div *ngIf="!pacientesFiltrados?.length" class="empty-result">
+      No hay resultados para “{{ searchQuery || '' }}”.
+    </div>
+
+    <table *ngIf="pacientesFiltrados?.length">
       <thead>
         <tr>
           <th>Apellido</th>
           <th>Nombre</th>
           <th>Identificación</th>
-          <th>Acciones</th>
+          <th style="width: 220px;">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -30,16 +58,20 @@
           <td>{{ paciente.nombreCompleto }}</td>
           <td>{{ paciente.identificacion }}</td>
           <td>
-            <button class="btn-icon" (click)="editarPaciente(paciente)">
+            <button class="btn-icon" (click)="editarPaciente(paciente)" title="Editar">
               <img src="assets/imagenes/editar.png" alt="Editar" class="icono-editar">
             </button>
-            <button class="btn-icon" (click)="verHistorias(paciente)">
+            <button class="btn-icon" (click)="verHistorias(paciente)" title="Ver historial">
               <img src="assets/imagenes/ver.png" alt="Ver" class="icono-ver">
             </button>
-            <button class="btn-icon" (click)="imprimirReceta(paciente)">
+            <button
+              class="btn-icon"
+              (click)="imprimirReceta(paciente)"
+              [disabled]="loadingImprimirId===paciente.id"
+              title="Imprimir receta">
               <img src="assets/imagenes/imprimir.png" alt="Imprimir" class="icono-ver">
             </button>
-            <button class="btn-icon" (click)="eliminarPaciente()">
+            <button class="btn-icon" (click)="eliminarPaciente()" title="Eliminar">
               <img src="assets/imagenes/eliminar.png" alt="Eliminar" class="icono-ver">
             </button>
           </td>

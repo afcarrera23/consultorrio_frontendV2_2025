@@ -58,4 +58,16 @@ export class AuthService {
     this.medicoLogueado = null;
     localStorage.removeItem(this.STORAGE_KEY);
   }
+
+      // AuthService (añade al final de la clase)
+    getRol(): number {
+      const m = this.getMedicoLogueado();
+      return m?.rol ?? 0;
+    }
+
+    isAdmin(): boolean {
+      // En tu BD el admin es rol = 4
+      return this.getRol() === 4;
+    }
+
 }

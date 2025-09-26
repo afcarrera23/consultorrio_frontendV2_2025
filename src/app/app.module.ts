@@ -20,6 +20,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CancelButtonComponent } from './shared/cancel-button/cancel-button.component';
 import { HistorialMedicoComponent } from './components/historial-medico/historial-medico.component';
+import { PrintFormulaComponent } from './components/print-formula/print-formula.component';
+import { MedicamentoComponent } from './components/components-admin/medicamento/medicamento.component';
+import { MedicoComponent } from './components/components-admin/medico/medico.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +38,10 @@ import { HistorialMedicoComponent } from './components/historial-medico/historia
     ExamenFisicoComponent,
     DiagnosticoComponent,
     CancelButtonComponent,
-    HistorialMedicoComponent
+    HistorialMedicoComponent,
+    PrintFormulaComponent,
+    MedicamentoComponent,
+    MedicoComponent
   ],
   imports: [
     BrowserModule,

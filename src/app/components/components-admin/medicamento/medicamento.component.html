@@ -1,1 +1,83 @@
 <p>medicamento works!</p>
+<div class="wrap">
+    <h2>Gestión de Medicamentos</h2>
+  
+    <!-- Mensajes -->
+    <div *ngIf="errorMsg" class="alert error">{{ errorMsg }}</div>
+    <div *ngIf="successMsg" class="alert success">{{ successMsg }}</div>
+  
+    <!-- Formulario -->
+    <form [formGroup]="form" (ngSubmit)="submit()" class="card">
+      <div class="row">
+        <label for="nombre">Nombre del medicamento</label>
+        <input
+          id="nombre"
+          type="text"
+          formControlName="nombreMedicamento"
+          [class.invalid]="form.controls['nombreMedicamento'].invalid && form.controls['nombreMedicamento'].touched"
+          placeholder="Ej. Paracetamol 500 mg"
+          autocomplete="off"
+        />
+        <small class="hint" *ngIf="form.controls['nombreMedicamento'].hasError('required') && form.controls['nombreMedicamento'].touched">
+          Campo requerido
+        </small>
+        <small class="hint" *ngIf="form.controls['nombreMedicamento'].hasError('maxlength') && form.controls['nombreMedicamento'].touched">
+          Máximo 255 caracteres
+        </small>
+      </div>
+  
+      <div class="actions">
+        <button type="submit" [disabled]="form.invalid || loading">
+          {{ isEditing ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button type="button" class="secondary" (click)="cancelarEdicion()" *ngIf="isEditing">Cancelar</button>
+      </div>
+    </form>
+  
+    <!-- Filtro de búsqueda -->
+    <div class="toolbar">
+      <input
+        type="text"
+        [(ngModel)]="q"
+        (keyup.enter)="buscar()"
+        placeholder="Buscar por nombre"
+      />
+      <button (click)="buscar()">Buscar</button>
+    </div>
+  
+    <!-- Tabla -->
+    <div class="card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:100px">ID</th>
+              <th>Nombre del medicamento</th>
+              <th style="width:220px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of data?.content">
+              <td>{{ m.id }}</td>
+              <td>{{ m.nombreMedicamento }}</td>
+              <td class="actions-cell">
+                <button (click)="editar(m)" [disabled]="loading">Editar</button>
+                <button class="danger" (click)="eliminar(m)" [disabled]="loading">Eliminar</button>
+              </td>
+            </tr>
+            <tr *ngIf="!data || data.content.length === 0">
+              <td colspan="3" class="empty">Sin resultados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  
+      <!-- Paginación -->
+      <div class="pager" *ngIf="data && data.totalPages > 1">
+        <button (click)="anterior()" [disabled]="page === 0 || loading">Anterior</button>
+        <span>Página {{ (data?.number ?? 0) + 1 }} de {{ data?.totalPages }}</span>
+        <button (click)="siguiente()" [disabled]="!data || page >= data.totalPages - 1 || loading">Siguiente</button>
+      </div>
+    </div>
+  </div>
+  

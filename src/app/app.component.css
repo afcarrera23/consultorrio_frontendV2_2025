@@ -1,0 +1,8 @@
+@media print {
+    header,           /* tu header */
+    .btn-logout,      /* botón cerrar sesión */
+    app-header {      /* si tu header es un componente */
+      display: none !important;
+    }
+  }
+  

@@ -8,6 +8,7 @@ import { PacienteListadoDTO, PacienteRegistroDTO } from '../models/paciente.mode
 // Manejo de flujo y estado temporal
 import { HistoriaFlowService } from '../services/historia-flow.service';
 import { RegistroTempService } from '../services/registro-temporal';
+import { FormulaMedica, PrintService } from '../services/print-service';
 
 @Component({
   selector: 'app-menu-principal',
@@ -19,6 +20,7 @@ export class MenuPrincipalComponent {
   pacientesFiltrados: PacienteListadoDTO[] = [];
   searchQuery: string = '';
   isPopupVisible: boolean = false;
+  loadingImprimirId: number | null = null;
 
   // si usas environments, cámbialo por environment.apiUrl
   private apiBase = 'http://localhost:8080';
@@ -29,6 +31,7 @@ export class MenuPrincipalComponent {
     private http: HttpClient,
     private flow: HistoriaFlowService,
     private registroTemp: RegistroTempService,
+    private printSvc: PrintService
   ) {}
 
   ngOnInit(): void {
@@ -46,36 +49,57 @@ export class MenuPrincipalComponent {
       .subscribe({
         next: (data) => {
           this.pacientes = data || [];
-          this.pacientesFiltrados = data || [];
+          // al cargar, respeta lo que haya escrito el usuario
+          this.buscarPaciente();
         },
         error: (error) => {
           console.error('Error al obtener pacientes:', error);
+          this.pacientes = [];
+          this.pacientesFiltrados = [];
         }
       });
   }
 
+  /** Normaliza: quita acentos, minúsculas, recorta */
+  private normalize(v: any): string {
+    return String(v ?? '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().trim();
+  }
+
+  /** Filtra en vivo por nombre, apellido o identificación (multi-palabra) */
   buscarPaciente(): void {
-    const query = (this.searchQuery || '').trim().toLowerCase();
-    if (!query) {
+    const q = this.normalize(this.searchQuery);
+
+    // sin query => copia completa
+    if (!q) {
       this.pacientesFiltrados = this.pacientes.slice();
       return;
     }
-    this.pacientesFiltrados = this.pacientes.filter(p =>
-      (p.nombreCompleto || '').toLowerCase().includes(query) ||
-      (p.apellidoCompleto || '').toLowerCase().includes(query) ||
-      (p.identificacion || '').toLowerCase().includes(query)
-    );
+
+    const tokens = q.split(/\s+/).filter(Boolean);
+
+    this.pacientesFiltrados = this.pacientes.filter(p => {
+      const nombre   = this.normalize(p?.nombreCompleto);
+      const apellido = this.normalize(p?.apellidoCompleto);
+      const ident    = this.normalize(p?.identificacion);
+
+      // cada token debe existir en alguno de los campos
+      return tokens.every(t =>
+        nombre.includes(t) || apellido.includes(t) || ident.includes(t)
+      );
+    });
   }
 
   /** =========== Flujo: Paciente nuevo =========== */
   agregarPaciente(): void {
     // 1) inicializa el flujo como NUEVO PACIENTE
     const medico = this.authService.getMedicoLogueado();
-    const usuarioId = Number(medico?.id || medico?.usuarioId || 0); // ajusta según tu AuthService
+    const usuarioId = Number(medico?.id || medico?.usuarioId || 0);
     this.flow.initNew(usuarioId);
 
     // 2) limpia cualquier rastro previo en el registro temporal
-    this.registroTemp.limpiarPaciente();   // ← sin optional chaining
+    this.registroTemp.limpiarPaciente();
 
     // 3) navega al registro del paciente (primer paso del flujo)
     this.router.navigate(['/registro-paciente']);
@@ -102,7 +126,7 @@ export class MenuPrincipalComponent {
       const usuarioId = Number(medico?.id || medico?.usuarioId || 0);
       this.flow.initExisting(detalle.id, usuarioId, detalle);
 
-      // 4) limpiar borradores previos (SIN pasar undefined a setters)
+      // 4) limpiar borradores previos
       this.registroTemp.resetDrafts();
 
       // 5) navega al primer paso del flujo de historia clínica
@@ -114,15 +138,10 @@ export class MenuPrincipalComponent {
     }
   }
 
-  /** =========== Otras acciones (pendientes de implementar) =========== */
+  /** =========== Otras acciones =========== */
   verPaciente(p: PacienteListadoDTO): void {
-    // Vista de solo lectura (opcional)
-    // this.router.navigate([`/paciente/${p.id}`]);
     console.log('Ver paciente', p);
-  }
-
-  imprimirReceta(p: PacienteListadoDTO): void {
-    console.log('Imprimir receta de', p);
+    // this.router.navigate([`/paciente/${p.id}`]);
   }
 
   eliminarPaciente(): void {
@@ -138,6 +157,29 @@ export class MenuPrincipalComponent {
   }
 
   verHistorias(p: PacienteListadoDTO) {
-    this.router.navigate([`/historial-medico/${p.id}`]); // ✅ ruta existente
+    this.router.navigate([`/historial-medico/${p.id}`]);
   }
+
+  /**
+   * Imprime la fórmula médica del paciente mostrando al menos Plan/Observaciones.
+   * Intenta traer la última fórmula/plan desde backend y, si no hay,
+   * imprime un mínimo con encabezado del paciente y fecha actual.
+   */
+  async imprimirReceta(p: PacienteListadoDTO): Promise<void> {
+    if (!p?.id) return;
+    this.loadingImprimirId = p.id;
+    try {
+      await this.printSvc.printFromEndpoint(p.id, {
+        nombre: p.nombreCompleto,
+        apellido: p.apellidoCompleto,
+        doc: p.identificacion
+      });
+    } catch (e) {
+      console.error('Error al preparar impresión:', e);
+      alert('No fue posible preparar la impresión.');
+    } finally {
+      this.loadingImprimirId = null;
+    }
+  }
+  
 }

@@ -1,2 +1,8 @@
-<app-header></app-header>
-<router-outlet></router-outlet>
+<!-- Usa aquí tu componente/header real, por ejemplo <app-header> -->
+    <div *ngIf="!noHeader">
+        <!-- header + botón Cerrar sesión -->
+        <app-header></app-header>
+      </div>
+      
+      <router-outlet></router-outlet>
+      
