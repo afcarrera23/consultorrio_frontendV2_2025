@@ -1,0 +1,135 @@
+:host { display: block; }
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.header-actions { display: flex; gap: 8px; }
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.row { display: flex; flex-direction: column; gap: 6px; }
+
+label { font-size: 0.9rem; color: #374151; }
+
+input[type="text"], input[type="password"], input[type="number"], input[type="file"] {
+  height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 12px;
+  outline: none;
+  background: #fff;
+}
+
+input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+.hint { color: #6b7280; font-size: 0.78rem; }
+
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+
+button {
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+}
+button.secondary { background: #6b7280; }
+button.danger { background: #dc2626; }
+button[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.toggle { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+
+.table-responsive { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  border-bottom: 1px solid #f3f4f6;
+  padding: 10px 8px;
+  text-align: left;
+}
+th {
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+}
+.actions-cell { display: flex; gap: 8px; }
+.empty { text-align: center; color: #6b7280; padding: 18px 0; }
+
+.pager {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.firma-preview img {
+  max-height: 70px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px;
+  background: #fff;
+}
+
+.firma-cell {
+  max-height: 40px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* styles.css global */
+.btn-link {
+  margin-left: auto;
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.btn-link:hover {
+  filter: brightness(0.95);
+}
+

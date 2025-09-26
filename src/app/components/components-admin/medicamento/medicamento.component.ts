@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MedicamentoDTO, MedicamentoService, Page } from 'src/app/services/medicamento-service';
 
 @Component({
@@ -20,7 +21,9 @@ export class MedicamentoComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
 
-  constructor(private fb: FormBuilder, private service: MedicamentoService) {}
+  constructor(private fb: FormBuilder, 
+              private service: MedicamentoService,
+              private router: Router) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -149,5 +152,9 @@ export class MedicamentoComponent implements OnInit {
 
   get isEditing(): boolean {
     return this.editId != null;
+  }
+
+  irAMedicos(): void {
+    this.router.navigate(['/admin/medico']);  // 👈 coincide con tu AppRoutingModule
   }
 }

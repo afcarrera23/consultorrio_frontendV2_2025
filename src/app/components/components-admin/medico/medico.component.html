@@ -1,1 +1,145 @@
-<p>medico works!</p>
+<div class="wrap">
+    <div class="header">
+      <h2>Gestión de Usuarios (Médicos)</h2>
+
+      <button class="btn-link" (click)="irAMedicamentos()">Agregar medicamento</button>
+      <div class="header-actions">
+        <button class="secondary" (click)="cancelarEdicion()" *ngIf="isEditing">Cancelar</button>
+      </div>
+    </div>
+  
+    <!-- Mensajes -->
+    <div *ngIf="errorMsg" class="alert error">{{ errorMsg }}</div>
+    <div *ngIf="successMsg" class="alert success">{{ successMsg }}</div>
+  
+    <!-- Formulario -->
+    <form [formGroup]="form" (ngSubmit)="submit()" class="card">
+      <div class="grid">
+        <div class="row">
+          <label for="usuario">Usuario</label>
+          <input id="usuario" type="text" formControlName="nombreUsuario" placeholder="usuario.sistema" />
+        </div>
+  
+        <div class="row">
+          <label for="pass">Contraseña</label>
+          <input id="pass" type="password" formControlName="contrasena" placeholder="••••••••" />
+        </div>
+  
+        <div class="row">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" type="text" formControlName="nombreMedico" placeholder="Juan" />
+        </div>
+  
+        <div class="row">
+          <label for="apellido">Apellido</label>
+          <input id="apellido" type="text" formControlName="apellidoMedico" placeholder="Pérez" />
+        </div>
+  
+        <div class="row">
+          <label for="rol">Rol</label>
+          <input id="rol" type="number" formControlName="rol" min="1" max="4" />
+          <small class="hint">Admin = 4</small>
+        </div>
+  
+        <div class="row">
+          <label for="desc1">Descripción médica 1</label>
+          <input id="desc1" type="text" formControlName="descripcionMedicaUno" placeholder="Ej. Médico general" />
+        </div>
+  
+        <div class="row">
+          <label for="desc2">Descripción médica 2</label>
+          <input id="desc2" type="text" formControlName="descripcionMedicaDos" placeholder="Ej. APS, atención primaria" />
+        </div>
+  
+        <div class="row">
+          <label for="regMed">Registro médico</label>
+          <input id="regMed" type="text" formControlName="registroMedico" placeholder="RM 123456" />
+        </div>
+  
+        <div class="row">
+          <label for="firma">Firma del médico (PNG/JPG)</label>
+          <input id="firma" type="file" accept="image/*" (change)="onFirmaChange($event)" />
+          <small class="hint">La firma se guardará como imagen en el servidor.</small>
+          <div class="firma-preview" *ngIf="firmaPreview">
+            <img [src]="firmaPreview" alt="Vista previa de firma" />
+          </div>
+        </div>
+      </div>
+  
+      <div class="actions">
+        <button type="submit" [disabled]="form.invalid || loading">
+          {{ isEditing ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button type="button" class="secondary" (click)="cancelarEdicion()" *ngIf="isEditing">Cancelar</button>
+      </div>
+    </form>
+  
+    <!-- Filtro -->
+    <div class="toolbar">
+      <input
+        type="text"
+        [(ngModel)]="q"
+        (keyup.enter)="buscar()"
+        placeholder="Buscar (usuario/nombre/apellido)"
+      />
+      <button (click)="buscar()">Buscar</button>
+  
+      <label class="toggle">
+        <input type="checkbox" (change)="togglePasswords()" />
+        <span>Mostrar contraseñas</span>
+      </label>
+    </div>
+  
+    <!-- Tabla -->
+    <div class="card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:80px">ID</th>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th style="width:80px">Rol</th>
+              <th>Desc. 1</th>
+              <th>Desc. 2</th>
+              <th>Reg. médico</th>
+              <th>Contraseña</th>
+              <th style="width:220px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of data?.content">
+              <td>{{ u.id }}</td>
+              <td>{{ u.nombreUsuario }}</td>
+              <td>{{ u.nombreMedico }}</td>
+              <td>{{ u.apellidoMedico }}</td>
+              <td>{{ u.rol }}</td>
+              <td>{{ u.descripcionMedicaUno }}</td>
+              <td>{{ u.descripcionMedicaDos }}</td>
+              <td>{{ u.registroMedico }}</td>
+              <td>
+                <span *ngIf="showPasswords; else masked">{{ u.contrasena }}</span>
+                <ng-template #masked>••••••••</ng-template>
+              </td>
+              <td class="actions-cell">
+                <button (click)="editar(u)" [disabled]="loading">Editar</button>
+                <button class="danger" (click)="eliminar(u)" [disabled]="loading">Eliminar</button>
+              </td>
+            </tr>
+            <tr *ngIf="!data || data.content.length === 0">
+              <td colspan="11" class="empty">Sin resultados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  
+      <!-- Paginación -->
+      <div class="pager" *ngIf="data && data.totalPages > 1">
+        <button (click)="anterior()" [disabled]="page === 0 || loading">Anterior</button>
+        <span>Página {{ (data?.number ?? 0) + 1 }} de {{ data?.totalPages }}</span>
+        <button (click)="siguiente()" [disabled]="!data || page >= data.totalPages - 1 || loading">Siguiente</button>
+      </div>
+    </div>
+  </div>
+  

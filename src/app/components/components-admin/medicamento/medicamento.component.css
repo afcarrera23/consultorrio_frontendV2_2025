@@ -149,3 +149,24 @@
     padding-top: 12px;
   }
   
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  
+  .btn-link {
+    height: 38px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .btn-link:hover { filter: brightness(0.95); }
+  

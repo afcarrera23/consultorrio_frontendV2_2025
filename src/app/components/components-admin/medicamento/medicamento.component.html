@@ -1,6 +1,10 @@
-<p>medicamento works!</p>
 <div class="wrap">
+  <div class="header">
     <h2>Gestión de Medicamentos</h2>
+    <button class="btn-link" (click)="irAMedicos()">Agregar médico</button>
+  </div>
+  
+  
   
     <!-- Mensajes -->
     <div *ngIf="errorMsg" class="alert error">{{ errorMsg }}</div>
