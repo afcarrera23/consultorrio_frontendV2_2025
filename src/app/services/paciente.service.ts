@@ -107,4 +107,10 @@ export class PacienteService {
   eliminarPaciente(id: number) {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  existeIdentificacion(ident: string) {
+    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/existe`, {
+      params: { identificacion: ident.trim() }
+    });
+  }
 }

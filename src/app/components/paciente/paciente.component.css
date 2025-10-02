@@ -95,4 +95,10 @@
 .btn-cancel:hover:enabled {
   background-color: #940303;
 }
+
+.error {
+  color: #dc3545; /* rojo Bootstrap */
+  font-size: 0.9em;
+}
+
   

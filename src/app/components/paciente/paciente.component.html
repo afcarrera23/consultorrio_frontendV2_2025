@@ -19,12 +19,25 @@
 
       <div class="form-group">
         <label for="identificacion">Número de identificación *:</label>
-        <input type="text" id="identificacion" name="identificacion"
-               [(ngModel)]="paciente.identificacion" required>
+        <input type="text"
+               id="identificacion"
+               name="identificacion"
+               [(ngModel)]="paciente.identificacion"
+               required
+               identUnica
+               [ngModelOptions]="{ updateOn: 'blur' }"
+               #identField="ngModel" />
+        <!-- Mensajes -->
+        <small class="error" *ngIf="identField?.errors?.['duplicado']">
+          Ya existe un paciente con esta identificación.
+        </small>
+        <small class="hint" *ngIf="identField?.pending">
+          Validando identificación…
+        </small>
       </div>
     </div>
 
-    <!-- Fila 2: Fecha de nacimiento y edad (solo lectura) -->
+    <!-- Fila 2: Fecha de nacimiento y edad -->
     <div class="form-row">
       <div class="form-group">
         <label for="fechaNacimiento">Fecha de nacimiento *:</label>
@@ -42,13 +55,10 @@
         <input type="number" id="edad" name="edad"
                [value]="edadCalculada ?? ''"
                disabled>
-        <!-- Si prefieres un <span>:
-        <div class="readonly">{{ edadCalculada ?? '—' }}</div>
-        -->
       </div>
     </div>
 
-    <!-- Fila 3: Nombre y género -->
+    <!-- Fila 3: Nombre y apellidos -->
     <div class="form-row">
       <div class="form-group">
         <label for="nombreCompleto">Nombre completo *:</label>
@@ -119,11 +129,15 @@
       <button type="button" 
               class="btn btn-primary"
               (click)="siguientePanelAntecedentes()"
-              [disabled]="!pacienteForm.form.valid || isSubmitting">
-              {{ paciente.id ? 'Continuar' : 'Siguiente' }}
+              [disabled]="!pacienteForm.form.valid 
+                          || identField?.pending 
+                          || identField?.errors?.['duplicado']
+                          || isSubmitting">
+        {{ paciente.id ? 'Continuar' : 'Siguiente' }}
       </button>
     </div>
 
+    <!-- Botón Cancelar -->
     <div class="form-row form-cancel">
       <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
         Cancelar

@@ -23,6 +23,7 @@ import { HistorialMedicoComponent } from './components/historial-medico/historia
 import { PrintFormulaComponent } from './components/print-formula/print-formula.component';
 import { MedicamentoComponent } from './components/components-admin/medicamento/medicamento.component';
 import { MedicoComponent } from './components/components-admin/medico/medico.component';
+import { IdentUnicaDirective } from './validators/ident-unica.directive';
 
 @NgModule({
   declarations: [
@@ -41,7 +42,8 @@ import { MedicoComponent } from './components/components-admin/medico/medico.com
     HistorialMedicoComponent,
     PrintFormulaComponent,
     MedicamentoComponent,
-    MedicoComponent
+    MedicoComponent,
+    IdentUnicaDirective
   ],
   imports: [
     BrowserModule,
