@@ -11,15 +11,13 @@ import { PacienteService } from '../../services/paciente.service';
 import { CodigoDiagnosticoService } from 'src/app/services/codigo-diagnostico.service';
 import { RegistroTempService } from 'src/app/services/registro-temporal';
 import { HistoriaFlowService } from 'src/app/services/historia-flow.service';
-// ⬇️ Ajusta esta ruta/nombre si tu archivo se llama diferente:
-
+import { HistoriaMedicaService } from 'src/app/services/historia-medica-service';
 
 type DiagnosticoFila = {
   codigoDiagnosticoId?: number;
   codigo?: string;
   descripcion?: string;
 };
-import { HistoriaMedicaService } from 'src/app/services/historia-medica-service';
 
 @Component({
   selector: 'app-diagnostico',
@@ -32,14 +30,10 @@ export class DiagnosticoComponent implements OnInit {
 
   // filas de diagnósticos
   diagnosticos: DiagnosticoFila[] = [{}];
-  // controles por fila (para mostrar el texto tipeado)
   diagControls: FormControl[] = [new FormControl('')];
-  // resultados filtrados por fila
   diagFiltrados: CodigoDiagnostico[][] = [[]];
-  // dropdown abierto por fila
   diagMenuOpen: boolean[] = [false];
 
-  // catálogo completo
   catalogoDiagnosticos: CodigoDiagnostico[] = [];
 
   // medicamentos
@@ -51,6 +45,7 @@ export class DiagnosticoComponent implements OnInit {
 
   /** Estado del popup */
   isPopupOpen = false;
+  isSubmitting = false; // ⬅️ NUEVO
 
   constructor(
     private route: ActivatedRoute,
@@ -66,11 +61,11 @@ export class DiagnosticoComponent implements OnInit {
     // lee :pacienteId de la URL
     this.pacienteId = Number(this.route.snapshot.paramMap.get('pacienteId')) || 0;
 
-    // 1) Cargar catálogo (luego hidrataremos las filas con él)
+    // 1) Cargar catálogo
     this.codigoService.getCodigosDiagnostico().subscribe({
       next: (data) => {
         this.catalogoDiagnosticos = data || [];
-        this.hidratarFilasConCatalogo(); // por si ya hay draft
+        this.hidratarFilasConCatalogo();
       },
       error: (err) => console.error('Error al cargar códigos', err)
     });
@@ -79,7 +74,6 @@ export class DiagnosticoComponent implements OnInit {
     const paciente = this.registroTemp.obtenerPaciente();
     if (!paciente || paciente.id !== this.pacienteId) {
       console.warn('⚠ Paciente no encontrado/discordante con la URL.');
-      // No forzamos redirección para permitir volver atrás con el botón propio
     } else {
       this.usuarioId = paciente.usuarioRegistroId ?? this.usuarioId;
     }
@@ -87,26 +81,22 @@ export class DiagnosticoComponent implements OnInit {
     // 3) Precargar draft de diagnóstico (si lo hay)
     const draft = this.registroTemp.getDraftDiagnosticos();
     if (draft && draft.length) {
-      // Usa plan/tipo/meds del primer item (la UI los maneja como cabecera)
       this.plan = draft[0].plan ?? '';
       this.tipoDiagnostico = draft[0].tipoDiagnostico ?? 1;
       this.medicamentos = (draft[0].medicamentos && draft[0].medicamentos.length)
         ? [...draft[0].medicamentos]
         : [this.nuevoMedicamento()];
 
-      // Reconstruye filas sólo con los ids; luego, al tener el catálogo, ponemos codigo/descripcion
       this.diagnosticos = draft.map(d => ({ codigoDiagnosticoId: d.codigoDiagnosticoId }));
-      // Asegura arrays auxiliares del mismo tamaño
       this.diagControls = this.diagnosticos.map(() => new FormControl(''));
       this.diagFiltrados = this.diagnosticos.map(() => []);
       this.diagMenuOpen = this.diagnosticos.map(() => false);
 
-      // Si el catálogo ya está, hidrata ahora; si no, ocurrirá en el subscribe de arriba
       this.hidratarFilasConCatalogo();
     }
   }
 
-  /** Rellena código/descripcion y el texto visible del input desde el catálogo, según el ID */
+  /** Rellena código/descripcion en inputs desde el catálogo */
   private hidratarFilasConCatalogo() {
     if (!this.catalogoDiagnosticos?.length || !this.diagnosticos?.length) return;
 
@@ -116,14 +106,12 @@ export class DiagnosticoComponent implements OnInit {
       if (found) {
         f.codigo = found.codigo;
         f.descripcion = found.descripcion;
-        // muestra en el input
         if (!this.diagControls[i]) this.diagControls[i] = new FormControl('');
         this.diagControls[i].setValue(`${found.codigo} - ${found.descripcion}`, { emitEvent: false });
       }
     });
   }
 
-  // Cierre global del dropdown al hacer click fuera
   @HostListener('document:click', ['$event'])
   closeMenusOnOutsideClick(ev: any) {
     if (!ev?.target?.closest?.('.autocomplete')) {
@@ -131,7 +119,6 @@ export class DiagnosticoComponent implements OnInit {
     }
   }
 
-  // === util ===
   private nuevoMedicamento(): DiagnosticoMedicamento {
     return {
       nombreMedicamentoManual: '',
@@ -175,7 +162,6 @@ export class DiagnosticoComponent implements OnInit {
       codigo: sel.codigo,
       descripcion: sel.descripcion
     };
-    // lo mostramos en el input
     this.diagControls[i].setValue(`${sel.codigo} - ${sel.descripcion}`, { emitEvent: false });
     this.diagMenuOpen[i] = false;
   }
@@ -205,8 +191,7 @@ export class DiagnosticoComponent implements OnInit {
     if (this.medicamentos.length === 0) this.addMedicamento();
   }
 
-  // === helpers de navegación/draft ===
-  /** Convierte el estado de la UI al draft que guarda el servicio */
+  /** Convierte UI → draft para RegistroTempService */
   private construirDraftDesdeUI(): DiagnosticoItem[] {
     const nowISO = new Date().toISOString();
     const usuario = this.usuarioId || 0;
@@ -225,7 +210,6 @@ export class DiagnosticoComponent implements OnInit {
       }));
   }
 
-  /** Guarda el draft actual en el RegistroTempService */
   private guardarDraftActual() {
     const draft = this.construirDraftDesdeUI();
     this.registroTemp.setDraftDiagnosticos(draft);
@@ -307,14 +291,36 @@ export class DiagnosticoComponent implements OnInit {
   /** ==== Popup cancelar ==== */
   abrirPopupCancelar() { this.isPopupOpen = true; }
   cerrarPopup() { this.isPopupOpen = false; }
+
   confirmarSalida() {
     this.isPopupOpen = false;
-    this.router.navigate(['/menu-principal']);
-    this.registroTemp.limpiarPaciente();
+
+    const id = this.registroTemp.obtenerIdPaciente();
+    const fueCreado = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+
+    if (fueCreado && id) {
+      this.isSubmitting = true;
+      this.pacienteService.eliminarPaciente(id).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(['/menu-principal']);
+        },
+        error: (err) => {
+          console.error('❌ No se pudo eliminar el paciente creado al cancelar:', err);
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(['/menu-principal']);
+        }
+      });
+    } else {
+      this.registroTemp.limpiarPaciente();
+      this.router.navigate(['/menu-principal']);
+    }
   }
+
   cancelar() { this.abrirPopupCancelar(); }
 
-  /** UX extra: tecla ESC cierra el popup */
   @HostListener('document:keydown.escape')
   onEsc() { if (this.isPopupOpen) this.cerrarPopup(); }
 }

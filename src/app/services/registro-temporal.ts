@@ -5,10 +5,16 @@ import { AntecedentePersonalDTO } from '../models/antecedente-personal.model';
 import { ExamenFisicoDTO } from '../models/examen-fisico.model';
 import { DiagnosticoItem } from '../models/diagnostico.model';
 
+// Tipo auxiliar para permitir id y createdInThisFlow sin tocar tu DTO
+type PacienteRegistroDTOExt = PacienteRegistroDTO & {
+  id?: number;
+  createdInThisFlow?: boolean;
+};
+
 @Injectable({ providedIn: 'root' })
 export class RegistroTempService {
   /* ================== Estado principal (historial) ================== */
-  paciente: PacienteRegistroDTO | null = null;
+  paciente: PacienteRegistroDTOExt | null = null;
   antecedentes: AntecedentePatologicoDTO[] = [];
   antecedentePersonal: AntecedentePersonalDTO[] = [];
   examenesFisicos: ExamenFisicoDTO[] = [];
@@ -33,16 +39,16 @@ export class RegistroTempService {
   private DRAFT_DIAG_KEY    = 'draftDiagnosticos';
 
   /* ================== PACIENTE ================== */
-  guardarPaciente(paciente: PacienteRegistroDTO) {
+  guardarPaciente(paciente: PacienteRegistroDTOExt) {
+    // Guardamos todo el objeto, incluida la marca createdInThisFlow si existe
     this.paciente = { ...paciente };
 
-    // Propaga pacienteId a antecedentes existentes
+    // Propagar pacienteId a colecciones ya guardadas
     if (this.antecedentes.length > 0) {
       const pid = paciente.id ?? 0;
       this.antecedentes = this.antecedentes.map(a => ({ ...a, pacienteId: pid }));
     }
 
-    // Propaga pacienteId a drafts (si existen)
     const pid = paciente.id ?? 0;
     if (this.draftAntPatologico) this.draftAntPatologico.pacienteId = pid;
     if (this.draftAntPersonal)   this.draftAntPersonal.pacienteId   = pid;
@@ -50,14 +56,14 @@ export class RegistroTempService {
 
     localStorage.setItem(this.KEY_PACIENTE, JSON.stringify(this.paciente));
 
-    // Persiste drafts si existen (para reloads o navegación)
+    // Persistir drafts si existen
     if (this.draftAntPatologico) localStorage.setItem(this.DRAFT_ANT_PAT_KEY, JSON.stringify(this.draftAntPatologico));
     if (this.draftAntPersonal)   localStorage.setItem(this.DRAFT_ANT_PER_KEY, JSON.stringify(this.draftAntPersonal));
     if (this.draftExamenFisico)  localStorage.setItem(this.DRAFT_EXA_FIS_KEY, JSON.stringify(this.draftExamenFisico));
     if (this.draftDiagnosticos)  localStorage.setItem(this.DRAFT_DIAG_KEY, JSON.stringify(this.draftDiagnosticos));
   }
 
-  obtenerPaciente(): PacienteRegistroDTO | null {
+  obtenerPaciente(): PacienteRegistroDTOExt | null {
     if (!this.paciente) {
       const data = localStorage.getItem(this.KEY_PACIENTE);
       if (data) this.paciente = JSON.parse(data);
@@ -65,10 +71,20 @@ export class RegistroTempService {
     return this.paciente ? { ...this.paciente } : null;
   }
 
+  /** Helpers para cancelar correctamente */
+  tienePacienteCreadoEnEsteFlujo(): boolean {
+    const p = this.obtenerPaciente();
+    return !!(p && p.createdInThisFlow && p.id);
+  }
+
+  obtenerIdPaciente(): number | null {
+    const p = this.obtenerPaciente();
+    return p?.id ?? null;
+  }
+
   /* ================== ANTECEDENTE PATOLÓGICO ================== */
-  // Draft (para precargar el formulario al volver)
   setDraftAntecedentePatologico(a?: AntecedentePatologicoDTO | null) {
-    if (!a) { // si viene undefined/null → limpiar
+    if (!a) {
       this.draftAntPatologico = undefined;
       localStorage.removeItem(this.DRAFT_ANT_PAT_KEY);
       return;
@@ -86,12 +102,10 @@ export class RegistroTempService {
     return this.draftAntPatologico ? { ...this.draftAntPatologico } : undefined;
   }
 
-  // Historial (si quieres guardar versiones sucesivas)
   guardarAntecedente(antecedente: AntecedentePatologicoDTO) {
     antecedente.pacienteId = this.paciente?.id ?? 0;
     this.antecedentes.push({ ...antecedente });
     localStorage.setItem(this.KEY_ANT_PAT, JSON.stringify(this.antecedentes));
-    // sincroniza draft con el último
     this.setDraftAntecedentePatologico(antecedente);
   }
 
@@ -195,7 +209,6 @@ export class RegistroTempService {
   guardarDiagnosticoTemp(item: DiagnosticoItem) {
     this.diagnosticos.push({ ...item });
     localStorage.setItem(this.KEY_DIAG, JSON.stringify(this.diagnosticos));
-    // opcional: sincroniza draft con todo el arreglo
     this.setDraftDiagnosticos(this.diagnosticos);
   }
 
@@ -233,7 +246,7 @@ export class RegistroTempService {
   }
 
   // Alias cómodo (mantener compatibilidad con llamadas existentes)
-  setPaciente(paciente: PacienteRegistroDTO) {
+  setPaciente(paciente: PacienteRegistroDTOExt) {
     this.guardarPaciente(paciente);
   }
 

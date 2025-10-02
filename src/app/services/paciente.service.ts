@@ -103,4 +103,8 @@ export class PacienteService {
   getById(id: number): Observable<PacienteDTO> {
     return this.http.get<PacienteDTO>(`${this.apiUrl}/${id}`);
   }
+
+  eliminarPaciente(id: number) {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

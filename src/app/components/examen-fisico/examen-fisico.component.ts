@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { PacienteRegistroDTO } from "src/app/models/paciente.model";
 import { ExamenFisicoDTO } from "src/app/models/examen-fisico.model";
 import { RegistroTempService } from "src/app/services/registro-temporal";
+import { PacienteService } from "src/app/services/paciente.service"; // ⬅️ NUEVO
 
 @Component({
   selector: "app-examen-fisico",
@@ -43,6 +44,7 @@ export class ExamenFisicoComponent implements OnInit {
 
   /** Estado del popup */
   isPopupOpen = false;
+  isSubmitting = false; // ⬅️ NUEVO
 
   // Campos que default = "Normal"
   private readonly camposNormal: Array<keyof ExamenFisicoDTO> = [
@@ -62,7 +64,8 @@ export class ExamenFisicoComponent implements OnInit {
   constructor(
     private registroTemp: RegistroTempService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pacienteService: PacienteService // ⬅️ NUEVO
   ) {}
 
   ngOnInit(): void {
@@ -93,7 +96,7 @@ export class ExamenFisicoComponent implements OnInit {
     let talla = this.examenFisico.talla || 0;
 
     if (peso > 0 && talla > 0) {
-      talla = talla / 100; // convertir cm a m
+      talla = talla / 100; // cm → m
       this.examenFisico.imc = +(peso / (talla * talla)).toFixed(2);
     } else {
       this.examenFisico.imc = 0;
@@ -113,12 +116,7 @@ export class ExamenFisicoComponent implements OnInit {
       usuarioId: this.paciente.usuarioRegistroId,
     });
 
-    // ✅ Guardar como DRAFT (usado por Diagnóstico)
     this.registroTemp.setDraftExamenFisico(examenParaGuardar);
-
-    // (opcional) también puedes persistir en historial:
-    // this.registroTemp.guardarExamenFisico(examenParaGuardar);
-
     this.router.navigate([`/diagnostico/${this.paciente.id}`]);
   }
 
@@ -147,10 +145,32 @@ export class ExamenFisicoComponent implements OnInit {
   /* ===== Popup cancelar ===== */
   abrirPopupCancelar() { this.isPopupOpen = true; }
   cerrarPopup() { this.isPopupOpen = false; }
+
   confirmarSalida() {
     this.isPopupOpen = false;
-    this.router.navigate(["/menu-principal"]);
-    this.registroTemp.limpiarPaciente();
+
+    const id = this.registroTemp.obtenerIdPaciente();
+    const fueCreado = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+
+    if (fueCreado && id) {
+      this.isSubmitting = true;
+      this.pacienteService.eliminarPaciente(id).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(["/menu-principal"]);
+        },
+        error: (err) => {
+          console.error("❌ No se pudo eliminar el paciente creado al cancelar:", err);
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(["/menu-principal"]);
+        }
+      });
+    } else {
+      this.registroTemp.limpiarPaciente();
+      this.router.navigate(["/menu-principal"]);
+    }
   }
 
   @HostListener("document:keydown.escape")

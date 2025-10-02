@@ -4,6 +4,7 @@ import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { AntecedentePersonalDTO } from 'src/app/models/antecedente-personal.model';
 import { RegistroTempService } from 'src/app/services/registro-temporal';
 import { AuthService } from 'src/app/services/auth.service';
+import { PacienteService } from 'src/app/services/paciente.service'; // ⬅️ NUEVO
 
 @Component({
   selector: 'app-antecedente-personal',
@@ -30,13 +31,14 @@ export class AntecedentePersonalComponent implements OnInit {
   };
 
   isPopupOpen = false;
-  isSubmitting = false;
+  isSubmitting = false; // ⬅️ NUEVO
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private registroTemp: RegistroTempService,
-    private authService: AuthService
+    private authService: AuthService,
+    private pacienteService: PacienteService // ⬅️ NUEVO
   ) {}
 
   ngOnInit(): void {
@@ -57,7 +59,6 @@ export class AntecedentePersonalComponent implements OnInit {
     } else {
       this.antecedentePersonal.pacienteId = this.paciente.id ?? 0;
 
-      // usuarioId desde AuthService si existe, si no desde el paciente
       const medico = this.authService.getMedicoLogueado?.();
       this.antecedentePersonal.usuarioId = medico?.id ?? this.paciente.usuarioRegistroId ?? 0;
     }
@@ -89,18 +90,12 @@ export class AntecedentePersonalComponent implements OnInit {
       alert("❌ Error: No se encontró el paciente.");
       return;
     }
-    // Guarda SIEMPRE el draft antes de navegar
     this.registroTemp.setDraftAntecedentePersonal(this.antecedentePersonal);
-
-    // (Opcional) si quieres mantener historial:
-    // this.registroTemp.guardarAntecedentePersonal(this.antecedentePersonal);
-
     this.router.navigate([`/examen-fisico/${this.paciente.id}`]);
   }
 
   /** Atrás → Antecedente Patológico */
   atras(): void {
-    // Guarda el draft antes de volver
     this.registroTemp.setDraftAntecedentePersonal(this.antecedentePersonal);
     this.router.navigate([`/antecedente-patologico/${this.paciente?.id}`]);
   }
@@ -108,10 +103,32 @@ export class AntecedentePersonalComponent implements OnInit {
   /* ===== Popup cancelar ===== */
   abrirPopupCancelar() { this.isPopupOpen = true; }
   cerrarPopup() { this.isPopupOpen = false; }
+
   confirmarSalida() {
     this.isPopupOpen = false;
-    this.router.navigate(['/menu-principal']);
-    this.registroTemp.limpiarPaciente();
+
+    const id = this.registroTemp.obtenerIdPaciente();
+    const fueCreado = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+
+    if (fueCreado && id) {
+      this.isSubmitting = true;
+      this.pacienteService.eliminarPaciente(id).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(['/menu-principal']);
+        },
+        error: (err) => {
+          console.error('❌ No se pudo eliminar el paciente creado al cancelar:', err);
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(['/menu-principal']);
+        }
+      });
+    } else {
+      this.registroTemp.limpiarPaciente();
+      this.router.navigate(['/menu-principal']);
+    }
   }
 
   /* UX extra: tecla ESC cierra el popup */

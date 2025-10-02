@@ -7,6 +7,13 @@ type HistoriaDet = {
   usuarioNombre?: string;
   motivoConsulta?: string;
 
+  profesional?: {
+    nombre?: string;
+    registro?: string;              // (legacy del back)
+    numeroRegistroMedico?: string;  // (nuevo, preferido)
+    especialidad?: string;
+  };
+
   antecedentesPatologicos?: Array<{
     motivoConsulta?: string;
     enfermedadActual?: string;
@@ -227,10 +234,10 @@ function keyValue(
   return cursorY;
 }
 
-
 export function exportarHistorialPDF(
   paciente: PacienteInfo | undefined,
-  historias: Array<{ id: number|string; fecha: string|Date; usuarioNombre?: string; motivoConsulta?: string; detalle?: HistoriaDet }>
+  historias: Array<{ id: number|string; fecha: string|Date; usuarioNombre?: string; motivoConsulta?: string; detalle?: HistoriaDet }>,
+  medico?: { nombre?: string; numeroRegistroMedico?: string; registro?: string } // 👈
 ) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
 
@@ -414,17 +421,26 @@ export function exportarHistorialPDF(
       });
     }
 
-    // ===== Meta final de la historia: Fecha registro + Usuario (nombre y apellido)
     cursorY += 4;
-    cursorY = keyValue(doc, "Fecha registro", fmtDate(h.fecha), cursorY, paciente);
-    cursorY = keyValue(doc, "Registro", fmt(h.usuarioNombre), cursorY, paciente);
+cursorY = keyValue(doc, "Fecha registro", fmtDate(h.fecha), cursorY, paciente);
 
-    // Separador entre historias
-    cursorY += 4;
-    doc.setDrawColor(220);
-    const w = doc.internal.pageSize.getWidth();
-    doc.line(MARG.left, cursorY, w - MARG.right, cursorY);
-    cursorY += 10;
+// Nombre del médico
+const medicoNombre =
+  medico?.nombre
+  ?? h.detalle?.profesional?.nombre
+  ?? h.usuarioNombre
+  ?? "";
+cursorY = keyValue(doc, "Médico", (medicoNombre?.toString().trim() || "—"), cursorY, paciente);
+
+// Número de registro médico (nuevo nombre + fallbacks)
+const medicoRegistroRaw =
+  (medico as any)?.numeroRegistroMedico
+  ?? (h.detalle?.profesional as any)?.numeroRegistroMedico
+  ?? (h as any)?.numeroRegistroMedico
+  ?? (h.detalle as any)?.numeroRegistroMedico
+  ?? (medico as any)?.registro
+  ?? (h.detalle?.profesional as any)?.registro;    
+
   });
 
   addFooter(doc);

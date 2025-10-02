@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { AntecedentePatologicoDTO } from 'src/app/models/antecedente-patologico.model';
 import { RegistroTempService } from 'src/app/services/registro-temporal';
+import { PacienteService } from 'src/app/services/paciente.service'; // ⬅️ NUEVO
 
 @Component({
   selector: 'app-antecedente-patologico',
@@ -41,12 +42,13 @@ export class AntecedentePatologicoComponent implements OnInit {
   };
 
   isPopupOpen = false;
-  isSubmitting = false;
+  isSubmitting = false; // ⬅️ NUEVO para bloquear/mostrar estado
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private registroTemp: RegistroTempService
+    private registroTemp: RegistroTempService,
+    private pacienteService: PacienteService // ⬅️ NUEVO
   ) {}
 
   ngOnInit(): void {
@@ -62,7 +64,6 @@ export class AntecedentePatologicoComponent implements OnInit {
     // 1) Precarga desde draft (si existe)
     const draft = this.registroTemp.getDraftAntecedentePatologico();
     if (draft) {
-      // Mezcla draft sobre los defaults para mantener campos nuevos/por defecto
       this.antecedente = { ...this.antecedente, ...draft };
     } else {
       // 2) Inicializa con IDs correctos si no había draft
@@ -76,7 +77,6 @@ export class AntecedentePatologicoComponent implements OnInit {
 
   /** Normaliza a 'YYYY-MM-DDTHH:mm' (lo que espera datetime-local) */
   private toLocalDateTime(value: string): string {
-    // Si ya viene en formato correcto (con minutos), respeta
     if (value && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
     try {
       const d = new Date(value || new Date());
@@ -93,17 +93,11 @@ export class AntecedentePatologicoComponent implements OnInit {
   }
 
   guardarYContinuar(): void {
-    // Guarda SIEMPRE el draft antes de navegar
     this.registroTemp.setDraftAntecedentePatologico(this.antecedente);
-
-    // (Opcional) Si aquí quieres además añadir al "historial":
-    // this.registroTemp.guardarAntecedente(this.antecedente);
-
     this.router.navigate([`/antecedente-personal/${this.paciente?.id}`]);
   }
 
   atras(): void {
-    // Guarda el draft antes de volver
     this.registroTemp.setDraftAntecedentePatologico(this.antecedente);
     this.router.navigate(['/registro-paciente']);
   }
@@ -111,10 +105,34 @@ export class AntecedentePatologicoComponent implements OnInit {
   /* ==== Popup cancelar ==== */
   abrirPopupCancelar() { this.isPopupOpen = true; }
   cerrarPopup() { this.isPopupOpen = false; }
+
   confirmarSalida() {
     this.isPopupOpen = false;
-    this.router.navigate(['/menu-principal']);
-    this.registroTemp.limpiarPaciente();
+
+    const id = this.registroTemp.obtenerIdPaciente();
+    const fueCreado = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+
+    // Si se creó en este flujo, elimina en BD para no dejar rastro
+    if (fueCreado && id) {
+      this.isSubmitting = true;
+      this.pacienteService.eliminarPaciente(id).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(['/menu-principal']);
+        },
+        error: (err) => {
+          console.error('❌ No se pudo eliminar el paciente creado al cancelar:', err);
+          this.isSubmitting = false;
+          this.registroTemp.limpiarPaciente();
+          this.router.navigate(['/menu-principal']);
+        }
+      });
+    } else {
+      // Si no estaba creado en BD, solo limpiar y salir
+      this.registroTemp.limpiarPaciente();
+      this.router.navigate(['/menu-principal']);
+    }
   }
 
   @HostListener('document:keydown.escape')

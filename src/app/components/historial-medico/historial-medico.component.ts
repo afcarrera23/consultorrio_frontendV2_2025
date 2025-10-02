@@ -10,6 +10,7 @@ import { HistoriaDetalleDTO, HistoriaResumenDTO } from 'src/app/models/historia-
 import { PacienteDTO } from 'src/app/interfaces/PacienteDTO';
 import { exportarHistorialPDF } from 'src/app/utils/pdf-historial.util';
 import { esHistoriaVacia } from 'src/app/utils/historia-helpers'; // ⬅️ NUEVO
+import { PrintService } from 'src/app/services/print-service';
 
 type RowState = {
   open: boolean;
@@ -46,7 +47,8 @@ export class HistorialMedicoComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private api: HistoriaLecturaApiService,
-    private pacientes: PacienteService
+    private pacientes: PacienteService,
+    private printSvc: PrintService
   ) {}
 
   ngOnInit(): void {
@@ -203,6 +205,64 @@ export class HistorialMedicoComponent implements OnInit {
     });
   }
 
+  /** Toma el primer profesional válido que aparezca en los detalles cargados */
+/** Toma el primer profesional válido disponible (PrintService → detalles) */
+private pickProfesionalParaPDF():
+  { nombre?: string; numeroRegistroMedico?: string } | undefined {
+
+  // 1) Prioriza lo que dejó la pantalla de Fórmula (si ya se imprimió ahí)
+  const fromPrint = (this.printSvc as any)?.getProfesional?.();
+  if (fromPrint && (fromPrint.numeroRegistroMedico || fromPrint.registro || fromPrint.nombre)) {
+    return {
+      nombre: fromPrint.nombre,
+      numeroRegistroMedico: fromPrint.numeroRegistroMedico ?? fromPrint.registro
+    };
+  }
+
+  // 2) Busca en el detalle de cada historia (varias rutas comunes)
+  for (const h of this.historias) {
+    const det: any = this.rows[h.id]?.detalle;
+    if (!det) continue;
+
+    // Ruta directa (la ideal)
+    const p1 = det?.profesional;
+    const num1 = p1?.numeroRegistroMedico ?? p1?.registro;
+
+    if (p1 && (p1?.nombre || num1)) {
+      return {
+        nombre: p1?.nombre ?? h?.usuarioNombre ?? undefined,
+        numeroRegistroMedico: (num1 ?? det?.numeroRegistroMedico ?? det?.registroMedico) || undefined,
+      };
+    }
+
+    // Algunas APIs lo embeben en el primer diagnóstico
+    const p2 = det?.diagnosticos?.[0]?.profesional;
+    const num2 = p2?.numeroRegistroMedico ?? p2?.registro;
+    if (p2 && (p2?.nombre || num2)) {
+      return {
+        nombre: p2?.nombre ?? h?.usuarioNombre ?? undefined,
+        numeroRegistroMedico: num2 || undefined,
+      };
+    }
+
+    // Fallbacks sueltos en el detalle
+    const num3 = det?.numeroRegistroMedico ?? det?.registroMedico;
+    if (num3) {
+      return {
+        nombre: h?.usuarioNombre ?? undefined,
+        numeroRegistroMedico: num3,
+      };
+    }
+  }
+
+  // 3) Último recurso: al menos el nombre del registrador
+  const first = this.historias[0];
+  if (first?.usuarioNombre) return { nombre: first.usuarioNombre };
+  return undefined;
+}
+
+
+
   /** Devuelve un nombre amigable para un id de usuario */
   userNameById(id?: string | number | null): string {
     if (id === null || id === undefined) return '—';
@@ -259,26 +319,34 @@ export class HistorialMedicoComponent implements OnInit {
         )
       );
 
-    const done = () => {
-      const payload = this.historias.map(h => ({
-        id: h.id,
-        fecha: h.fecha,
-        usuarioNombre: this.nz(h.usuarioNombre),
-        motivoConsulta: this.nz(h.motivoConsulta),
-        detalle: this.toHistoriaDet(this.rows[h.id]?.detalle)
-      }));
-
-      const pacienteInfo = {
-        id: this.pacienteId,
-        nombreCompleto: this.paciente?.nombreCompleto,
-        apellidoCompleto: this.paciente?.apellidoCompleto,
-        identificacion: this.paciente?.identificacion,
-        fechaNacimiento: this.paciente?.fechaNacimiento,
+      const done = () => {
+        const payload = this.historias.map(h => ({
+          id: h.id,
+          fecha: h.fecha,
+          usuarioNombre: this.nz(h.usuarioNombre),
+          motivoConsulta: this.nz(h.motivoConsulta),
+          detalle: this.toHistoriaDet(this.rows[h.id]?.detalle)
+        }));
+      
+        const pacienteInfo = {
+          id: this.pacienteId,
+          nombreCompleto: this.paciente?.nombreCompleto,
+          apellidoCompleto: this.paciente?.apellidoCompleto,
+          identificacion: this.paciente?.identificacion,
+          fechaNacimiento: this.paciente?.fechaNacimiento,
+        };
+      
+        // 👇 NUEVO: profesional para el PDF
+        const medicoParam = this.pickProfesionalParaPDF();
+        // (opcional) log para verificar
+        console.log('Historial — medicoParam enviado al PDF:', medicoParam);
+      
+        // 👇 PÁSALO como 3er argumento
+        exportarHistorialPDF(pacienteInfo, payload, medicoParam);
+      
+        this.exporting = false;
       };
-
-      exportarHistorialPDF(pacienteInfo, payload);
-      this.exporting = false;
-    };
+      
 
     if (!requests.length) { done(); return; }
 

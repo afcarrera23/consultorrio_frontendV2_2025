@@ -71,7 +71,8 @@
               title="Imprimir receta">
               <img src="assets/imagenes/imprimir.png" alt="Imprimir" class="icono-ver">
             </button>
-            <button class="btn-icon" (click)="eliminarPaciente()" title="Eliminar">
+            <!-- Botón de eliminar abre modal -->
+            <button class="btn-icon" (click)="abrirConfirmarEliminar(paciente)" title="Eliminar">
               <img src="assets/imagenes/eliminar.png" alt="Eliminar" class="icono-ver">
             </button>
           </td>
@@ -80,3 +81,21 @@
     </table>
   </div>
 </div>
+
+<!-- Modal de confirmación de eliminación -->
+<ng-container *ngIf="confirmDelete.visible">
+  <app-popup
+    [message]="'¿Eliminar definitivamente al paciente ' 
+                + (confirmDelete.paciente?.nombreCompleto || '') + ' ' 
+                + (confirmDelete.paciente?.apellidoCompleto || '') 
+                + ' (' + (confirmDelete.paciente?.identificacion || '') + ')?'"
+    [confirmText]="confirmDelete.loading ? 'Eliminando…' : 'Sí, eliminar'"
+    [cancelText]="'Cancelar'"
+    (onConfirm)="confirmarEliminar()"
+    (onCancel)="cancelarEliminar()">
+  </app-popup>
+
+  <div *ngIf="confirmDelete.error" class="popup-error">
+    {{ confirmDelete.error }}
+  </div>
+</ng-container>

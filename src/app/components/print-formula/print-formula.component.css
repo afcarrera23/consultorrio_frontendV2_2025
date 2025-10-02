@@ -117,3 +117,24 @@
     }
   }
   
+  .profesional {
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    font-size: 14px;
+  }
+  
+  .firma {
+    margin-top: 15px;
+    text-align: left;
+  }
+  
+  .firma img {
+    max-height: 80px;
+  }
+  
+  .firma-label {
+    font-size: 12px;
+    color: #666;
+  }
+  
