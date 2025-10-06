@@ -24,6 +24,7 @@ import { PrintFormulaComponent } from './components/print-formula/print-formula.
 import { MedicamentoComponent } from './components/components-admin/medicamento/medicamento.component';
 import { MedicoComponent } from './components/components-admin/medico/medico.component';
 import { IdentUnicaDirective } from './validators/ident-unica.directive';
+import { FormulaMedicaFastComponent } from './components/formula-medica-fast/formula-medica-fast.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { IdentUnicaDirective } from './validators/ident-unica.directive';
     PrintFormulaComponent,
     MedicamentoComponent,
     MedicoComponent,
-    IdentUnicaDirective
+    IdentUnicaDirective,
+    FormulaMedicaFastComponent
   ],
   imports: [
     BrowserModule,

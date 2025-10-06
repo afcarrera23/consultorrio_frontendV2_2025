@@ -3,7 +3,7 @@
   <form #pacienteForm="ngForm">
     <p class="form-note">Los campos marcados con asterisco (*) son obligatorios</p>
 
-    <!-- Fila 1: Tipo y número de identificación -->
+    <!-- Fila 1: Tipo de identificación y checkbox -->
     <div class="form-row">
       <div class="form-group">
         <label for="tipoIdentificacion">Tipo de identificación *:</label>
@@ -16,23 +16,44 @@
           <option value="NA">No aplica</option>
         </select>
       </div>
+    
+      <!-- ⬇️ nuevo: misma fila pero con clase de estilo especial -->
+      <div class="form-group form-group--checkbox">
+        <label>
+          <input type="checkbox"
+                 [(ngModel)]="paciente.pendienteDocumento"
+                 name="pendienteDocumento">
+          No conoce el número ahora
+        </label>
+      </div>
+    </div>
+    
 
-      <div class="form-group">
-        <label for="identificacion">Número de identificación *:</label>
+    <!-- Identificación -->
+    <div class="form-row">
+      <div class="form-group" style="flex: 1 1 100%;">
+        <label for="identificacion">
+          Número de identificación <span *ngIf="!paciente.pendienteDocumento">*</span>:
+        </label>
         <input type="text"
                id="identificacion"
                name="identificacion"
                [(ngModel)]="paciente.identificacion"
-               required
+               [required]="!paciente.pendienteDocumento"
                identUnica
+               [identUnicaDisabled]="!!paciente.pendienteDocumento"
+               [disabled]="!!paciente.pendienteDocumento"
                [ngModelOptions]="{ updateOn: 'blur' }"
                #identField="ngModel" />
-        <!-- Mensajes -->
+
         <small class="error" *ngIf="identField?.errors?.['duplicado']">
           Ya existe un paciente con esta identificación.
         </small>
         <small class="hint" *ngIf="identField?.pending">
           Validando identificación…
+        </small>
+        <small class="hint" *ngIf="paciente.pendienteDocumento">
+          Se asignará un identificador temporal automático y podrás actualizarlo después.
         </small>
       </div>
     </div>
@@ -130,8 +151,7 @@
               class="btn btn-primary"
               (click)="siguientePanelAntecedentes()"
               [disabled]="!pacienteForm.form.valid 
-                          || identField?.pending 
-                          || identField?.errors?.['duplicado']
+                          || (!paciente.pendienteDocumento && (identField?.pending || identField?.errors?.['duplicado']))
                           || isSubmitting">
         {{ paciente.id ? 'Continuar' : 'Siguiente' }}
       </button>

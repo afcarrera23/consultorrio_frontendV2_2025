@@ -1,9 +1,10 @@
 <header class="header-bar">
-    <div class="header-content">
-      <h1 class="titulo">Consultorio Médico Las Lunas</h1>
-      <div class="acciones">
-        <app-cerrar-sesion *ngIf="mostrarCerrarSesion"></app-cerrar-sesion>
-      </div>
+  <div class="header-content">
+    <h1 class="titulo">Consultorio Médico Las Lunas</h1>
+
+    <!-- 👇 Solo aparece si hay sesión y NO estamos en /iniciar-sesion -->
+    <div class="acciones" *ngIf="auth.isLoggedIn() && !isLoginRoute">
+      <app-cerrar-sesion></app-cerrar-sesion>
     </div>
-  </header>
-  
+  </div>
+</header>

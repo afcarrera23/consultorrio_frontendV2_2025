@@ -8,7 +8,6 @@
 
   <!-- ======================== DIAGNÓSTICOS ======================== -->
   <h4>Diagnósticos</h4>
-
   <table class="ui-table">
     <thead>
       <tr>
@@ -30,8 +29,9 @@
               [value]="diagControls[i].value || ''"
               (focus)="openDiagMenu(i)"
               (input)="onDiagInput(i, inp.value)"
+              [class.invalid]="!d.codigoDiagnosticoId"
             />
-        
+
             <div class="dropdown" *ngIf="diagMenuOpen[i] && diagFiltrados[i]?.length">
               <div class="option"
                    *ngFor="let op of diagFiltrados[i]"
@@ -39,22 +39,14 @@
                 <strong>{{ op.codigo }}</strong> — {{ op.descripcion }}
               </div>
             </div>
-        
+
             <div class="dropdown" *ngIf="diagMenuOpen[i] && !diagFiltrados[i]?.length">
               <div class="nores">Sin resultados</div>
             </div>
           </div>
         </td>
-        
-
-        <td>
-          <input class="input" type="text" [value]="d.codigo || ''" readonly />
-        </td>
-
-        <td>
-          <input class="input" type="text" [value]="d.descripcion || ''" readonly />
-        </td>
-
+        <td><input class="input" type="text" [value]="d.codigo || ''" readonly /></td>
+        <td><input class="input" type="text" [value]="d.descripcion || ''" readonly /></td>
         <td class="center">
           <button type="button" class="btn danger" (click)="removeDiagnostico(i)">🗑️</button>
         </td>
@@ -62,13 +54,16 @@
     </tbody>
   </table>
 
+  <div *ngIf="!tieneDiagnosticoValido" class="state-error">
+    ⚠️ Debes seleccionar al menos un diagnóstico del catálogo.
+  </div>
+
   <div class="actions-row">
     <button type="button" class="btn" (click)="addDiagnostico()">+ Agregar diagnóstico</button>
   </div>
 
   <!-- ======================== MEDICAMENTOS ======================== -->
   <h4>Medicamentos</h4>
-
   <table class="ui-table">
     <thead>
       <tr>
@@ -82,11 +77,17 @@
     <tbody>
       <tr *ngFor="let m of medicamentos; let i = index">
         <td>
-          <input class="input" type="text" placeholder="Nombre del medicamento" [(ngModel)]="m.nombreMedicamentoManual" name="med_nombre_{{i}}" />
+          <input class="input" type="text" placeholder="Nombre del medicamento"
+                 [(ngModel)]="m.nombreMedicamentoManual"
+                 name="med_nombre_{{i}}"
+                 [class.invalid]="!(m.nombreMedicamentoManual || '').trim().length" />
         </td>
 
         <td>
-          <select class="input" [(ngModel)]="m.via" name="med_via_{{i}}">
+          <select class="input"
+                  [(ngModel)]="m.via"
+                  name="med_via_{{i}}"
+                  [class.invalid]="!(m.via || '').trim().length">
             <option value="">Seleccione vía</option>
             <option>Oral</option>
             <option>Intravenosa</option>
@@ -97,16 +98,21 @@
         </td>
 
         <td>
-          <input class="input" type="number" min="0" step="1" placeholder="Cant." [(ngModel)]="m.dosisCantidad" name="med_cant_{{i}}" />
+          <input class="input" type="number" min="1" step="1"
+            placeholder="Cant."
+            [(ngModel)]="m.dosisCantidad"
+            name="med_cant_{{i}}"
+            [class.invalid]="!(+m.dosisCantidad > 0)" />
+
         </td>
 
         <td>
           <input class="input" type="text"
                  placeholder="Posología y duración"
                  [(ngModel)]="m.dosificacion"
-                 name="med_poso_{{i}}" />
+                 name="med_poso_{{i}}"
+                 [class.invalid]="!(m.dosificacion || '').trim().length" />
         </td>
-        
 
         <td class="center">
           <button type="button" class="btn danger" (click)="removeMedicamento(i)">🗑️</button>
@@ -115,49 +121,50 @@
     </tbody>
   </table>
 
+  <div *ngIf="!medicamentosValidos" class="state-error">
+    ⚠️ Completa nombre, vía, cantidad y posología en todos los medicamentos.
+  </div>
+
   <div class="actions-row">
     <button type="button" class="btn" (click)="addMedicamento()">+ Agregar medicamento</button>
   </div>
 
   <!-- ======================== PLAN ======================== -->
-<div class="mt-2">
-  <label class="lbl">Recomendaciones, plan de tratamiento <span style="color:red">*</span></label>
-  <textarea class="input plan-textarea"
-        rows="4"
-        [(ngModel)]="plan"
-        name="plan"
-        placeholder="Indique el plan de tratamiento"
-        required>
-  </textarea>
+  <div class="mt-2">
+    <label class="lbl">Recomendaciones, plan de tratamiento <span style="color:red">*</span></label>
+    <textarea class="input plan-textarea"
+              rows="4"
+              [(ngModel)]="plan"
+              name="plan"
+              placeholder="Indique el plan de tratamiento"
+              required
+              [class.invalid]="!planValido">
+    </textarea>
+  </div>
+
+  <!-- ======================== BOTÓN REGISTRAR ======================== -->
+  <div class="footer-actions">
+    <button type="button"
+            class="btn success"
+            (click)="guardarTodo()"
+            [disabled]="!esFormularioValido() || isSubmitting">
+      Registrar
+    </button>
+  </div>
+
+  <!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
+  <div class="form-row form-bottom">
+    <button type="button" class="btn-back" (click)="atras()">← Atrás</button>
+    <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">Cancelar</button>
+  </div>
+
+  <!-- POPUP de confirmación -->
+  <app-popup
+    *ngIf="isPopupOpen"
+    [message]="'¿Deseas abandonar el registro?'"
+    [confirmText]="'SI'"
+    [cancelText]="'NO'"
+    (onConfirm)="confirmarSalida()"
+    (onCancel)="cerrarPopup()">
+  </app-popup>
 </div>
-
-<div class="footer-actions">
-  <button type="button"
-          class="btn success"
-          (click)="guardarTodo()"
-          [disabled]="!plan || plan.trim().length === 0">
-    Registrar
-  </button>
-</div>
-<!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
-<div class="form-row form-bottom">
-  <button type="button" class="btn-back" (click)="atras()">
-    ← Atrás
-  </button>
-
-  <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
-    Cancelar
-  </button>
-</div>
-
-
-
-<!-- POPUP de confirmación -->
-<app-popup
-  *ngIf="isPopupOpen"
-  [message]="'¿Deseas abandonar el registro?'"
-  [confirmText]="'SI'"
-  [cancelText]="'NO'"
-  (onConfirm)="confirmarSalida()"
-  (onCancel)="cerrarPopup()">
-</app-popup>

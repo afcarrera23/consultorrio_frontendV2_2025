@@ -7,7 +7,8 @@ import { RegistroTempService } from 'src/app/services/registro-temporal';
 // Tipo auxiliar para no modificar tu DTO original
 type PacienteRegistroDTOExt = PacienteRegistroDTO & {
   id?: number;
-  createdInThisFlow?: boolean; // ⬅️ marca de “creado en este flujo”
+  createdInThisFlow?: boolean;         // marca de “creado en este flujo”
+  pendienteDocumento: boolean;         // ⬅️ AHORA OBLIGATORIO Y BOOLEAN
 };
 
 @Component({
@@ -20,7 +21,7 @@ export class PacienteComponent implements OnInit {
     identificacion: '',
     tipoIdentificacion: '',
     fechaNacimiento: '',   // ISO (YYYY-MM-DD)
-    edad: undefined,       // ahora opcional (back la puede calcular)
+    edad: undefined,       // el back la puede calcular
     nombreCompleto: '',
     apellidoCompleto: '',
     genero: '',
@@ -31,7 +32,8 @@ export class PacienteComponent implements OnInit {
     correo: '',
     usuarioRegistroId: 0,
     antecedentesPatologicos: [],
-    antecedentePersonal: []
+    antecedentePersonal: [],
+    pendienteDocumento: false          // ⬅️ VALOR INICIAL FIJO
   };
 
   isPopupOpen = false;
@@ -49,7 +51,13 @@ export class PacienteComponent implements OnInit {
 
     // Cargar draft si existe
     const guardado = this.registroTemp.obtenerPaciente();
-    if (guardado) this.paciente = { ...this.paciente, ...guardado };
+    if (guardado) {
+      // Si el draft no trae el campo, lo forzamos a boolean
+      const pd = typeof (guardado as any).pendienteDocumento === 'boolean'
+        ? (guardado as any).pendienteDocumento
+        : false;
+      this.paciente = { ...this.paciente, ...guardado, pendienteDocumento: pd };
+    }
 
     // Setear usuarioRegistroId si faltara
     if (!this.paciente.usuarioRegistroId) {
@@ -70,11 +78,35 @@ export class PacienteComponent implements OnInit {
     const cumpleEsteAño = new Date(hoy.getFullYear(), m - 1, d);
     if (hoy < cumpleEsteAño) edad -= 1;
     return edad < 0 ? null : edad;
-  }
+    }
 
   onFechaChange() {
-    // Si hay fechaNacimiento, podemos calcular edad localmente
+    // Si hay fechaNacimiento, calculamos edad localmente
     this.paciente.edad = this.edadCalculada ?? undefined;
+  }
+
+  /** Generador de identificación temporal segura (parche solo front) */
+  private nextTempCounter(): number {
+    const key = 'tempIdentCounter';
+    const current = Number(localStorage.getItem(key) || '0') + 1;
+    localStorage.setItem(key, String(current));
+    return current;
+  }
+
+  private generarIdentTemporal(): string {
+    // Formato: TMP-YYYYMMDDHHmmss-<contador>
+    const now = new Date();
+    const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+    const stamp =
+      now.getFullYear().toString() +
+      pad(now.getMonth() + 1) +
+      pad(now.getDate()) +
+      pad(now.getHours()) +
+      pad(now.getMinutes()) +
+      pad(now.getSeconds());
+
+    const counter = this.nextTempCounter();
+    return `TMP-${stamp}-${counter}`;
   }
 
   /** Paso 1 → Paso 2 */
@@ -88,8 +120,18 @@ export class PacienteComponent implements OnInit {
       return;
     }
 
-    // Construir payload (si hay fecha, no enviar edad para que la calcule el back)
+    // Construir payload
     const payload: PacienteRegistroDTO = { ...this.paciente };
+
+    // Parche: si marcó "no conoce el número" y no hay identificación, asignar temporal
+    if (this.paciente.pendienteDocumento) {
+      const ident = (payload.identificacion ?? '').trim();
+      if (!ident) {
+        (payload as any).identificacion = this.generarIdentTemporal();
+      }
+    }
+
+    // Si envías fechaNacimiento, dejamos que el back calcule edad
     if (payload.fechaNacimiento) {
       delete (payload as any).edad;
     }
@@ -101,16 +143,16 @@ export class PacienteComponent implements OnInit {
         if (!nuevoId) {
           throw new Error('El backend no retornó id en la creación de paciente.');
         }
-        // Marcar como creado en este flujo
+
+        // Marcar como creado en este flujo y persistir el valor final de identificación
         const pacienteConId: PacienteRegistroDTOExt = {
           ...this.paciente,
           id: nuevoId,
-          createdInThisFlow: true
+          createdInThisFlow: true,
+          identificacion: (payload as any).identificacion
         };
 
-        // Persistir en el storage temporal
         this.registroTemp.guardarPaciente(pacienteConId);
-
         this.isSubmitting = false;
         this.router.navigate([`/antecedente-patologico/${nuevoId}`]);
       },
@@ -141,10 +183,9 @@ export class PacienteComponent implements OnInit {
         },
         error: (err) => {
           console.error('❌ No se pudo eliminar el paciente creado al cancelar:', err);
-          // Aún así limpiamos el estado local para no dejar residuos en UI
+          // Aún así limpiamos el estado local
           this.registroTemp.limpiarPaciente();
           this.router.navigate(['/menu-principal']);
-          // (Opcional) Mostrar toast informativo
         }
       });
     } else {

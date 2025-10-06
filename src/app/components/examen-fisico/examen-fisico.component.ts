@@ -4,7 +4,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { PacienteRegistroDTO } from "src/app/models/paciente.model";
 import { ExamenFisicoDTO } from "src/app/models/examen-fisico.model";
 import { RegistroTempService } from "src/app/services/registro-temporal";
-import { PacienteService } from "src/app/services/paciente.service"; // ⬅️ NUEVO
+import { PacienteService } from "src/app/services/paciente.service";
 
 @Component({
   selector: "app-examen-fisico",
@@ -44,9 +44,9 @@ export class ExamenFisicoComponent implements OnInit {
 
   /** Estado del popup */
   isPopupOpen = false;
-  isSubmitting = false; // ⬅️ NUEVO
+  isSubmitting = false;
 
-  // Campos que default = "Normal"
+  /** Campos que deben normalizarse con "Normal" */
   private readonly camposNormal: Array<keyof ExamenFisicoDTO> = [
     "craneoDetalle",
     "ojosDetalle",
@@ -65,7 +65,7 @@ export class ExamenFisicoComponent implements OnInit {
     private registroTemp: RegistroTempService,
     private router: Router,
     private route: ActivatedRoute,
-    private pacienteService: PacienteService // ⬅️ NUEVO
+    private pacienteService: PacienteService
   ) {}
 
   ngOnInit(): void {
@@ -91,6 +91,7 @@ export class ExamenFisicoComponent implements OnInit {
     this.calcularIMC();
   }
 
+  /** Calcula IMC (peso / talla²) */
   calcularIMC(): void {
     const peso = this.examenFisico.peso || 0;
     let talla = this.examenFisico.talla || 0;
@@ -103,14 +104,14 @@ export class ExamenFisicoComponent implements OnInit {
     }
   }
 
-  /** Siguiente → Diagnóstico */
+  /** Botón siguiente → Diagnóstico */
   continuarADiagnostico(): void {
     if (!this.paciente?.id) {
       alert("❌ Error: no hay paciente cargado.");
       return;
     }
 
-    const examenParaGuardar = this.normalizarCamposConNormal({
+    const examenParaGuardar = this.normalizarCampos({
       ...this.examenFisico,
       pacienteId: this.paciente.id,
       usuarioId: this.paciente.usuarioRegistroId,
@@ -124,25 +125,35 @@ export class ExamenFisicoComponent implements OnInit {
   atras(): void {
     if (!this.paciente?.id) return;
 
-    const examenParaGuardar = this.normalizarCamposConNormal(this.examenFisico);
+    const examenParaGuardar = this.normalizarCampos(this.examenFisico);
     this.registroTemp.setDraftExamenFisico(examenParaGuardar);
 
     this.router.navigate([`/antecedente-personal/${this.paciente.id}`]);
   }
 
-  /** Normaliza campos vacíos con "Normal" */
-  private normalizarCamposConNormal(examen: ExamenFisicoDTO): ExamenFisicoDTO {
+  /**
+   * Normaliza campos vacíos:
+   * - Campos clínicos → "Normal"
+   * - Otros Hallazgos → "Ninguno"
+   */
+  private normalizarCampos(examen: ExamenFisicoDTO): ExamenFisicoDTO {
     const copia: ExamenFisicoDTO = { ...examen };
-    const norm = (s?: string) => (s && s.trim().length ? s : "Normal");
 
+    const normNormal = (s?: string) => (s && s.trim().length ? s.trim() : "Normal");
     for (const k of this.camposNormal) {
-      (copia as any)[k] = norm(copia[k] as unknown as string);
+      (copia as any)[k] = normNormal((copia as any)[k] as string);
     }
+
+    // Campo especial: Otros Hallazgos
+    copia.otrosHallazgos =
+      copia.otrosHallazgos && copia.otrosHallazgos.trim().length
+        ? copia.otrosHallazgos.trim()
+        : "Ninguno";
 
     return copia;
   }
 
-  /* ===== Popup cancelar ===== */
+  /** Popup cancelar */
   abrirPopupCancelar() { this.isPopupOpen = true; }
   cerrarPopup() { this.isPopupOpen = false; }
 
@@ -165,7 +176,7 @@ export class ExamenFisicoComponent implements OnInit {
           this.isSubmitting = false;
           this.registroTemp.limpiarPaciente();
           this.router.navigate(["/menu-principal"]);
-        }
+        },
       });
     } else {
       this.registroTemp.limpiarPaciente();
@@ -173,6 +184,9 @@ export class ExamenFisicoComponent implements OnInit {
     }
   }
 
+  /** Atajo teclado Escape → cerrar popup */
   @HostListener("document:keydown.escape")
-  onEsc() { if (this.isPopupOpen) this.cerrarPopup(); }
+  onEsc() {
+    if (this.isPopupOpen) this.cerrarPopup();
+  }
 }

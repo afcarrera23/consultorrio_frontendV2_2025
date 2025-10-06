@@ -161,4 +161,11 @@ export class MenuPrincipalComponent {
       this.loadingImprimirId = null;
     }
   }
+
+  nuevaFormula(): void {
+    // Aquí defines qué quieres que haga el botón
+    // Ejemplo: redirigir a un módulo de fórmulas
+    this.router.navigate(['/formula-nueva']);
+  }
+  
 }

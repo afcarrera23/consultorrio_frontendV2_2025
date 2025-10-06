@@ -43,11 +43,12 @@
 
     <section *ngIf="data?.profesional">
       <div class="profesional">
-        <div class="firma" *ngIf="data?.profesional?.firmaBase64">
-          <img [src]="'data:image/png;base64,' + data?.profesional?.firmaBase64" alt="Firma del médico" />
+        <div class="firma" *ngIf="firmaSrc(data?.profesional?.firmaBase64) as firmaUrl">
+          <img [src]="firmaUrl" alt="Firma del médico" />
           <div class="firma-label"></div>
         </div>
-        <div><b>Nombre:</b> {{ data?.profesional?.nombre }}</div>
+        
+        <div><b>Médico:</b> {{ data?.profesional?.nombre }}</div>
         <div><b>Especialidad:</b> {{ data?.profesional?.especialidad || '—' }}</div>
         <div><b>Registro médico:</b> {{ data?.profesional?.numeroRegistroMedico || '—' }}</div>
       </div>

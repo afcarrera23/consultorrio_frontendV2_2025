@@ -30,4 +30,13 @@ export class PrintFormulaComponent implements AfterViewInit {
   reimprimir(): void {
     window.print();
   }
+  
+  firmaSrc(b64?: string | null): string | null {
+    if (!b64) return null;
+    const s = String(b64).trim();
+    if (!s) return null;
+    // si ya viene como data URL, úsala; si no, agrega el prefijo
+    return s.startsWith('data:') ? s : `data:image/png;base64,${s}`;
+  }
+  
 }

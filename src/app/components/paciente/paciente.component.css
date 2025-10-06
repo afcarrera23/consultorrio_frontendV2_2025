@@ -101,4 +101,26 @@
   font-size: 0.9em;
 }
 
-  
+/* Ajuste solo para el checkbox */
+.form-group--checkbox {
+  display: flex;
+  align-items: center;   /* centra verticalmente checkbox + label */
+  gap: 6px;              /* espacio entre el cuadrado y el texto */
+  margin-top: 24px;      /* opcional: alinear con la base de los otros labels */
+}
+
+.form-group--checkbox label {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;       /* hace clickeable el label */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-group--checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #28a745; /* color verde al checkear */
+}

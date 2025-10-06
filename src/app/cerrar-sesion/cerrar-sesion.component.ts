@@ -1,5 +1,7 @@
+// cerrar-sesion.component.ts
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service'; // ajusta la ruta
 
 @Component({
   selector: 'app-cerrar-sesion',
@@ -7,33 +9,21 @@ import { Router } from '@angular/router';
   styleUrls: ['./cerrar-sesion.component.css']
 })
 export class CerrarSesionComponent {
-  mostrarPopup: boolean = false; // Controla si el popup se muestra o no
+  mostrarPopup = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private auth: AuthService) {}
 
-  // Método que muestra el popup al intentar cerrar sesión
   cerrarSesion() {
     this.mostrarPopup = true;
   }
 
   confirmarCerrarSesion() {
-    // Primero oculta el popup
     this.mostrarPopup = false;
-  
-    // Espera un instante antes de cerrar sesión y redirigir
     setTimeout(() => {
-      // Elimina los datos del médico logueado del localStorage
-      localStorage.removeItem('medico');
-  
-      // Redirige al usuario a la página de inicio de sesión
+      this.auth.logout();                 // ✅ usa tu servicio (limpia 'medico')
       this.router.navigate(['/iniciar-sesion']);
-    }, 100); // 100 milisegundos es suficiente para que el *ngIf se actualice visualmente
-  }
-  
-
-  // Método para cancelar la acción
-  cancelarCerrarSesion() {
-    this.mostrarPopup = false; // Solo oculta el popup
+    }, 100);
   }
 
+  cancelarCerrarSesion() { this.mostrarPopup = false; }
 }

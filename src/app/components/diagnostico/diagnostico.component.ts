@@ -13,6 +13,9 @@ import { RegistroTempService } from 'src/app/services/registro-temporal';
 import { HistoriaFlowService } from 'src/app/services/historia-flow.service';
 import { HistoriaMedicaService } from 'src/app/services/historia-medica-service';
 
+/** ⬇️ NUEVO: servicio que abre la vista de impresión y hace window.print() en /print */
+import { PrintService } from 'src/app/services/print-service';
+
 type DiagnosticoFila = {
   codigoDiagnosticoId?: number;
   codigo?: string;
@@ -45,7 +48,7 @@ export class DiagnosticoComponent implements OnInit {
 
   /** Estado del popup */
   isPopupOpen = false;
-  isSubmitting = false; // ⬅️ NUEVO
+  isSubmitting = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -55,6 +58,9 @@ export class DiagnosticoComponent implements OnInit {
     private registroTemp: RegistroTempService,
     private flow: HistoriaFlowService,
     private historiaApi: HistoriaMedicaService,
+
+    /** ⬇️ NUEVO */
+    private printSvc: PrintService
   ) {}
 
   ngOnInit(): void {
@@ -231,7 +237,7 @@ export class DiagnosticoComponent implements OnInit {
     const mode = this.flow.mode;
   
     if (mode === 'NEW_PATIENT') {
-      // 🔵 Caso A: Paciente nuevo
+      // 🔵 Caso A: Paciente nuevo (crear todo)
       const payload = {
         ...paciente,
         id: paciente.id,
@@ -243,16 +249,21 @@ export class DiagnosticoComponent implements OnInit {
       };
   
       this.pacienteService.registrarConTodo(payload).subscribe({
-        next: () => this.finalizarOk(),
+        next: (resp: any) => {
+          // Intenta tomar el id del paciente recién creado, si viene
+          const nuevoId = Number(resp?.id || resp?.pacienteId);
+          if (nuevoId && !Number.isNaN(nuevoId)) this.pacienteId = nuevoId;
+          this.finalizarOkConImpresion();
+        },
         error: (e) => this.finalizaError(e)
       });
   
     } else if (mode === 'EXISTING_PATIENT') {
-      // 🟢 Caso B: Paciente existente
+      // 🟢 Caso B: Paciente existente (historia nueva)
       const usuarioActualId = this.flow.usuarioId ?? this.usuarioId;
       const dto = {
         pacienteId: paciente.id!,
-        usuarioId: usuarioActualId,   // ✅ ahora sí guarda al usuario logueado actual
+        usuarioId: usuarioActualId,
         motivoConsulta: antPatUsar?.motivoConsulta,
         antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
         antecedentesPersonales:  antPerUsar ? [antPerUsar] : [],
@@ -261,7 +272,7 @@ export class DiagnosticoComponent implements OnInit {
       };
   
       this.historiaApi.crearHistoriaCompleta(dto).subscribe({
-        next: () => this.finalizarOk(),
+        next: () => this.finalizarOkConImpresion(),
         error: (e) => this.finalizaError(e)
       });
   
@@ -269,6 +280,30 @@ export class DiagnosticoComponent implements OnInit {
       alert('⚠️ Modo de flujo no definido.');
     }
   }  
+
+  /** ⬇️ NUEVO: finaliza guardado + dispara la impresión automática */
+  private async finalizarOkConImpresion() {
+    try {
+      alert('✅ Registro guardado correctamente.\nSe abrirá la impresión de la fórmula médica.');
+  
+      // ⬇⬇⬇ CAMBIO: tipamos el draft correctamente
+      const draft = (this.registroTemp.obtenerPaciente?.() ?? null) as Partial<PacienteRegistroDTO> | null;
+  
+      const fallback = {
+        nombre:   draft?.nombreCompleto ?? '',
+        apellido: draft?.apellidoCompleto ?? '',
+        doc:      draft?.identificacion ?? ''
+      };
+  
+      await this.printSvc.printFromEndpoint(this.pacienteId, fallback);
+  
+      this.registroTemp.limpiarPaciente?.();
+      this.flow.clear();
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+  
 
   private finalizarOk() {
     alert('✅ Registro guardado correctamente.');
@@ -323,4 +358,38 @@ export class DiagnosticoComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEsc() { if (this.isPopupOpen) this.cerrarPopup(); }
+
+  // ===== Validaciones de UI requeridas =====
+  get tipoDiagnosticoValido(): boolean {
+    return [1, 2, 3].includes(Number(this.tipoDiagnostico));
+  }
+
+  get tieneDiagnosticoValido(): boolean {
+    // al menos un diagnóstico elegido del catálogo
+    return Array.isArray(this.diagnosticos) &&
+          this.diagnosticos.some(d => !!d.codigoDiagnosticoId);
+  }
+
+  get medicamentosValidos(): boolean {
+    // todos los renglones deben estar completos
+    if (!Array.isArray(this.medicamentos) || this.medicamentos.length === 0) return false;
+    return this.medicamentos.every(m =>
+      (m?.nombreMedicamentoManual || '').trim().length > 0 &&
+      (m?.via || '').trim().length > 0 &&
+      Number(m?.dosisCantidad) > 0 &&
+      (m?.dosificacion || '').trim().length > 0
+    );
+  }
+
+  get planValido(): boolean {
+    return (this.plan || '').trim().length > 0;
+  }
+
+  esFormularioValido(): boolean {
+    return this.tipoDiagnosticoValido &&
+          this.tieneDiagnosticoValido &&
+          this.medicamentosValidos &&
+          this.planValido;
+  }
+
 }

@@ -18,6 +18,7 @@ import { PrintFormulaComponent } from './components/print-formula/print-formula.
 import { UserOnlyGuard } from './services/user-only.guard';
 import { MedicamentoComponent } from './components/components-admin/medicamento/medicamento.component';
 import { MedicoComponent } from './components/components-admin/medico/medico.component';
+import { FormulaMedicaFastComponent } from './components/formula-medica-fast/formula-medica-fast.component';
 
 // 👇 Ajusta estas rutas de import a tu estructura real
 
@@ -33,6 +34,7 @@ const routes: Routes = [
   { path: 'examen-fisico/:pacienteId', component: ExamenFisicoComponent, canActivate: [AuthGuard, UserOnlyGuard] },
   { path: 'diagnostico/:pacienteId', component: DiagnosticoComponent, canActivate: [AuthGuard, UserOnlyGuard] },
   { path: 'historial-medico/:pacienteId', component: HistorialMedicoComponent, canActivate: [AuthGuard, UserOnlyGuard] },
+  { path: 'formula-nueva', component: FormulaMedicaFastComponent, canActivate: [AuthGuard, UserOnlyGuard] },
   { path: 'print', component: PrintFormulaComponent, canActivate: [AuthGuard, UserOnlyGuard] },
   { path: 'print', component: PrintFormulaComponent, data: { noHeader: true }, canActivate: [AuthGuard, UserOnlyGuard] },
 

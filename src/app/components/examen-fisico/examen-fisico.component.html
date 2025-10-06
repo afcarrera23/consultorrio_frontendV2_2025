@@ -188,10 +188,11 @@
           [(ngModel)]="examenFisico.otrosHallazgos"
           name="otrosHallazgos"
           placeholder="Ninguno"
-          (focus)="examenFisico.otrosHallazgos === 'Ninguno' ? examenFisico.otrosHallazgos = '' : null"
-          (blur)="!examenFisico.otrosHallazgos ? examenFisico.otrosHallazgos = 'Ninguno' : null">
+          (focus)="examenFisico.otrosHallazgos?.trim() === 'Ninguno' ? examenFisico.otrosHallazgos = '' : null"
+          (blur)="!examenFisico.otrosHallazgos || !examenFisico.otrosHallazgos.trim() ? examenFisico.otrosHallazgos = 'Ninguno' : examenFisico.otrosHallazgos = examenFisico.otrosHallazgos.trim()">
         </textarea>
       </div>
+      
       
     </div>
 

@@ -1,0 +1,208 @@
+<div class="diag-wrapper">
+  <!-- ======================== MÉDICO SESIÓN ======================== -->
+  <div class="medico-box" *ngIf="medicoSesionMin || medicoDetalle">
+    <div class="medico-info">
+      <div class="medico-name">
+        <strong>Médico:</strong>
+        {{ (medicoDetalle?.nombreMedico || medicoSesionMin?.nombre) }}
+        {{ (medicoDetalle?.apellidoMedico || medicoSesionMin?.apellido) }}
+      </div>
+
+      <div class="medico-reg" *ngIf="medicoDetalle?.registroMedico">
+        <strong>Registro:</strong> {{ medicoDetalle?.registroMedico }}
+      </div>
+
+      <div class="medico-desc" *ngIf="medicoDetalle?.descripcionMedicaUno || medicoDetalle?.descripcionMedicaDos">
+        <span *ngIf="medicoDetalle?.descripcionMedicaUno">{{ medicoDetalle?.descripcionMedicaUno }}</span>
+        <span *ngIf="medicoDetalle?.descripcionMedicaDos"> · {{ medicoDetalle?.descripcionMedicaDos }}</span>
+      </div>
+    </div>
+
+    <div class="medico-firma" *ngIf="firmaSrc(medicoDetalle?.firmaBase64) as firmaUrl">
+      <img [src]="firmaUrl" alt="Firma del médico" />
+    </div>
+  </div>
+
+  <!-- ======================== DATOS PACIENTE ======================== -->
+  <h3>Datos del paciente</h3>
+  <div class="grid-3">
+    <div>
+      <label class="lbl">Nombre *</label>
+      <input class="input" type="text" [(ngModel)]="form.nombrePaciente" name="nombrePaciente" />
+    </div>
+    <div>
+      <label class="lbl">Apellido *</label>
+      <input class="input" type="text" [(ngModel)]="form.apellidoPaciente" name="apellidoPaciente" />
+    </div>
+    <div>
+      <label class="lbl">Identificación *</label>
+      <input
+        class="input"
+        type="text"
+        [(ngModel)]="form.numeroIdentificacion"
+        name="numeroIdentificacion"
+        (ngModelChange)="onIdentificacionChange($event)"
+        (blur)="cargarFormulas()"
+        (keyup.enter)="cargarFormulas()"
+      />
+    </div>
+    <div>
+      <label class="lbl">Fecha *</label>
+      <input class="input" type="date" [(ngModel)]="form.fecha" name="fecha" />
+    </div>
+  </div>
+
+  <!-- ======================== MEDICAMENTOS ======================== -->
+  <h4>Medicamentos</h4>
+  <div class="table-scroll">
+    <table class="ui-table">
+      <thead>
+        <tr>
+          <th style="width: 36%">Medicamento</th>
+          <th style="width: 18%">Vía</th>
+          <th style="width: 12%">Cantidad</th>
+          <th style="width: 24%">Posología</th>
+          <th style="width: 10%; text-align:center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of meds; let i = index; trackBy: trackByIndex">
+          <td>
+            <input
+              class="input"
+              type="text"
+              [attr.list]="'medsList' + i"
+              [(ngModel)]="r.medInput"
+              name="medInput_{{i}}"
+              placeholder="Escribe o selecciona…"
+              (ngModelChange)="onMedInput(i, $event)"
+            />
+          
+            <datalist [id]="'medsList' + i">
+              <option *ngFor="let m of medicamentosCatalogo" [value]="m.nombreMedicamento"></option>
+            </datalist>
+          </td>
+          
+          <td>
+            <select class="input" [(ngModel)]="r.via" name="via_{{i}}">
+              <option [ngValue]="''" disabled>Seleccione vía</option>
+              <option>Oral</option>
+              <option>Intravenosa</option>
+              <option>Intramuscular</option>
+              <option>Subcutánea</option>
+              <option>Tópica</option>
+              <option>Oftálmica</option>
+              <option>Ótica</option>
+              <option>Rectal</option>
+              <option>Vaginal</option>
+              <option>Inhalatoria</option>
+            </select>
+          </td>
+          <td>
+            <input class="input" type="number" min="1" step="1" [(ngModel)]="r.cantidad" name="cantidad_{{i}}" />
+          </td>
+          <td>
+            <input
+              class="input"
+              type="text"
+              placeholder="Ej. 1 tableta cada 8 horas por 5 días"
+              [(ngModel)]="r.posologia"
+              name="posologia_{{i}}"
+            />
+          </td>
+          <td class="center">
+            <button type="button" class="btn btn-ghost danger" (click)="removeMed(i)">🗑️ Quitar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions-row" style="margin:8px 0 16px;">
+    <button type="button" class="btn btn-ghost" (click)="addMed()">+ Agregar medicamento</button>
+  </div>
+
+  <!-- ======================== PLAN ======================== -->
+  <h4>Plan de tratamiento</h4>
+  <textarea
+    class="input plan-textarea"
+    rows="4"
+    [(ngModel)]="form.planTratamiento"
+    name="planTratamiento"
+    placeholder="Recomendaciones, controles, alertas, etc.">
+  </textarea>
+
+  <!-- ======================== ACCIONES ======================== -->
+  <div class="footer-actions">
+    <button
+      type="button"
+      class="btn success"
+      (click)="registrar()"
+      [disabled]="!esValido() || guardando || !medicoDetalle">
+      Registrar
+    </button>
+  </div>
+
+  <div *ngIf="error" class="state-error" style="margin-top:8px;">
+    ⚠️ {{ error }}
+  </div>
+
+  <!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
+  <div class="form-row form-bottom">
+    <button type="button" class="btn-back" (click)="atras()">
+      ← Atrás
+    </button>
+    <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
+      Cancelar
+    </button>
+  </div>
+
+  <!-- POPUP simple -->
+  <div class="overlay" *ngIf="isPopupOpen" (click)="cerrarPopup()"></div>
+  <div class="popup" *ngIf="isPopupOpen">
+    <div style="font-weight: 600; margin-bottom: 8px;">¿Deseas abandonar el registro?</div>
+    <div class="popup-actions">
+      <button class="btn btn-light" (click)="cerrarPopup()">No</button>
+      <button class="btn btn-danger" (click)="confirmarSalida()">Sí</button>
+    </div>
+  </div>
+
+  <!-- ======================== LISTADO DE FÓRMULAS (GLOBAL) ======================== -->
+  <hr class="my-4" />
+
+  <div class="table-title">
+    <h3>Fórmulas registradas (global)</h3>
+    <button type="button" class="btn btn-ghost" (click)="cargarLista()">↻ Recargar</button>
+  </div>
+
+  <div *ngIf="cargandoLista" class="state-loading">Cargando…</div>
+  <div *ngIf="!cargandoLista && errorLista" class="state-error">{{ errorLista }}</div>
+  <div *ngIf="!cargandoLista && !errorLista && !formulasGlobal?.length" class="state-empty">
+    No hay fórmulas registradas.
+  </div>
+
+  <div class="table-scroll" *ngIf="!cargandoLista && !errorLista && formulasGlobal?.length">
+    <table class="ui-table ui-table--min table-compact">
+      <thead>
+        <tr>
+          <th class="col-name">Nombre</th>
+          <th class="col-last">Apellido</th>
+          <th class="col-acts">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of formulasGlobal; trackBy: trackByFormulaId">
+          <td>{{ f.nombrePaciente }}</td>
+          <td>{{ f.apellidoPaciente }}</td>
+          <td>
+            <div class="table-actions">
+              <button type="button" class="btn btn-ghost primary" (click)="onImprimirSimple(f)">🖨️ Imprimir</button>
+              <button type="button" class="btn btn-ghost danger" (click)="onEliminarSimple(f)">🗑️ Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

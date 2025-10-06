@@ -228,3 +228,25 @@ table tr:hover { background-color: #f3f4f7; }
     width: 100%; /* botones a ancho completo en móvil */
   }
 }
+
+
+.btn-formula {
+  width: 150px;      /* mismo ancho */
+  height: 40px;      /* misma altura */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1976d2; /* azul */
+  color: white;
+  transition: background-color 0.2s ease, transform .06s ease;
+}
+.btn-formula:hover {
+  background-color: #1565c0;
+}
+.btn-formula:active {
+  transform: translateY(1px);
+}
