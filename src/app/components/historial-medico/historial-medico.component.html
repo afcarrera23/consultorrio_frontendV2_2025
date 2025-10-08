@@ -208,7 +208,16 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let m of dx.medicamentos">
-                    <td>{{ m.nombreMedicamentoManual || '—' }}</td>
+                    <td>
+                      <ng-container *ngIf="m.medicamentoNombre; else manualName">
+                        {{ m.medicamentoNombre }}
+                        <span class="chip neutral" *ngIf="m.medicamentoId"></span>
+                      </ng-container>
+                      <ng-template #manualName>
+                        {{ m.nombreMedicamentoManual || '—' }}
+                      </ng-template>
+                    </td>
+                    
                     <td>{{ m.via || '—' }}</td>
                     <td>
                       <ng-container *ngIf="m.dosisCantidad || m.dosisDescripcion; else noCant">

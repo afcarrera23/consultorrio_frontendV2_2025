@@ -96,16 +96,25 @@ export class FormulaMedicaApiService {
    * @param page número de página (0-based)
    * @param size tamaño de página
    */
-  listarMedicamentos(q = '', page = 0, size = 100): Observable<Medicamento[]> {
-    const params = new HttpParams()
+  // services/formula-medica.api.service.ts
+  listarMedicamentos(q = '', page = 0, size = 1000, bust = false): Observable<Medicamento[]> {
+    let params = new HttpParams()
       .set('q', q)
       .set('page', page)
       .set('size', size);
-
+  
+    // 👇 fuerza URL única para evitar caché del browser/CDN
+    if (bust) params = params.set('_ts', Date.now().toString());
+  
     return this.http
-      .get<PageResponse<Medicamento>>(`${API_URL}/api/admin/medicamentos`, { params })
+      .get<PageResponse<Medicamento>>(
+        `${API_URL}/api/admin/medicamentos`,
+        { params, headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } }
+      )
       .pipe(map(resp => resp.content ?? []));
   }
+  
+
 
   // ==================== MÉDICOS ====================
 

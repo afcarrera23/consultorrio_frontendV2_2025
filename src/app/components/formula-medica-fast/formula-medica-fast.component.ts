@@ -113,6 +113,7 @@ export class FormulaMedicaFastComponent implements OnInit {
 
     // 4) Cargar la lista GLOBAL (todas las fórmulas) para la tabla mínima
     this.cargarLista();
+    this.cargarMedicamentos(true);
   }
 
   // ======================== HELPERS UI ========================
@@ -185,22 +186,21 @@ export class FormulaMedicaFastComponent implements OnInit {
   }
 
   // ======================== CATÁLOGOS ========================
-  cargarMedicamentos(): void {
+  cargarMedicamentos(force = false): void {
     this.cargandoCatalogo = true;
-    this.api.listarMedicamentos('', 0, 500).subscribe({
-      next: (meds) => {
-        this.medicamentosCatalogo = meds || [];
-        console.log('Catalogo:', this.medicamentosCatalogo.length, this.medicamentosCatalogo.slice(0,5));
+    this.api.listarMedicamentos('', 0, 1000, force).subscribe({
+      next: (resp: any) => {
+        this.medicamentosCatalogo = Array.isArray(resp) ? resp : (resp?.content || []);
         this.cargandoCatalogo = false;
       },
       error: (e) => {
         console.error('❌ Error medicamentos:', e);
-        this.error = 'No fue posible cargar medicamentos.';
+        this.medicamentosCatalogo = [];
         this.cargandoCatalogo = false;
       }
     });
-    
   }
+    
 
   // ======================== VALIDACIÓN ========================
   private medsValidas(): boolean {
@@ -290,6 +290,7 @@ export class FormulaMedicaFastComponent implements OnInit {
         
 
         this.printSvc.printFormula(data);
+        this.cargarMedicamentos(true);
         // refresca ambos listados
         this.cargarFormulas(); // por identificación (si hay)
         this.cargarLista();    // global minimal
@@ -485,5 +486,11 @@ export class FormulaMedicaFastComponent implements OnInit {
     if (!f.medicamentos?.length) return '—';
     return f.medicamentos.map(m => m.medicamentoNombre).join(', ');
   }
+
+  onMedFocus(): void {
+    this.cargarMedicamentos(true);
+  }
+  
+  
   
 }

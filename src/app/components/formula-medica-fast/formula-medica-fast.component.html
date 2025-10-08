@@ -73,9 +73,7 @@
               type="text"
               [attr.list]="'medsList' + i"
               [(ngModel)]="r.medInput"
-              name="medInput_{{i}}"
-              placeholder="Escribe o selecciona…"
-              autocomplete="off"
+              (focus)="onMedFocus()"
               (ngModelChange)="onMedInput(i, $event)"
             />
             <datalist [id]="'medsList' + i">
@@ -83,6 +81,7 @@
                 {{ m.nombreMedicamento }}
               </option>
             </datalist>
+
           </td>
           
           <td>
@@ -190,7 +189,7 @@
             <th class="col-name">Paciente</th>
             <th>Identificación</th>
             <th>Fecha</th>
-            <th class="col-plan">Plan</th> <!-- ✅ añadida para cuadrar columnas -->
+            
             <th class="col-acts">Acciones</th>
           </tr>
         </thead>
@@ -200,9 +199,7 @@
             <td>{{ f.nombrePaciente }} {{ f.apellidoPaciente }}</td>
             <td>{{ f.numeroIdentificacion }}</td>
             <td>{{ f.fecha | date:'yyyy-MM-dd' }}</td>
-            <td class="col-plan" [title]="f.planTratamiento || '—'">
-              {{ f.planTratamiento || '—' }}
-            </td>
+            
             <td>
               <div class="table-actions">
                 <button

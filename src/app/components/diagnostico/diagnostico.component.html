@@ -64,69 +64,90 @@
 
   <!-- ======================== MEDICAMENTOS ======================== -->
   <h4>Medicamentos</h4>
-  <table class="ui-table">
-    <thead>
-      <tr>
-        <th style="width: 26%">Medicamento</th>
-        <th style="width: 16%">Vía administración</th>
-        <th style="width: 10%">Cantidad</th>
-        <th style="width: 38%">Posología y duración</th>
-        <th style="width: 10%; text-align:center">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let m of medicamentos; let i = index">
-        <td>
-          <input class="input" type="text" placeholder="Nombre del medicamento"
-                 [(ngModel)]="m.nombreMedicamentoManual"
-                 name="med_nombre_{{i}}"
-                 [class.invalid]="!(m.nombreMedicamentoManual || '').trim().length" />
-        </td>
+  <div class="table-scroll">
+    <table class="ui-table">
+      <thead>
+        <tr>
+          <th style="width: 40%">Medicamento</th>
+          <th style="width: 20%">Vía</th>
+          <th style="width: 15%">Cantidad</th>
+          <th style="width: 20%">Posología</th>
+          <th style="width: 5%; text-align:center"> </th>
+        </tr>
+      </thead>
 
-        <td>
-          <select class="input"
-                  [(ngModel)]="m.via"
-                  name="med_via_{{i}}"
-                  [class.invalid]="!(m.via || '').trim().length">
-            <option value="">Seleccione vía</option>
-            <option>Oral</option>
-            <option>Intravenosa</option>
-            <option>Intramuscular</option>
-            <option>Subcutánea</option>
-            <option>Tópica</option>
-          </select>
-        </td>
+      <tbody>
+        <tr *ngFor="let m of medicamentos; let i = index">
+          <!-- Medicamento: catálogo o manual con datalist -->
+          <td>
+            <input
+              class="input"
+              type="text"
+              [attr.list]="'medsList' + i"
+              [ngModel]="medInp[i]?.value || ''"
+              (ngModelChange)="onMedInput(i, $event)"
+              (focus)="onMedFocus(i)"          
+              name="medInput_{{i}}"
+              placeholder="Escribe o selecciona…"
+              autocomplete="off"
+            />
 
-        <td>
-          <input class="input" type="number" min="1" step="1"
-            placeholder="Cant."
-            [(ngModel)]="m.dosisCantidad"
-            name="med_cant_{{i}}"
-            [class.invalid]="!(+m.dosisCantidad > 0)" />
 
-        </td>
+            <datalist [id]="'medsList' + i">
+              <option *ngFor="let md of medicamentosCatalogo" [attr.value]="md.nombreMedicamento">
+                {{ md.nombreMedicamento }}
+              </option>
+            </datalist>
+            <!-- ❌ Se elimina la sección de chips/estado (Manual / Catálogo) -->
+          </td>
 
-        <td>
-          <input class="input" type="text"
-                 placeholder="Posología y duración"
-                 [(ngModel)]="m.dosificacion"
-                 name="med_poso_{{i}}"
-                 [class.invalid]="!(m.dosificacion || '').trim().length" />
-        </td>
+          <!-- Vía -->
+          <td>
+            <select class="input" [(ngModel)]="m.via">
+              <option value="">Seleccione</option>
+              <option>Oral</option>
+              <option>Intravenosa</option>
+              <option>Intramuscular</option>
+              <option>Subcutánea</option>
+              <option>Tópica</option>
+              <option>Oftálmica</option>
+              <option>Ótica</option>
+              <option>Rectal</option>
+              <option>Vaginal</option>
+              <option>Inhalatoria</option>
+            </select>
+          </td>
 
-        <td class="center">
-          <button type="button" class="btn danger" (click)="removeMedicamento(i)">🗑️</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          <!-- Cantidad -->
+          <td>
+            <input class="input" type="number" min="1" step="1" [(ngModel)]="m.dosisCantidad" />
+          </td>
+
+          <!-- Posología -->
+          <td>
+            <input
+              class="input"
+              type="text"
+              placeholder="Ej. 1 tableta cada 8 horas por 5 días"
+              [(ngModel)]="m.dosificacion"
+            />
+          </td>
+
+          <!-- Acción -->
+          <td class="center">
+            <button type="button" class="btn danger" (click)="removeMedicamento(i)">🗑️</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div *ngIf="!medicamentosValidos" class="state-error">
     ⚠️ Completa nombre, vía, cantidad y posología en todos los medicamentos.
   </div>
 
-  <div class="actions-row">
-    <button type="button" class="btn" (click)="addMedicamento()">+ Agregar medicamento</button>
+  <div class="actions-row" style="margin:8px 0 16px;">
+    <button type="button" class="btn btn-ghost" (click)="addMedicamento()">+ Agregar medicamento</button>
   </div>
 
   <!-- ======================== PLAN ======================== -->
@@ -152,13 +173,13 @@
     </button>
   </div>
 
-  <!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
+  <!-- Fila inferior: Atrás / Cancelar -->
   <div class="form-row form-bottom">
     <button type="button" class="btn-back" (click)="atras()">← Atrás</button>
     <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">Cancelar</button>
   </div>
 
-  <!-- POPUP de confirmación -->
+  <!-- POPUP -->
   <app-popup
     *ngIf="isPopupOpen"
     [message]="'¿Deseas abandonar el registro?'"

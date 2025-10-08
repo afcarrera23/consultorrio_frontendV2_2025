@@ -3,7 +3,7 @@
   <form #pacienteForm="ngForm">
     <p class="form-note">Los campos marcados con asterisco (*) son obligatorios</p>
 
-    <!-- Fila 1: Tipo de identificación y checkbox -->
+    <!-- Fila 1: Tipo de identificación + checkbox -->
     <div class="form-row">
       <div class="form-group">
         <label for="tipoIdentificacion">Tipo de identificación *:</label>
@@ -16,8 +16,7 @@
           <option value="NA">No aplica</option>
         </select>
       </div>
-    
-      <!-- ⬇️ nuevo: misma fila pero con clase de estilo especial -->
+
       <div class="form-group form-group--checkbox">
         <label>
           <input type="checkbox"
@@ -27,7 +26,6 @@
         </label>
       </div>
     </div>
-    
 
     <!-- Identificación -->
     <div class="form-row">
@@ -145,7 +143,7 @@
 
     <input type="hidden" [(ngModel)]="paciente.usuarioRegistroId" name="usuarioRegistroId">
 
-    <!-- Botón Siguiente -->
+    <!-- Acciones -->
     <div class="form-row form-actions">
       <button type="button" 
               class="btn btn-primary"
@@ -157,7 +155,6 @@
       </button>
     </div>
 
-    <!-- Botón Cancelar -->
     <div class="form-row form-cancel">
       <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
         Cancelar
