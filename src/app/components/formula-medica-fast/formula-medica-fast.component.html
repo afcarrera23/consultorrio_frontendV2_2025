@@ -75,11 +75,13 @@
               [(ngModel)]="r.medInput"
               name="medInput_{{i}}"
               placeholder="Escribe o selecciona…"
+              autocomplete="off"
               (ngModelChange)="onMedInput(i, $event)"
             />
-          
             <datalist [id]="'medsList' + i">
-              <option *ngFor="let m of medicamentosCatalogo" [value]="m.nombreMedicamento"></option>
+              <option *ngFor="let m of medicamentosCatalogo" [attr.value]="m.nombreMedicamento">
+                {{ m.nombreMedicamento }}
+              </option>
             </datalist>
           </td>
           
@@ -98,9 +100,11 @@
               <option>Inhalatoria</option>
             </select>
           </td>
+
           <td>
             <input class="input" type="number" min="1" step="1" [(ngModel)]="r.cantidad" name="cantidad_{{i}}" />
           </td>
+
           <td>
             <input
               class="input"
@@ -110,6 +114,7 @@
               name="posologia_{{i}}"
             />
           </td>
+
           <td class="center">
             <button type="button" class="btn btn-ghost danger" (click)="removeMed(i)">🗑️ Quitar</button>
           </td>
@@ -147,14 +152,10 @@
     ⚠️ {{ error }}
   </div>
 
-  <!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
+  <!-- Fila inferior: Atrás / Cancelar -->
   <div class="form-row form-bottom">
-    <button type="button" class="btn-back" (click)="atras()">
-      ← Atrás
-    </button>
-    <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
-      Cancelar
-    </button>
+    <button type="button" class="btn-back" (click)="atras()">← Atrás</button>
+    <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">Cancelar</button>
   </div>
 
   <!-- POPUP simple -->
@@ -181,28 +182,51 @@
     No hay fórmulas registradas.
   </div>
 
-  <div class="table-scroll" *ngIf="!cargandoLista && !errorLista && formulasGlobal?.length">
-    <table class="ui-table ui-table--min table-compact">
-      <thead>
-        <tr>
-          <th class="col-name">Nombre</th>
-          <th class="col-last">Apellido</th>
-          <th class="col-acts">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let f of formulasGlobal; trackBy: trackByFormulaId">
-          <td>{{ f.nombrePaciente }}</td>
-          <td>{{ f.apellidoPaciente }}</td>
-          <td>
-            <div class="table-actions">
-              <button type="button" class="btn btn-ghost primary" (click)="onImprimirSimple(f)">🖨️ Imprimir</button>
-              <button type="button" class="btn btn-ghost danger" (click)="onEliminarSimple(f)">🗑️ Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <div class="table-shell" *ngIf="!cargandoLista && !errorLista && formulasGlobal?.length">
+    <div class="table-scroll">
+      <table class="ui-table ui-table--min table-compact">
+        <thead>
+          <tr>
+            <th class="col-name">Paciente</th>
+            <th>Identificación</th>
+            <th>Fecha</th>
+            <th class="col-plan">Plan</th> <!-- ✅ añadida para cuadrar columnas -->
+            <th class="col-acts">Acciones</th>
+          </tr>
+        </thead>
 
+        <tbody>
+          <tr *ngFor="let f of formulasGlobal; trackBy: trackByFormulaId">
+            <td>{{ f.nombrePaciente }} {{ f.apellidoPaciente }}</td>
+            <td>{{ f.numeroIdentificacion }}</td>
+            <td>{{ f.fecha | date:'yyyy-MM-dd' }}</td>
+            <td class="col-plan" [title]="f.planTratamiento || '—'">
+              {{ f.planTratamiento || '—' }}
+            </td>
+            <td>
+              <div class="table-actions">
+                <button
+                  type="button"
+                  class="btn btn-ghost primary"
+                  (click)="onImprimirSimple(f)"
+                  title="Imprimir">
+                  🖨️ Imprimir
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-ghost danger"
+                  [disabled]="deletingId === f.id"
+                  (click)="onEliminarSimple(f)"
+                  title="Eliminar">
+                  {{ deletingId === f.id ? 'Eliminando…' : '🗑️ Eliminar' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+  </div>
 </div>

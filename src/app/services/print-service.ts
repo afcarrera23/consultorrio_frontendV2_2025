@@ -4,23 +4,30 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 // ≈ Tu DTO interno para imprimir
-// ≈ Tu DTO interno para imprimir
+
 export interface FormulaMedica {
   pacienteNombre: string;
   pacienteApellido: string;
   pacienteDocumento?: string;
   fecha: string;
   diagnosticos?: string[];
-  medicamentos?: Array<{ nombre: string; dosis: string; via: string }>;
+
+  medicamentos?: Array<{
+    nombre: string;
+    dosis: string;
+    via: string;
+    cantidad?: number;        // ← se mantiene por compatibilidad
+    dosisCantidad?: string;   // ← se agrega para que el HTML funcione
+  }>;
+
   planObservaciones: string;
   profesional?: {
     nombre: string;
-    numeroRegistroMedico?: string;   // 👈 aquí cambias
+    numeroRegistroMedico?: string;
     especialidad?: string;
     firmaBase64?: string;
   };
 }
-
 
 
 // ≈ DTO que devuelve tu back (FormulaImpresionDTO)
@@ -36,6 +43,7 @@ interface BackendFormulaDTO {
     frecuencia?: string;
     duracion?: string;
     via?: string;
+    dosisCantidad?: string;
   }>;
   planObservaciones?: string;
 
@@ -75,6 +83,7 @@ export class PrintService {
     try {
       const url = `${this.apiBase}/historias/ultima-formula?pacienteId=${pacienteId}`;
       const receta = await firstValueFrom(this.http.get<BackendFormulaDTO>(url));
+      console.log('🧾 ultima-formula:', receta);
 
       const data: FormulaMedica = this.mapBackendToFront(receta, fallback);
       return this.printFormula(data);
@@ -106,9 +115,10 @@ export class PrintService {
       diagnosticos: (receta?.diagnosticos || []).filter(Boolean),
   
       medicamentos: (receta?.medicamentos || []).map(m => ({
-        nombre: m?.nombre?.trim() || '',
-        dosis: m?.dosis?.trim() || '',
-        via: m?.via?.trim() || '—',
+        nombre: (m?.nombre || '').trim(),
+        dosis: (m?.dosis || '').trim(),
+        via: (m?.via || '—').trim(),
+        dosisCantidad: (m as any)?.dosisCantidad?.toString()?.trim() || undefined, // 👈
       })),
   
       planObservaciones: receta?.planObservaciones || '—',

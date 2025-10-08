@@ -1,30 +1,35 @@
+// interfaces/formula-medica.dto.ts
+export interface MedicamentoRecetaDTO {
+  medicamentoId?: number | null;
+  medicamentoNombre?: string | null;
+  cantidad?: number | null;
+  via?: string | null;
+  posologia?: string | null;
+}
+
 export interface FormulaMedicaDTO {
-    id?: number;
-  
-    // Paciente
-    nombrePaciente: string;
-    apellidoPaciente: string;
-    numeroIdentificacion: string;
-    fecha: string; // YYYY-MM-DD
-  
-    // Medicamento
-    medicamentoId: number;
-    medicamentoNombre?: string;
-  
-    cantidad: number;
-    via: string;
-    posologia: string;
-    planTratamiento: string;
-  
-    // Médico (obligatorio para crear)
-    usuarioId: number;
-  
-    // Datos del médico devueltos por el back
-    nombreMedico?: string;
-    apellidoMedico?: string;
-    registroMedico?: string | null;
-    descripcionMedicaUno?: string | null;
-    descripcionMedicaDos?: string | null;
-    firma?: string | null; // base64
-  }
-  
+  id?: number;
+  nombrePaciente?: string;
+  apellidoPaciente?: string;
+  numeroIdentificacion?: string;
+  fecha?: string; // o Date
+  planTratamiento?: string;
+
+  // campos "simples" que aún podrían venir en respuestas antiguas:
+  medicamentoId?: number | null;
+  medicamentoNombre?: string | null;
+  cantidad?: number | null;
+  via?: string | null;
+  posologia?: string | null;
+
+  usuarioId?: number;
+  nombreMedico?: string;
+  apellidoMedico?: string;
+  registroMedico?: string;
+  descripcionMedicaUno?: string;
+  descripcionMedicaDos?: string;
+  firma?: string | null;
+
+  // 🔹 NUEVO: lista de medicamentos agrupados
+  medicamentos?: MedicamentoRecetaDTO[];
+}

@@ -26,9 +26,11 @@ export class IdentUnicaDirective implements AsyncValidator {
     if (this.identUnicaDisabled) return of(null);
 
     const raw = (control.value ?? '').toString().trim();
-    if (!raw || raw.length < 3) return of(null); // evita llamadas triviales
 
-    // debounce simple para no saturar el backend
+    // ⚠️ Antes: if (!raw || raw.length < 3) return of(null);
+    // Ahora: valida para cualquier longitud > 0
+    if (!raw) return of(null);
+
     return timer(300).pipe(
       switchMap(() => this.pacienteService.existeIdentificacion(raw)),
       map(resp => (resp?.exists ? { duplicado: true } : null)),

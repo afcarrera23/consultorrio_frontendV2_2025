@@ -188,9 +188,18 @@ export class FormulaMedicaFastComponent implements OnInit {
   cargarMedicamentos(): void {
     this.cargandoCatalogo = true;
     this.api.listarMedicamentos('', 0, 500).subscribe({
-      next: (meds) => { this.medicamentosCatalogo = meds || []; this.cargandoCatalogo = false; },
-      error: (e) => { console.error(e); this.error = 'No fue posible cargar medicamentos.'; this.cargandoCatalogo = false; }
+      next: (meds) => {
+        this.medicamentosCatalogo = meds || [];
+        console.log('Catalogo:', this.medicamentosCatalogo.length, this.medicamentosCatalogo.slice(0,5));
+        this.cargandoCatalogo = false;
+      },
+      error: (e) => {
+        console.error('❌ Error medicamentos:', e);
+        this.error = 'No fue posible cargar medicamentos.';
+        this.cargandoCatalogo = false;
+      }
     });
+    
   }
 
   // ======================== VALIDACIÓN ========================
@@ -263,9 +272,13 @@ export class FormulaMedicaFastComponent implements OnInit {
           diagnosticos: [],
           medicamentos: this.meds.map(m => ({
             nombre: this.resolveNombreParaImpresion(m),
-            dosis: m.posologia,
+            cantidad: m.cantidad ?? 0,
             via: m.via,
+            dosis: m.posologia,
+            dosisCantidad: (m.cantidad != null ? String(m.cantidad) : undefined),
           })),
+          
+          
           planObservaciones: this.form.planTratamiento,
           profesional: {
             nombre: profesionalNombre,
@@ -274,6 +287,7 @@ export class FormulaMedicaFastComponent implements OnInit {
             firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,
           }
         };
+        
 
         this.printSvc.printFormula(data);
         // refresca ambos listados
@@ -335,63 +349,78 @@ export class FormulaMedicaFastComponent implements OnInit {
   imprimirFormula(f: FormulaMedicaDTO): void {
     if (!f) return;
     this.printingId = f.id ?? null;
-
+  
     const profesionalNombre = (
       (this.medicoDetalle?.nombreMedico || this.medicoSesionMin?.nombre || '') + ' ' +
       (this.medicoDetalle?.apellidoMedico || this.medicoSesionMin?.apellido || '')
     ).trim();
+  
+    // 🔹 Construye la lista de medicamentos para imprimir (incluye cantidad en el nombre)
+    // al imprimir desde la fórmula agrupada:
+    const items = (f.medicamentos ?? []).map(m => ({
+      nombre: m.medicamentoNombre ?? '—',
+      cantidad: m.cantidad ?? 0,
+      via: m.via || '—',
+      dosis: m.posologia || '',
+      dosisCantidad: (m.cantidad != null ? String(m.cantidad) : undefined),
+    }));
+    
 
-    // Intento de resolver nombre por id desde el catálogo si viene en el DTO
-    const nombreResuelto =
-      (f.medicamentoNombre && f.medicamentoNombre.trim().length > 0)
-        ? f.medicamentoNombre
-        : this.resolveNombreCatalogo((f as any).medicamentoId ?? null);
+      // al imprimir justo después de guardar (desde this.meds):
+      medicamentos: this.meds.map(m => ({
+        nombre: this.resolveNombreParaImpresion(m),
+        cantidad: m.cantidad ?? 0,
+        via: m.via,
+        dosis: m.posologia
+      }))
 
-    const data: FormulaImpresion = {
+
+  
+    const profesional = {
+      nombre: profesionalNombre,
+      numeroRegistroMedico: this.medicoDetalle?.registroMedico ?? undefined,
+      especialidad: this.medicoDetalle?.descripcionMedicaUno ?? undefined,
+      firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,
+    };
+  
+    const data = {
       pacienteNombre: f.nombrePaciente || this.form.nombrePaciente,
       pacienteApellido: f.apellidoPaciente || this.form.apellidoPaciente,
       pacienteDocumento: f.numeroIdentificacion || this.form.numeroIdentificacion,
       fecha: f.fecha || this.form.fecha,
       diagnosticos: [],
-      medicamentos: [{
-        nombre: nombreResuelto || '—',
-        dosis: f.posologia || '',
-        via: f.via || '—'
-      }],
+      medicamentos: items,
       planObservaciones: f.planTratamiento || '—',
-      profesional: {
-        nombre: profesionalNombre,
-        numeroRegistroMedico: this.medicoDetalle?.registroMedico ?? undefined,
-        especialidad: this.medicoDetalle?.descripcionMedicaUno ?? undefined,
-        firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,
-      }
+      profesional
     };
-
+  
     try {
       this.printSvc.printFormula(data);
     } finally {
       this.printingId = null;
     }
   }
+  
 
+  // ======= ELIMINAR =======
+
+  /** ahora borra el GRUPO completo usando el nuevo endpoint */
   eliminarFormula(f: FormulaMedicaDTO): void {
     if (!f?.id) return;
-    const ok = window.confirm('¿Eliminar esta fórmula? Esta acción no se puede deshacer.');
+    const ok = window.confirm('¿Eliminar esta fórmula completa (todos sus medicamentos)?');
     if (!ok) return;
 
     this.deletingId = f.id;
-    this.api.eliminarFormula(f.id).subscribe({
+    this.api.eliminarFormulaGrupo(f.id).subscribe({
       next: () => {
-        // Si estabas en la lista por identificación:
         this.formulas = this.formulas.filter(x => x.id !== f.id);
-        // También refresca la global
-        this.cargarLista();
+        this.formulasGlobal = this.formulasGlobal.filter(x => x.id !== f.id);
         this.deletingId = null;
       },
       error: (e) => {
         console.error(e);
         this.deletingId = null;
-        alert('No fue posible eliminar la fórmula.');
+        alert('No fue posible eliminar la fórmula completa.');
       }
     });
   }
@@ -451,4 +480,10 @@ export class FormulaMedicaFastComponent implements OnInit {
   get identFilled(): boolean {
     return ((this.form?.numeroIdentificacion ?? '').trim().length) > 0;
   }
+
+  getNombresMedicamentos(f: FormulaMedicaDTO): string {
+    if (!f.medicamentos?.length) return '—';
+    return f.medicamentos.map(m => m.medicamentoNombre).join(', ');
+  }
+  
 }

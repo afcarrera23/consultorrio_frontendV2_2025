@@ -43,15 +43,32 @@ export class FormulaMedicaApiService {
   }
 
   listarFormulas(): Observable<FormulaMedicaDTO[]> {
+    // El backend ya devuelve agrupadas
     return this.http.get<FormulaMedicaDTO[]>(`${API_URL}/formula-medica`);
   }
 
   listarFormulasPorIdentificacion(numero: string): Observable<FormulaMedicaDTO[]> {
-    return this.http.get<FormulaMedicaDTO[]>(`${API_URL}/formula-medica/por-identificacion/${encodeURIComponent(numero)}`);
+    // El backend ya devuelve agrupadas por identificación
+    return this.http.get<FormulaMedicaDTO[]>(
+      `${API_URL}/formula-medica/por-identificacion/${encodeURIComponent(numero)}`
+    );
   }
 
+  /**
+   * ❌ Elimina SOLO una fila por id (no recomendado si tu UI lista agrupado).
+   * Se mantiene por compatibilidad.
+   */
   eliminarFormula(id: number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/formula-medica/${id}`);
+  }
+
+  /**
+   * ✅ Elimina TODA la fórmula (grupo completo) usando el id representativo
+   * que ves en la tabla agrupada.
+   * Backend: DELETE /formula-medica/grupo/{id}
+   */
+  eliminarFormulaGrupo(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/formula-medica/grupo/${id}`);
   }
 
   /**
@@ -98,5 +115,27 @@ export class FormulaMedicaApiService {
 
   listarMedicos(): Observable<UsuarioMedico[]> {
     return this.http.get<UsuarioMedico[]>(`${API_URL}/usuarios/medicos`);
+  }
+
+  // ==================== (Opcional) Util front para deduplicar si fuera necesario ====================
+  /**
+   * Si por alguna razón recibes filas no agrupadas, puedes deduplicar en el front
+   * por (identificación|fecha|plan|usuarioId).
+   */
+  dedupe(list: FormulaMedicaDTO[]): FormulaMedicaDTO[] {
+    const seen = new Set<string>();
+    const out: FormulaMedicaDTO[] = [];
+    for (const f of list ?? []) {
+      const key = [
+        (f.numeroIdentificacion ?? '').trim(),
+        (f.fecha ?? '').toString(),
+        (f.planTratamiento ?? '').trim().toLowerCase(),
+        (f as any).usuarioId ?? '' // según tu DTO
+      ].join('|');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(f);
+    }
+    return out;
   }
 }
