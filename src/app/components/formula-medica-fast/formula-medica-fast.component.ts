@@ -72,6 +72,7 @@ export class FormulaMedicaFastComponent implements OnInit {
   formulasGlobal: FormulaMedicaDTO[] = [];
   cargandoLista = false;
   errorLista?: string;
+  private medSearchTimer?: any;
 
   constructor(
     private router: Router,
@@ -163,25 +164,40 @@ export class FormulaMedicaFastComponent implements OnInit {
     if (this.meds.length === 0) this.addMed();
   }
 
-  // Handler del <input list> (ngModelChange)
   onMedInput(i: number, value: string): void {
     const row = this.meds[i];
     if (!row) return;
-
+  
     row.medInput = value ?? '';
-    const v = (value || '').trim().toLowerCase();
-
-    // Coincidencia exacta por nombre en el catálogo
+    const v = (value || '').trim();
+  
+    // 🔎 Búsqueda remota con debounce (evita spam de requests)
+    clearTimeout(this.medSearchTimer);
+    if (v.length >= 2) {
+      this.medSearchTimer = setTimeout(() => {
+        this.api.listarMedicamentos(v, 0, 25, true).subscribe({
+          next: (items) => this.medicamentosCatalogo = items,
+          error: () => this.medicamentosCatalogo = []
+        });
+      }, 180);
+    } else {
+      // cuando borra o 1 letra, muestra una lista corta “default”
+      this.api.listarMedicamentos('', 0, 25, true).subscribe({
+        next: (items) => this.medicamentosCatalogo = items,
+        error: () => this.medicamentosCatalogo = []
+      });
+    }
+  
+    // Emparejo exacto por nombre (para distinguir id vs nombre libre)
     const match = this.medicamentosCatalogo.find(
-      m => (m.nombreMedicamento || '').trim().toLowerCase() === v
+      m => (m.nombreMedicamento || '').trim().toLowerCase() === v.toLowerCase()
     );
-
     if (match) {
       row.medicamentoId = match.id;
-      row.medicamentoNombre = ''; // lo tomaremos del catálogo por id
+      row.medicamentoNombre = '';
     } else {
       row.medicamentoId = null;
-      row.medicamentoNombre = (value || '').trim();
+      row.medicamentoNombre = v;
     }
   }
 
@@ -488,8 +504,12 @@ export class FormulaMedicaFastComponent implements OnInit {
   }
 
   onMedFocus(): void {
-    this.cargarMedicamentos(true);
+    this.api.listarMedicamentos('', 0, 25, true).subscribe({
+      next: (items) => this.medicamentosCatalogo = items,
+      error: () => this.medicamentosCatalogo = []
+    });
   }
+  
   
   
   
