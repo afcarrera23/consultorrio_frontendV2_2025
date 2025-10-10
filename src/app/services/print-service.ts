@@ -11,24 +11,23 @@ export interface FormulaMedica {
   pacienteDocumento?: string;
   fecha: string;
   diagnosticos?: string[];
-
   medicamentos?: Array<{
     nombre: string;
     dosis: string;
     via: string;
-    cantidad?: number;        // ← se mantiene por compatibilidad
-    dosisCantidad?: string;   // ← se agrega para que el HTML funcione
+    cantidad?: number;
+    dosisCantidad?: string;
   }>;
-
   planObservaciones: string;
   profesional?: {
-    nombre: string;
+    nombreCompleto?: string;
+    nombre?: string;
     numeroRegistroMedico?: string;
-    especialidad?: string;
+    especialidad1?: string;   // ← OK
+    especialidad2?: string;   // ← renombrado (antes especialidadDos)
     firmaBase64?: string;
   };
 }
-
 
 // ≈ DTO que devuelve tu back (FormulaImpresionDTO)
 interface BackendFormulaDTO {
@@ -50,10 +49,10 @@ interface BackendFormulaDTO {
   // 👇 Agrega esto
   profesional?: {
     nombre: string;
-    // Acepta ambos nombres:
-    registro?: string;                 // ← por si el back viejo devuelve 'registro'
-    numeroRegistroMedico?: string;     // ← nombre nuevo
-    especialidad?: string;
+    registro?: string;
+    numeroRegistroMedico?: string;
+    especialidad?: string;      // del back = descripción 1
+    especialidadDos?: string;   // del back = descripción 2
     firmaBase64?: string;
   };
   
@@ -103,41 +102,32 @@ export class PrintService {
   }
 
   /** Mapeo de DTO backend -> modelo de impresión del front */
-  private mapBackendToFront(
-    receta: BackendFormulaDTO | null | undefined,
-    fallback: { nombre?: string; apellido?: string; doc?: string }
-  ): FormulaMedica {
+  private mapBackendToFront(receta: BackendFormulaDTO | null | undefined, fallback: { nombre?: string; apellido?: string; doc?: string }): FormulaMedica {
     return {
       pacienteNombre: receta?.pacienteNombre || fallback?.nombre || '—',
       pacienteApellido: receta?.pacienteApellido || fallback?.apellido || '—',
       pacienteDocumento: receta?.pacienteDocumento || fallback?.doc || '—',
       fecha: receta?.fecha || new Date().toISOString(),
       diagnosticos: (receta?.diagnosticos || []).filter(Boolean),
-  
       medicamentos: (receta?.medicamentos || []).map(m => ({
         nombre: (m?.nombre || '').trim(),
         dosis: (m?.dosis || '').trim(),
         via: (m?.via || '—').trim(),
-        dosisCantidad: (m as any)?.dosisCantidad?.toString()?.trim() || undefined, // 👈
+        dosisCantidad: (m as any)?.dosisCantidad?.toString()?.trim() || undefined,
       })),
-  
       planObservaciones: receta?.planObservaciones || '—',
-  
-      // 👇 IMPORTANTE: aquí llenamos el médico
-        profesional: receta?.profesional
-        ? {
+      profesional: receta?.profesional
+      ? {
           nombre: receta.profesional.nombre ?? '—',
-      // lee ambos nombres y mapea al nuevo campo del front:
-        numeroRegistroMedico:
-        receta.profesional.numeroRegistroMedico
-        ?? receta.profesional.registro
-        ?? undefined,
-        especialidad: receta.profesional.especialidad ?? undefined,
-        firmaBase64: receta.profesional.firmaBase64 ?? undefined,
-          }
-        : undefined,
+          numeroRegistroMedico: receta.profesional.numeroRegistroMedico ?? receta.profesional.registro ?? undefined,
+          especialidad1: receta.profesional.especialidad ?? undefined,      // ← mapea a especialidad1
+          especialidad2: receta.profesional.especialidadDos ?? undefined,   // ← mapea a especialidad2
+          firmaBase64: receta.profesional.firmaBase64 ?? undefined,
+        }
+      : undefined,
     };
   }
+  
   
 
   /** Consumir y limpiar para el componente de impresión */

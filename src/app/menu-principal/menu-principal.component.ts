@@ -168,4 +168,15 @@ export class MenuPrincipalComponent {
     this.router.navigate(['/formula-nueva']);
   }
   
+
+  editarDatosPersonales(paciente: any): void {
+    this.http.get<any>(`${this.apiBase}/pacientes/${paciente.id}`).subscribe({
+      next: (detalle) => {
+        this.registroTemp.guardarPaciente({ ...detalle, id: detalle.id }); // para que el form detecte edición
+        this.router.navigate(['/registro-paciente']); // primer panel en modo edición
+      },
+      error: () => alert('No fue posible abrir la edición de datos personales.')
+    });
+  }
+  
 }

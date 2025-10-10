@@ -9,6 +9,7 @@ import { AntecedentePersonalDTO } from '../models/antecedente-personal.model';
 import { ExamenFisicoDTO } from '../models/examen-fisico.model';
 import { Diagnostico } from '../models/diagnostico.model';
 import { PacienteDTO } from '../interfaces/PacienteDTO'
+import { PacienteBasicosUpdateRequestDTO } from '../interfaces/PacienteBasicosUpdateRequestDTO';
 
 @Injectable({ providedIn: 'root' })
 export class PacienteService {
@@ -112,5 +113,17 @@ export class PacienteService {
     return this.http.get<{ exists: boolean }>(`${this.apiUrl}/existe`, {
       params: { identificacion: ident.trim() }
     });
+  }
+//ACTUALIZAR DATOS BASICOS PACIENTE//
+  crearPaciente(req: PacienteBasicosUpdateRequestDTO): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, req);
+  }
+
+  actualizarBasicos(id: number, req: Partial<PacienteBasicosUpdateRequestDTO>): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/basicos`, req);
+  }
+
+  obtenerPaciente(id: number): Observable<PacienteBasicosUpdateRequestDTO> {
+    return this.http.get<PacienteBasicosUpdateRequestDTO>(`${this.apiUrl}/${id}`);
   }
 }

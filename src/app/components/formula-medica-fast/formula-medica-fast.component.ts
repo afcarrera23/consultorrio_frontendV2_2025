@@ -263,7 +263,7 @@ export class FormulaMedicaFastComponent implements OnInit {
           (this.medicoDetalle?.nombreMedico || this.medicoSesionMin?.nombre || '') + ' ' +
           (this.medicoDetalle?.apellidoMedico || this.medicoSesionMin?.apellido || '')
         ).trim();
-
+        
         const data: FormulaImpresion = {
           pacienteNombre: this.form.nombrePaciente,
           pacienteApellido: this.form.apellidoPaciente,
@@ -273,22 +273,19 @@ export class FormulaMedicaFastComponent implements OnInit {
           medicamentos: this.meds.map(m => ({
             nombre: this.resolveNombreParaImpresion(m),
             cantidad: m.cantidad ?? 0,
-            via: m.via,
-            dosis: m.posologia,
+            via: m.via || '—',
+            dosis: m.posologia || '',
             dosisCantidad: (m.cantidad != null ? String(m.cantidad) : undefined),
           })),
-          
-          
           planObservaciones: this.form.planTratamiento,
           profesional: {
-            nombre: profesionalNombre,
-            numeroRegistroMedico: this.medicoDetalle?.registroMedico ?? undefined,
-            especialidad: this.medicoDetalle?.descripcionMedicaUno ?? undefined,
-            firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,
+            nombreCompleto: profesionalNombre,                               // 👈 (1) nombre completo
+            numeroRegistroMedico: this.medicoDetalle?.registroMedico ?? undefined, // 👈 (5) registro
+            especialidad1: this.medicoDetalle?.descripcionMedicaUno || undefined,  // 👈 (3) esp. 1
+            especialidad2: this.medicoDetalle?.descripcionMedicaDos || undefined,  // 👈 (4) esp. 2
+            firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,            // 👈 (0) firma
           }
         };
-        
-
         this.printSvc.printFormula(data);
         this.cargarMedicamentos(true);
         // refresca ambos listados
@@ -356,8 +353,7 @@ export class FormulaMedicaFastComponent implements OnInit {
       (this.medicoDetalle?.apellidoMedico || this.medicoSesionMin?.apellido || '')
     ).trim();
   
-    // 🔹 Construye la lista de medicamentos para imprimir (incluye cantidad en el nombre)
-    // al imprimir desde la fórmula agrupada:
+    // Arma medicamentos desde la fórmula guardada
     const items = (f.medicamentos ?? []).map(m => ({
       nombre: m.medicamentoNombre ?? '—',
       cantidad: m.cantidad ?? 0,
@@ -365,26 +361,8 @@ export class FormulaMedicaFastComponent implements OnInit {
       dosis: m.posologia || '',
       dosisCantidad: (m.cantidad != null ? String(m.cantidad) : undefined),
     }));
-    
-
-      // al imprimir justo después de guardar (desde this.meds):
-      medicamentos: this.meds.map(m => ({
-        nombre: this.resolveNombreParaImpresion(m),
-        cantidad: m.cantidad ?? 0,
-        via: m.via,
-        dosis: m.posologia
-      }))
-
-
   
-    const profesional = {
-      nombre: profesionalNombre,
-      numeroRegistroMedico: this.medicoDetalle?.registroMedico ?? undefined,
-      especialidad: this.medicoDetalle?.descripcionMedicaUno ?? undefined,
-      firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,
-    };
-  
-    const data = {
+    const data: FormulaImpresion = {
       pacienteNombre: f.nombrePaciente || this.form.nombrePaciente,
       pacienteApellido: f.apellidoPaciente || this.form.apellidoPaciente,
       pacienteDocumento: f.numeroIdentificacion || this.form.numeroIdentificacion,
@@ -392,7 +370,13 @@ export class FormulaMedicaFastComponent implements OnInit {
       diagnosticos: [],
       medicamentos: items,
       planObservaciones: f.planTratamiento || '—',
-      profesional
+      profesional: {
+        nombreCompleto: profesionalNombre,                                 // 👈 (1)
+        numeroRegistroMedico: this.medicoDetalle?.registroMedico ?? undefined, // 👈 (5)
+        especialidad1: this.medicoDetalle?.descripcionMedicaUno || undefined,  // 👈 (3)
+        especialidad2: this.medicoDetalle?.descripcionMedicaDos || undefined,  // 👈 (4)
+        firmaBase64: this.medicoDetalle?.firmaBase64 ?? undefined,              // 👈 (0)
+      }
     };
   
     try {
@@ -401,6 +385,7 @@ export class FormulaMedicaFastComponent implements OnInit {
       this.printingId = null;
     }
   }
+  
   
 
   // ======= ELIMINAR =======

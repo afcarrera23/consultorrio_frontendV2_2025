@@ -157,7 +157,7 @@ button:hover:enabled {
 /* Fila inferior con Atrás (izq) y Cancelar (der) */
 .form-bottom {
   display: flex;
-  justify-content: space-between; /* Atrás a la izq, Cancelar a la der */
+  justify-content: flex-end; /* Atrás a la izq, Cancelar a la der */
   align-items: center;
   margin-top: 10px;
 }

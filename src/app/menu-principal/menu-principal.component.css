@@ -36,11 +36,10 @@
   margin: 0;
 }
 
-/* ===== Fila del buscador (INPUT + BOTONES) =====
-   Pasamos a GRID para que nunca se monten */
+/* ===== Fila del buscador (INPUT + BOTONES) ===== */
 .form-row {
   display: grid;
-  grid-template-columns: minmax(360px, 1fr) max-content; /* input crece, botones lo necesario */
+  grid-template-columns: minmax(360px, 1fr) max-content;
   align-items: center;
   gap: 12px;
 }
@@ -49,13 +48,13 @@
 .search-input {
   position: relative;
   width: 100%;
-  max-width: 100%; /* tope visual del input (ajústalo si quieres) */
+  max-width: 100%;
 }
 
 /* Input */
 .search-input input[type="text"] {
   width: 100%;
-  padding: 12px 38px 12px 12px; /* espacio para el botón clear (×) */
+  padding: 12px 38px 12px 12px;
   border: 1px solid #ccc;
   border-radius: 8px;
   transition: border 0.2s ease, box-shadow .2s ease;
@@ -88,16 +87,16 @@
 }
 .search-input .clear:hover { background: #e5e7eb; }
 
-/* Grupo de botones (Buscar / Agregar) */
+/* Grupo de botones (Buscar / Agregar / Fórmula) */
 .button-group {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
   align-items: center;
-  width: auto; /* clave: que no intente crecer */
+  width: auto;
 }
 
-/* Botones primario/secundario */
+/* Botones primario/secundario base */
 .btn-primary, .btn-secondary {
   width: 150px;
   height: 40px;
@@ -124,6 +123,24 @@
   color: white;
 }
 .btn-secondary:hover { background-color: #45a049; }
+
+/* Botón Fórmula */
+.btn-formula {
+  width: 150px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1976d2; /* azul */
+  color: white;
+  transition: background-color 0.2s ease, transform .06s ease;
+}
+.btn-formula:hover { background-color: #1565c0; }
+.btn-formula:active { transform: translateY(1px); }
 
 /* ===== Lista de pacientes ===== */
 .patient-list {
@@ -153,7 +170,7 @@ table {
   margin-top: 12px;
   background-color: #fff;
   border-radius: 8px;
-  overflow: hidden; /* respeta bordes redondeados */
+  overflow: hidden;
 }
 table th, table td {
   padding: 12px 15px;
@@ -168,7 +185,15 @@ table th {
 table tr:nth-child(even) { background-color: #fafafa; }
 table tr:hover { background-color: #f3f4f7; }
 
-/* ===== Botones con ícono ===== */
+/* ===== Celda de acciones ===== */
+.acciones-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;              /* espacio uniforme entre botones */
+  flex-wrap: wrap;       /* evita que se monten cuando hay poco ancho */
+}
+
+/* Botón con ícono existente */
 .btn-icon {
   background-color: transparent;
   border: none;
@@ -178,7 +203,6 @@ table tr:hover { background-color: #f3f4f7; }
   transition: background-color 0.2s ease, transform 0.08s ease;
 }
 .btn-icon + .btn-icon { margin-left: 6px; }
-
 .btn-icon:hover {
   background-color: rgba(0, 0, 0, 0.06);
   transform: scale(1.06);
@@ -189,6 +213,41 @@ table tr:hover { background-color: #f3f4f7; }
   display: block;
   margin: 0 auto;
   pointer-events: none;
+}
+
+/* 🔹 Nuevo botón plano con texto: “Editar datos” */
+.btn-flat-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .45rem .75rem;
+  min-width: 120px;            /* ancho coherente con acciones */
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;   /* gris claro */
+  background: #ffffff;         /* flat */
+  color: #111827;              /* gris 900 */
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  letter-spacing: .2px;
+  white-space: nowrap;         /* evita salto de línea */
+}
+.btn-flat-edit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+.btn-flat-edit:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.btn-flat-edit:focus {
+  outline: 2px solid #60a5fa33; /* enfoque accesible azul suave */
+  outline-offset: 2px;
 }
 
 /* ===== Overlay de popup ===== */
@@ -219,34 +278,19 @@ table tr:hover { background-color: #f3f4f7; }
 
 @media (max-width: 640px) {
   .form-row {
-    grid-template-columns: 1fr; /* input arriba, botones abajo */
+    grid-template-columns: 1fr;
   }
   .button-group {
     width: 100%;
   }
-  .btn-primary, .btn-secondary {
-    width: 100%; /* botones a ancho completo en móvil */
+  .btn-primary, .btn-secondary, .btn-formula {
+    width: 100%;
   }
-}
-
-
-.btn-formula {
-  width: 150px;      /* mismo ancho */
-  height: 40px;      /* misma altura */
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #1976d2; /* azul */
-  color: white;
-  transition: background-color 0.2s ease, transform .06s ease;
-}
-.btn-formula:hover {
-  background-color: #1565c0;
-}
-.btn-formula:active {
-  transform: translateY(1px);
+  .acciones-cell {
+    gap: 6px;
+  }
+  .btn-flat-edit {
+    min-width: auto;     /* que se adapte en pantallas pequeñas */
+    padding: .45rem .6rem;
+  }
 }

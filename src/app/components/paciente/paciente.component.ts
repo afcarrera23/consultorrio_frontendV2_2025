@@ -39,6 +39,17 @@ export class PacienteComponent implements OnInit {
   isSubmitting = false;
   todayISO = '';
 
+  isEditMode = false;  // ← nuevo
+
+  /** Convierte yyyy-MM-dd → dd/MM/yyyy para el DTO de actualización */
+  private isoToDDMMYYYY(iso?: string | null): string | null {
+    if (!iso) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+    if (!m) return null;
+    const [, yyyy, mm, dd] = m;
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
   constructor(
     private pacienteService: PacienteService,
     private router: Router,
@@ -60,6 +71,7 @@ export class PacienteComponent implements OnInit {
       const usuarioId = Number(localStorage.getItem('usuarioId'));
       if (usuarioId > 0) this.paciente.usuarioRegistroId = usuarioId;
     }
+    this.isEditMode = !!this.paciente?.id; 
   }
 
   /** Edad calculada (solo UI) */
@@ -176,4 +188,51 @@ export class PacienteComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEsc() { if (this.isPopupOpen) this.cerrarPopup(); }
+
+
+  //ACTUALIZAR DATOS BASICOS PACIENTE//
+  /** Acción principal: si es edición → PUT; si no, sigue tu flujo de creación */
+onPrimaryAction(): void {
+  if (this.isEditMode && this.paciente.id) {
+    this.guardarCambiosBasicos();
+  } else {
+    this.siguientePanelAntecedentes();
+  }
+}
+
+/** PUT /pacientes/{id}/basicos (sin tipo/identificación) */
+private guardarCambiosBasicos(): void {
+  if (!this.paciente.id) return;
+  this.isSubmitting = true;
+
+  const payload = {
+    fechaNacimiento: this.isoToDDMMYYYY(this.paciente.fechaNacimiento) ?? '',
+    edad: this.edadCalculada ?? undefined,
+    nombreCompleto: this.paciente.nombreCompleto,
+    apellidoCompleto: this.paciente.apellidoCompleto,
+    genero: this.paciente.genero,
+    profesion: this.paciente.profesion,
+    numeroTelefono: this.paciente.numeroTelefono,
+    direccion: this.paciente.direccion,
+    acompananteNombre: this.paciente.nombreAcompanante,
+    correo: this.paciente.correo
+  };
+
+  this.pacienteService.actualizarBasicos(this.paciente.id, payload).subscribe({
+    next: () => {
+      this.isSubmitting = false;
+      alert('✅ Datos básicos actualizados correctamente.');
+
+      // 🟢 Redireccionar al menú principal
+      this.router.navigate(['/menu-principal']);
+    },
+    error: (err) => {
+      console.error('❌ Error al actualizar datos básicos:', err);
+      this.isSubmitting = false;
+      alert('No fue posible actualizar los datos.');
+    }
+  });
+}
+
+
 }

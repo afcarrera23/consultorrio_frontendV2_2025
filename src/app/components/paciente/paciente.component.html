@@ -8,7 +8,9 @@
       <div class="form-group">
         <label for="tipoIdentificacion">Tipo de identificación *:</label>
         <select id="tipoIdentificacion" name="tipoIdentificacion"
-                [(ngModel)]="paciente.tipoIdentificacion" required>
+                [(ngModel)]="paciente.tipoIdentificacion"
+                required
+                [disabled]="isEditMode">
           <option value="">Seleccione</option>
           <option value="CC">Cédula de ciudadanía</option>
           <option value="TI">Tarjeta de identidad</option>
@@ -21,7 +23,8 @@
         <label>
           <input type="checkbox"
                  [(ngModel)]="paciente.pendienteDocumento"
-                 name="pendienteDocumento">
+                 name="pendienteDocumento"
+                 [disabled]="isEditMode">
           No conoce el número ahora
         </label>
       </div>
@@ -39,8 +42,8 @@
                [(ngModel)]="paciente.identificacion"
                [required]="!paciente.pendienteDocumento"
                identUnica
-               [identUnicaDisabled]="!!paciente.pendienteDocumento"
-               [disabled]="!!paciente.pendienteDocumento"
+               [identUnicaDisabled]="!!paciente.pendienteDocumento || isEditMode"
+               [disabled]="!!paciente.pendienteDocumento || isEditMode"
                [ngModelOptions]="{ updateOn: 'blur' }"
                #identField="ngModel" />
 
@@ -50,7 +53,7 @@
         <small class="hint" *ngIf="identField?.pending">
           Validando identificación…
         </small>
-        <small class="hint" *ngIf="paciente.pendienteDocumento">
+        <small class="hint" *ngIf="paciente.pendienteDocumento && !isEditMode">
           Se asignará un identificador temporal automático y podrás actualizarlo después.
         </small>
       </div>
@@ -145,13 +148,14 @@
 
     <!-- Acciones -->
     <div class="form-row form-actions">
-      <button type="button" 
+      <button type="button"
               class="btn btn-primary"
-              (click)="siguientePanelAntecedentes()"
+              (click)="onPrimaryAction()"
               [disabled]="!pacienteForm.form.valid 
-                          || (!paciente.pendienteDocumento && (identField?.pending || identField?.errors?.['duplicado']))
+                          || (!isEditMode && !paciente.pendienteDocumento 
+                              && (identField?.pending || identField?.errors?.['duplicado']))
                           || isSubmitting">
-        {{ paciente.id ? 'Continuar' : 'Siguiente' }}
+        {{ isEditMode ? 'Guardar cambios' : 'Siguiente' }}
       </button>
     </div>
 
@@ -163,6 +167,7 @@
   </form>
 </div>
 
+<!-- Popup cancelar -->
 <app-popup
   *ngIf="isPopupOpen"
   [message]="'¿Deseas abandonar el registro?'"

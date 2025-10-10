@@ -32,7 +32,7 @@
       <div class="button-group">
         <button class="btn-secondary" (click)="agregarPaciente()">Agregar paciente</button>
 
-            <!-- Nuevo botón -->
+        <!-- Nuevo botón existente -->
         <button class="btn-formula" (click)="nuevaFormula()">
           Fórmula rapida
         </button>
@@ -54,7 +54,7 @@
           <th>Apellido</th>
           <th>Nombre</th>
           <th>Identificación</th>
-          <th style="width: 220px;">Acciones</th>
+          <th style="width: 320px;">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -62,13 +62,24 @@
           <td>{{ paciente.apellidoCompleto }}</td>
           <td>{{ paciente.nombreCompleto }}</td>
           <td>{{ paciente.identificacion }}</td>
-          <td>
-            <button class="btn-icon" (click)="editarPaciente(paciente)" title="Editar">
+          <td class="acciones-cell">
+
+             <!-- 🔹 NUEVO: botón plano con texto “Editar datos” -->
+             <button class="btn-flat-edit" (click)="editarDatosPersonales(paciente)" title="Editar datos personales">
+              Editar datos
+            </button>
+            
+            <!-- Botón clásico (edición flujo historias) -->
+            <button class="btn-icon" (click)="editarPaciente(paciente)" title="Editar (historias)">
               <img src="assets/imagenes/editar.png" alt="Editar" class="icono-editar">
             </button>
+          
+            <!-- Ver historias -->
             <button class="btn-icon" (click)="verHistorias(paciente)" title="Ver historial">
               <img src="assets/imagenes/ver.png" alt="Ver" class="icono-ver">
             </button>
+          
+            <!-- Imprimir receta -->
             <button
               class="btn-icon"
               (click)="imprimirReceta(paciente)"
@@ -76,11 +87,13 @@
               title="Imprimir receta">
               <img src="assets/imagenes/imprimir.png" alt="Imprimir" class="icono-ver">
             </button>
-            <!-- Botón de eliminar abre modal -->
+          
+            <!-- Eliminar -->
             <button class="btn-icon" (click)="abrirConfirmarEliminar(paciente)" title="Eliminar">
               <img src="assets/imagenes/eliminar.png" alt="Eliminar" class="icono-ver">
             </button>
           </td>
+          
         </tr>
       </tbody>
     </table>

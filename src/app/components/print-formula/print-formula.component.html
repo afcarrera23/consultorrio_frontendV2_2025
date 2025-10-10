@@ -1,9 +1,9 @@
 <div class="hoja">
   <!-- Encabezado -->
   <div class="brand">Consultorio Médico Las Lunas</div>
-
   <h1>Fórmula médica</h1>
 
+  <!-- Meta -->
   <div class="meta">
     <div>
       <b>Paciente:</b> {{ data?.pacienteNombre }} {{ data?.pacienteApellido }}
@@ -12,27 +12,36 @@
       <b>Documento:</b> {{ data?.pacienteDocumento }}
     </div>
     <div>
-      <b>Fecha:</b> {{ data?.fecha | date: 'short' }}
+      <b>Fecha:</b> {{ data?.fecha | date:'short' }}
     </div>
   </div>
 
-  <!-- Tabla de Medicamentos -->
+  <!-- Medicamentos -->
   <section *ngIf="data?.medicamentos?.length">
     <h2>Medicamentos</h2>
-    <table>
+
+    <table class="meds">
+      <!-- Anchos de columnas -->
+      <colgroup>
+        <col style="width:24%">  <!-- Nombre -->
+        <col style="width:12%">  <!-- Cantidad -->
+        <col style="width:12%">  <!-- Vía -->
+        <col style="width:52%">  <!-- Dosis (más amplia) -->
+      </colgroup>
+
       <thead>
         <tr>
           <th>Nombre</th>
-          <th style="width: 90px; text-align: center;">Cantidad</th>
+          <th style="text-align:center;">Cantidad</th>
           <th>Vía</th>
           <th>Dosis</th>
         </tr>
       </thead>
+
       <tbody>
         <tr *ngFor="let m of data!.medicamentos">
           <td>{{ m.nombre }}</td>
-          <!-- 👇 Aquí cambiamos 'cantidad' por 'dosisCantidad' -->
-          <td style="text-align: center;">{{ m.dosisCantidad || '—' }}</td>
+          <td style="text-align:center;">{{ m.dosisCantidad || '—' }}</td>
           <td>{{ m.via || '—' }}</td>
           <td>{{ m.dosis || '—' }}</td>
         </tr>
@@ -40,27 +49,35 @@
     </table>
   </section>
 
-  <!-- Plan de tratamiento -->
+  <!-- Plan / Observaciones -->
   <section>
     <h2>Plan / Observaciones</h2>
     <div class="box plan">{{ data?.planObservaciones }}</div>
   </section>
 
-  <!-- Información del profesional -->
-  <section *ngIf="data?.profesional">
-    <div class="profesional">
-      <div class="firma" *ngIf="firmaSrc(data?.profesional?.firmaBase64) as firmaUrl">
-        <img [src]="firmaUrl" alt="Firma del médico" />
-        <div class="firma-label"></div>
-      </div>
-
-      <div><b>Médico:</b> {{ data?.profesional?.nombre }}</div>
-      <div><b>Especialidad:</b> {{ data?.profesional?.especialidad || '—' }}</div>
-      <div><b>Registro médico:</b> {{ data?.profesional?.numeroRegistroMedico || '—' }}</div>
+  <!-- Profesional -->
+<section *ngIf="data?.profesional">
+  <div class="profesional">
+    <!-- Firma: primero la imagen -->
+    <div class="firma" *ngIf="firmaSrc(data?.profesional?.firmaBase64) as firmaUrl">
+      <img [src]="firmaUrl" alt="Firma del médico" />
+      <div class="firma-line"></div> <!-- línea bajo la firma -->
     </div>
-  </section>
 
-  <!-- Botones (solo visibles en pantalla) -->
+    <!-- Luego: Médico + nombre y apellido -->
+    <div><b>Médico:</b> {{ data?.profesional?.nombreCompleto || data?.profesional?.nombre || '—' }}</div>
+
+    <!-- Luego: especialidad 1 y 2 SIN label -->
+    <div *ngIf="data?.profesional?.especialidad1">{{ data?.profesional?.especialidad1 }}</div>
+    <div *ngIf="data?.profesional?.especialidad2">{{ data?.profesional?.especialidad2 }}</div>
+
+    <!-- Por último: Registro con label -->
+    <div><b>Registro médico:</b> {{ data?.profesional?.numeroRegistroMedico || '—' }}</div>
+  </div>
+</section>
+
+
+  <!-- Botones (solo pantalla) -->
   <div class="acciones">
     <button class="btn-atras" (click)="volverMenu()">← Atrás</button>
     <button class="btn-imprimir" (click)="reimprimir()">🖨️ Imprimir</button>
