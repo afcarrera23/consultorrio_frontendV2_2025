@@ -3,7 +3,7 @@
     <h2>Antecedente Patológico</h2>
     <p class="form-note">Complete los campos obligatorios (*)</p>
 
-    <!-- Datos de consulta -->
+    <!-- ========================= DATOS DE CONSULTA ========================= -->
     <div class="form-row">
       <div class="form-group">
         <label for="motivoConsulta">Motivo de consulta *</label>
@@ -34,7 +34,106 @@
 
     <hr class="divider">
 
-    <!-- Síntomas -->
+    <!-- ================== DETECCIÓN DE RIESGOS Y VIOLENCIAS ================== -->
+    <h4>Detección de riesgos y violencias</h4>
+
+    <div class="risk-grid">
+      <!-- (1) ¿Ha sufrido algún tipo de violencia en su casa? -> victimaViolencia -->
+      <div class="qa-card">
+        <div class="qa-title">¿Ha sufrido algún tipo de violencia en su casa?</div>
+        <div class="qa-options">
+          <label class="qa-option">
+            <input type="radio" name="victimaViolencia" [value]="true"
+                   [(ngModel)]="antecedente.victimaViolencia"> Sí
+          </label>
+          <label class="qa-option">
+            <input type="radio" name="victimaViolencia" [value]="false"
+                   [(ngModel)]="antecedente.victimaViolencia"> No
+          </label>
+        </div>
+      </div>
+
+      <!-- (2) Físico -> dolorToraxico -->
+      <div class="qa-card">
+        <div class="qa-title">Físico</div>
+        <div class="qa-options">
+          <label class="qa-option">
+            <input type="radio" name="dolorToraxico" [value]="true"
+                   [(ngModel)]="antecedente.dolorToraxico"> Sí
+          </label>
+          <label class="qa-option">
+            <input type="radio" name="dolorToraxico" [value]="false"
+                   [(ngModel)]="antecedente.dolorToraxico"> No
+          </label>
+        </div>
+      </div>
+
+      <!-- (3) Sexual -> disgeusia -->
+      <div class="qa-card">
+        <div class="qa-title">Sexual</div>
+        <div class="qa-options">
+          <label class="qa-option">
+            <input type="radio" name="disgeusia" [value]="true"
+                   [(ngModel)]="antecedente.disgeusia"> Sí
+          </label>
+          <label class="qa-option">
+            <input type="radio" name="disgeusia" [value]="false"
+                   [(ngModel)]="antecedente.disgeusia"> No
+          </label>
+        </div>
+      </div>
+
+      <!-- (4) Emocional -> cefalea -->
+      <div class="qa-card">
+        <div class="qa-title">Emocional</div>
+        <div class="qa-options">
+          <label class="qa-option">
+            <input type="radio" name="cefalea" [value]="true"
+                   [(ngModel)]="antecedente.cefalea"> Sí
+          </label>
+          <label class="qa-option">
+            <input type="radio" name="cefalea" [value]="false"
+                   [(ngModel)]="antecedente.cefalea"> No
+          </label>
+        </div>
+      </div>
+
+      <!-- (5) ¿Usted se siente en riesgo? -> sintomaticoRespiratorio -->
+      <div class="qa-card">
+        <div class="qa-title">¿Usted se siente en riesgo?</div>
+        <div class="qa-options">
+          <label class="qa-option">
+            <input type="radio" name="sintomaticoRespiratorio" [value]="true"
+                   [(ngModel)]="antecedente.sintomaticoRespiratorio"> Sí
+          </label>
+          <label class="qa-option">
+            <input type="radio" name="sintomaticoRespiratorio" [value]="false"
+                   [(ngModel)]="antecedente.sintomaticoRespiratorio"> No
+          </label>
+        </div>
+      </div>
+
+      <!-- (6) ¿Quiere hablar del tema? -> sintomaticoPiel -->
+      <div class="qa-card">
+        <div class="qa-title">¿Quiere hablar del tema?</div>
+        <div class="qa-options">
+          <label class="qa-option">
+            <input type="radio" name="sintomaticoPiel" [value]="true"
+                   [(ngModel)]="antecedente.sintomaticoPiel"> Sí
+          </label>
+          <label class="qa-option">
+            <input type="radio" name="sintomaticoPiel" [value]="false"
+                   [(ngModel)]="antecedente.sintomaticoPiel"> No
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+         REFERENCIA ORIGINAL (ANTES DE LA MODIFICACIÓN)
+         Mantener por trazabilidad, no eliminar:
+    ==============================================================
+
     <div class="checkbox-container">
       <h4>Síntomas</h4>
       <div class="checkbox-grid">
@@ -58,6 +157,7 @@
         <label><input type="checkbox" name="victimaViolencia" [(ngModel)]="antecedente.victimaViolencia"> Víctima de violencia</label>
       </div>
     </div>
+    ============================================================== -->
 
     <div class="form-row">
       <div class="form-group full-width">
@@ -71,7 +171,7 @@
     <input type="hidden" name="usuarioId" [(ngModel)]="antecedente.usuarioId">
     <input type="hidden" name="pacienteId" [(ngModel)]="antecedente.pacienteId">
 
-    <!-- Acciones -->
+    <!-- ========================= ACCIONES ========================= -->
     <div class="form-row form-actions">
       <button type="button"
               class="btn btn-primary"
@@ -81,18 +181,15 @@
       </button>
     </div>
 
-        <!-- Fila inferior: Atrás (izquierda) y Cancelar (derecha) -->
     <div class="form-row form-bottom">
-      <!-- boton atras comentado 
+      <!-- botón Atrás (opcional, comentado)
       <button type="button" class="btn-back" (click)="atras()">
         ← Atrás
-      </button>-->
-
+      </button> -->
       <button type="button" class="btn-cancel" (click)="abrirPopupCancelar()">
         Cancelar
       </button>
     </div>
-
   </form>
 </div>
 

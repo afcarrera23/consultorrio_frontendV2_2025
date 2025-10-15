@@ -55,8 +55,8 @@ label {
   font-size: 0.9rem;
 }
 
-/* ==== Inputs, Textareas, Selects ==== */
-input,
+/* ==== Inputs, Textareas, Selects (sin afectar radios/checkboxes) ==== */
+input:not([type="radio"]):not([type="checkbox"]),
 select,
 textarea {
   width: 100%;
@@ -69,30 +69,104 @@ textarea {
   box-sizing: border-box;
 }
 
-input:focus,
+input:focus:not([type="radio"]):not([type="checkbox"]),
 select:focus,
 textarea:focus {
   border-color: #3498db;
   box-shadow: 0 0 4px rgba(52, 152, 219, 0.25);
 }
 
-/* ==== Checkbox ==== */
+/* ================================================================
+   SECCIÓN DE RIESGOS Y VIOLENCIAS - TARJETAS MODERNAS
+   ================================================================ */
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.qa-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #e9edf3;
+  border-radius: 12px;
+  padding: 10px 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.qa-card:hover {
+  border-color: #cfd8ff;
+  box-shadow: 0 6px 14px rgba(28, 56, 90, 0.08);
+}
+
+/* Título dentro de la tarjeta */
+.qa-title {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  line-height: 1.25;
+}
+
+/* Opciones Sí / No */
+.qa-options {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.qa-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px; /* antes 8px: reduce el espacio entre radio y texto */
+  font-weight: 500;
+  color: #333;
+}
+
+.qa-option input[type="radio"] {
+  accent-color: #28a745;
+  transform: scale(1.15);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* ================================================================
+   BLOQUE LEGADO (checkbox-grid, por compatibilidad)
+   ================================================================ */
+
 .checkbox-container {
   margin-bottom: 20px;
 }
 
-.checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
+.checkbox-container h4 {
+  margin-bottom: 12px;
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-.checkbox-grid input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  transform: scale(1.5);
-  margin-right: 6px;
-  cursor: pointer;
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px 24px;
+}
+
+.checkbox-grid div {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: background 0.3s ease, border 0.3s ease;
+}
+
+.checkbox-grid div:hover {
+  background: #f3f7ff;
+  border-color: #cfdffb;
 }
 
 /* ==== Botones ==== */
@@ -117,21 +191,24 @@ button:hover:enabled {
   background-color: #218838;
 }
 
-/* ==== Botón cancelar (debajo y pequeño) ==== */
-.form-cancel {
+/* ================================================================
+   BOTÓN CANCELAR - AHORA ALINEADO A LA DERECHA
+   ================================================================ */
+.form-bottom {
   display: flex;
-  justify-content: center;  /* centrado */
+  justify-content: flex-end; /* antes: center */
+  margin-top: 10px;
 }
 
 .btn-cancel {
   background-color: #dc3545;
   color: #fff;
   border: none;
-  padding: 6px 14px;      /* más pequeño que el de Siguiente */
+  padding: 6px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  width: auto;            /* solo lo necesario */
+  width: auto;
   transition: background-color 0.3s ease;
 }
 
@@ -143,63 +220,21 @@ button:hover:enabled {
   background-color: #940303;
 }
 
-/* ==== Responsive observaciones (colapsa a 1 col en pantallas medianas) ==== */
-@media (max-width: 1100px) {
-  .observaciones-grid {
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 1024px) {
+  .risk-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .risk-grid {
     grid-template-columns: 1fr;
   }
-}
 
-/* Acciones principales: Siguiente arriba (full width) */
-.form-actions { margin-top: 6px; }
-.form-actions .btn.btn-primary { width: 100%; }
-
-/* Fila inferior con Atrás (izq) y Cancelar (der) */
-.form-bottom {
-  display: flex;
-  justify-content: flex-end; /* Atrás a la izq, Cancelar a la der */
-  align-items: center;
-  margin-top: 10px;
-}
-
-/* Tamaño compacto y consistencia entre Atrás y Cancelar */
-.btn-back,
-.btn-cancel {
-  padding: 6px 14px;      /* mismo tamaño */
-  font-size: 14px;
-  border-radius: 6px;
-  width: auto;            /* no full width */
-}
-
-/* Estilo de Atrás (neutro) */
-.btn-back {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  cursor: pointer;
-  transition: background-color .2s ease;
-}
-.btn-back:hover { background: #e5e7eb; }
-
-/* Estilo de Cancelar (rojo) */
-.btn-cancel {
-  background-color: #dc3545;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background-color .2s ease;
-}
-.btn-cancel:hover { background-color: #c82333; }
-
-/* Responsive: apila en pantallas pequeñas */
-@media (max-width: 560px) {
-  .form-bottom {
-    gap: 10px;
-    justify-content: center;
-  }
-  .btn-back, .btn-cancel {
-    flex: 1 1 auto;       /* ocupan mitad y mitad */
-    text-align: center;
+  .qa-card {
+    min-height: 10px;
   }
 }
-

@@ -10,7 +10,7 @@
         <select id="tipoIdentificacion" name="tipoIdentificacion"
                 [(ngModel)]="paciente.tipoIdentificacion"
                 required
-                [disabled]="isEditMode">
+                [disabled]="isEditMode || paciente.pendienteDocumento">
           <option value="">Seleccione</option>
           <option value="CC">Cédula de ciudadanía</option>
           <option value="TI">Tarjeta de identidad</option>
@@ -23,6 +23,7 @@
         <label>
           <input type="checkbox"
                  [(ngModel)]="paciente.pendienteDocumento"
+                 (ngModelChange)="onPendienteDocChange($event)"
                  name="pendienteDocumento"
                  [disabled]="isEditMode">
           No conoce el número ahora

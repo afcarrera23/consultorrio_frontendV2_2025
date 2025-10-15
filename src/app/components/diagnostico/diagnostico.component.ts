@@ -123,7 +123,7 @@ export class DiagnosticoComponent implements OnInit {
     this.catalogoLoading = true;
 
     // Pide bastante tamaño para incluir recién creados (si el backend no soporta orden, al menos estarán)
-    this.medsApi.listar('', 0, 2000).subscribe({
+    this.medsApi.listar('', 0, 10000).subscribe({
       next: (page) => {
         this.medicamentosCatalogo = page?.content || [];
         this.catalogoLoading = false;

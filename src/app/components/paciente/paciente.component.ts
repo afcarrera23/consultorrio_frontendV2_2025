@@ -234,5 +234,19 @@ private guardarCambiosBasicos(): void {
   });
 }
 
+onPendienteDocChange(checked: boolean): void {
+  this.paciente.pendienteDocumento = checked;
+
+  if (checked) {
+    this.paciente.tipoIdentificacion = 'NA';
+    this.paciente.identificacion = '';
+  } else {
+    if (this.paciente.tipoIdentificacion === 'NA') {
+      this.paciente.tipoIdentificacion = '';
+    }
+  }
+}
+
+
 
 }

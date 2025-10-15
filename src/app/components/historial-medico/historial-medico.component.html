@@ -58,197 +58,253 @@
 
       <ng-container *ngIf="rows[h.id]?.detalle as d">
         <!-- ===== Antecedentes patológicos ===== -->
-  
-    <!-- ===== Antecedentes patológicos ===== -->
-    <div class="section">
-      <h4><span>🩺</span> Antecedentes patológicos</h4>
-      <div *ngIf="(d.antecedentesPatologicos || []).length === 0" class="muted">Sin datos</div>
+        <div class="section">
+          <h4><span>🩺</span> Antecedentes patológicos</h4>
+          <div *ngIf="(d.antecedentesPatologicos || []).length === 0" class="muted">Sin datos</div>
 
-      <div class="card" *ngFor="let a of d.antecedentesPatologicos">
-        <div class="kv"><b>Motivo:</b> <span>{{ a.motivoConsulta || '—' }}</span></div>
-        <div class="kv"><b>Enfermedad actual:</b> <span>{{ a.enfermedadActual || '—' }}</span></div>
-        <div class="kv"><b>Medicamento actual:</b> <span>{{ a.medicamentoActual || '—' }}</span></div>
+          <div class="card" *ngFor="let a of d.antecedentesPatologicos">
+            <div class="kv"><b>Motivo:</b> <span>{{ a.motivoConsulta || '—' }}</span></div>
+            <div class="kv"><b>Enfermedad actual:</b> <span>{{ a.enfermedadActual || '—' }}</span></div>
+            <div class="kv"><b>Medicamento actual:</b> <span>{{ a.medicamentoActual || '—' }}</span></div>
 
-        <!-- Síntomas -->
-        <div class="kv" *ngIf="syms(a).length">
-          <b>Síntomas:</b>
-          <ul class="chips symptoms">
-            <li class="chip warn" *ngFor="let s of syms(a)">{{ s }}</li>
-          </ul>
+            <!-- =========================================================
+                 Detección de riesgos y violencias (NUEVOS 6 LABELS)
+                 Mapeo (no cambia back / modelo):
+                 - a.victimaViolencia         → ¿Ha sufrido algún tipo de violencia en su casa?
+                 - a.dolorToraxico           → Físico
+                 - a.disgeusia               → Sexual
+                 - a.cefalea                 → Emocional
+                 - a.sintomaticoRespiratorio → ¿Usted se siente en riesgo?
+                 - a.sintomaticoPiel         → ¿Quiere hablar del tema?
+               ========================================================= -->
+            <div class="kv"><b>Detección de riesgos y violencias:</b></div>
+
+            <div class="grid grid-2 risk-cards">
+              <div class="kv">
+                <b>¿Ha sufrido algún tipo de violencia en su casa?</b>
+                <span>{{ a.victimaViolencia === true ? 'Sí' : (a.victimaViolencia === false ? 'No' : '—') }}</span>
+              </div>
+
+              <div class="kv">
+                <b>Físico</b>
+                <span>{{ a.dolorToraxico === true ? 'Sí' : (a.dolorToraxico === false ? 'No' : '—') }}</span>
+              </div>
+
+              <div class="kv">
+                <b>Sexual</b>
+                <span>{{ a.disgeusia === true ? 'Sí' : (a.disgeusia === false ? 'No' : '—') }}</span>
+              </div>
+
+              <div class="kv">
+                <b>Emocional</b>
+                <span>{{ a.cefalea === true ? 'Sí' : (a.cefalea === false ? 'No' : '—') }}</span>
+              </div>
+
+              <div class="kv">
+                <b>¿Usted se siente en riesgo?</b>
+                <span>{{ a.sintomaticoRespiratorio === true ? 'Sí' : (a.sintomaticoRespiratorio === false ? 'No' : '—') }}</span>
+              </div>
+
+              <div class="kv">
+                <b>¿Quiere hablar del tema?</b>
+                <span>{{ a.sintomaticoPiel === true ? 'Sí' : (a.sintomaticoPiel === false ? 'No' : '—') }}</span>
+              </div>
+            </div>
+
+            <!-- (Opcional) chips solo con respuestas “Sí” 
+            <div class="kv" *ngIf="a.victimaViolencia || a.dolorToraxico || a.disgeusia || a.cefalea || a.sintomaticoRespiratorio || a.sintomaticoPiel">
+              <ul class="chips">
+                <li class="chip warn" *ngIf="a.victimaViolencia">¿Ha sufrido algún tipo de violencia en su casa?</li>
+                <li class="chip warn" *ngIf="a.dolorToraxico">Físico</li>
+                <li class="chip warn" *ngIf="a.disgeusia">Sexual</li>
+                <li class="chip warn" *ngIf="a.cefalea">Emocional</li>
+                <li class="chip warn" *ngIf="a.sintomaticoRespiratorio">¿Usted se siente en riesgo?</li>
+                <li class="chip warn" *ngIf="a.sintomaticoPiel">¿Quiere hablar del tema?</li>
+              </ul>
+            </div>-->
+
+            <!-- =========================================================
+                 REFERENCIA ORIGINAL (COMENTADA)
+                 Antes se mostraban síntomas/flags así:
+            =========================================================
+            <div class="kv" *ngIf="syms(a).length">
+              <b>Síntomas:</b>
+              <ul class="chips symptoms">
+                <li class="chip warn" *ngFor="let s of syms(a)">{{ s }}</li>
+              </ul>
+            </div>
+
+            <div class="kv" *ngIf="flags(a).length">
+              <ul class="chips">
+                <li class="chip neutral" *ngFor="let f of flags(a)">{{ f }}</li>
+              </ul>
+            </div>
+            ========================================================= -->
+
+            <!-- Revisión por sistemas / Observaciones -->
+            <div class="kv" *ngIf="revisionTexto(a) as rev">
+              <b>Revisión por sistemas / Observaciones:</b>
+              <p class="note">{{ rev }}</p>
+            </div>
+          </div>
         </div>
-
-        <!-- (Opcional) Flags adicionales, bajo los síntomas -->
-        <div class="kv" *ngIf="flags(a).length">
-          <ul class="chips">
-            <li class="chip neutral" *ngFor="let f of flags(a)">{{ f }}</li>
-          </ul>
-        </div>
-
-        <!-- Revisión por sistemas / Observaciones -->
-        <div class="kv" *ngIf="revisionTexto(a) as rev">
-          <b>Revisión por sistemas / Observaciones:</b>
-          <p class="note">{{ rev }}</p>
-        </div>
-      </div>
-    </div>
-
 
         <!-- ===== Antecedentes personales ===== -->
-    <div class="section">
-      <h4><span>👤</span> Antecedentes personales</h4>
-      <div *ngIf="(d.antecedentesPersonales || []).length === 0" class="muted">Sin datos</div>
+        <div class="section">
+          <h4><span>👤</span> Antecedentes personales</h4>
+          <div *ngIf="(d.antecedentesPersonales || []).length === 0" class="muted">Sin datos</div>
 
-      <div class="card" *ngFor="let ap of d.antecedentesPersonales">
-        <!-- Línea 1 -->
-        <div class="kv">
-          <b>Personales:</b>
-          <span>{{ safe(ap.antecedentesPersonales) }}</span>
-        </div>
+          <div class="card" *ngFor="let ap of d.antecedentesPersonales">
+            <!-- Línea 1 -->
+            <div class="kv">
+              <b>Personales:</b>
+              <span>{{ safe(ap.antecedentesPersonales) }}</span>
+            </div>
 
-        <!-- Línea 2 -->
-        <div class="kv">
-          <b>Familiares:</b>
-          <span>{{ safe(ap.antecedentesFamiliares) }}</span>
-        </div>
+            <!-- Línea 2 -->
+            <div class="kv">
+              <b>Familiares:</b>
+              <span>{{ safe(ap.antecedentesFamiliares) }}</span>
+            </div>
 
-        <!-- Línea 3 (texto + chips GO si aplica) -->
-        <div class="kv" *ngIf="ap.ginecoObstetricos || hasGO(ap)">
-          <b>Gineco-obstétricos:</b>
-          <span *ngIf="ap.ginecoObstetricos">{{ ap.ginecoObstetricos }}</span>
+            <!-- Línea 3 (texto + chips GO si aplica) -->
+            <div class="kv" *ngIf="ap.ginecoObstetricos || hasGO(ap)">
+              <b>Gineco-obstétricos:</b>
+              <span *ngIf="ap.ginecoObstetricos">{{ ap.ginecoObstetricos }}</span>
 
-          <ul class="chips" *ngIf="hasGO(ap)">
-            <li *ngIf="ap.gestas != null" class="chip neutral">Gestas: {{ ap.gestas }}</li>
-            <li *ngIf="ap.partos != null" class="chip neutral">Partos: {{ ap.partos }}</li>
-            <li *ngIf="ap.abortos != null" class="chip neutral">Abortos: {{ ap.abortos }}</li>
-            <li *ngIf="ap.cesareas != null" class="chip neutral">Cesáreas: {{ ap.cesareas }}</li>
-            <li *ngIf="ap.vivos != null" class="chip neutral">Vivos: {{ ap.vivos }}</li>
-            <li *ngIf="ap.mortinatos != null" class="chip neutral">Mortinatos: {{ ap.mortinatos }}</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-            <!-- ===== Examen físico ===== -->
-      <div class="section">
-        <h4><span>🧪</span> Examen físico</h4>
-        <div *ngIf="!d.examenFisico" class="muted">Sin datos</div>
-
-        <div class="card" *ngIf="d.examenFisico as ex">
-          <!-- VITALES / MEDIDAS -->
-          <div class="grid vitals">
-            <div><b>Tensión Sistólica:</b> {{ safe(ex.tensionSistolica) }}</div>
-            <div><b>Tensión Diastólica:</b> {{ safe(ex.tensionDiastolica) }}</div>
-            <div><b>Frecuencia Respiratoria:</b> {{ safe(ex.frecuenciaRespiratoria) }}</div>
-            <div><b>Frecuencia Cardíaca:</b> {{ safe(ex.frecuenciaCardiaca) }}</div>
-            <div><b>Temperatura:</b> {{ safe(ex.temperatura) }}</div>
-            <div><b>Saturación O₂:</b> {{ safe(ex.saturacion) }}</div>
-            <div><b>Peso (kg):</b> {{ safe(ex.peso) }}</div>
-            <div><b>Talla (cm):</b> {{ safe(ex.talla) }}</div>
-            <div><b>IMC:</b> {{ safe(ex.imc) }}</div>
-            <div><b>Perímetro Cefálico (cm):</b> {{ safe(ex.perimetroCefalico) }}</div>
-          </div>
-
-          <!-- HALLAZGOS -->
-          <div class="sub">
-            <b>Hallazgos</b>
-
-            <div class="kv"><b>Aspecto General:</b> <span>{{ safe(ex.aspectoGeneral) }}</span></div>
-            <div class="kv"><b>Cráneo:</b> <span>{{ safe(ex.craneoDetalle) }}</span></div>
-            <div class="kv"><b>Ojos:</b> <span>{{ safe(ex.ojosDetalle) }}</span></div>
-            <div class="kv"><b>Oído:</b> <span>{{ safe(ex.oidoDetalle) }}</span></div>
-            <div class="kv"><b>Cuello:</b> <span>{{ safe(ex.cuelloDetalle) }}</span></div>
-            <div class="kv"><b>Cardio-Pulmonar:</b> <span>{{ safe(ex.cardioPulmonarDetalle) }}</span></div>
-            <div class="kv"><b>Senos:</b> <span>{{ safe(ex.senosDetalle) }}</span></div>
-            <div class="kv"><b>Abdomen:</b> <span>{{ safe(ex.abdomenDetalle) }}</span></div>
-            <div class="kv"><b>Genitales:</b> <span>{{ safe(ex.genitalesDetalle) }}</span></div>
-            <div class="kv"><b>Examen Rectal:</b> <span>{{ safe(ex.examenRectalDetalle) }}</span></div>
-            <div class="kv"><b>Neurológico:</b> <span>{{ safe(ex.neurologicoDetalle) }}</span></div>
-            <div class="kv"><b>Extremidades Osteoarticulares:</b> <span>{{ safe(ex.extremidadesOsteoarticularDetalle) }}</span></div>
-
-            <div class="kv" *ngIf="ex.otrosHallazgos">
-              <b>Otros Hallazgos:</b>
-              <p class="note">{{ ex.otrosHallazgos }}</p>
+              <ul class="chips" *ngIf="hasGO(ap)">
+                <li *ngIf="ap.gestas != null" class="chip neutral">Gestas: {{ ap.gestas }}</li>
+                <li *ngIf="ap.partos != null" class="chip neutral">Partos: {{ ap.partos }}</li>
+                <li *ngIf="ap.abortos != null" class="chip neutral">Abortos: {{ ap.abortos }}</li>
+                <li *ngIf="ap.cesareas != null" class="chip neutral">Cesáreas: {{ ap.cesareas }}</li>
+                <li *ngIf="ap.vivos != null" class="chip neutral">Vivos: {{ ap.vivos }}</li>
+                <li *ngIf="ap.mortinatos != null" class="chip neutral">Mortinatos: {{ ap.mortinatos }}</li>
+              </ul>
             </div>
           </div>
         </div>
-      </div>
 
+        <!-- ===== Examen físico ===== -->
+        <div class="section">
+          <h4><span>🧪</span> Examen físico</h4>
+          <div *ngIf="!d.examenFisico" class="muted">Sin datos</div>
+
+          <div class="card" *ngIf="d.examenFisico as ex">
+            <!-- VITALES / MEDIDAS -->
+            <div class="grid vitals">
+              <div><b>Tensión Sistólica:</b> {{ safe(ex.tensionSistolica) }}</div>
+              <div><b>Tensión Diastólica:</b> {{ safe(ex.tensionDiastolica) }}</div>
+              <div><b>Frecuencia Respiratoria:</b> {{ safe(ex.frecuenciaRespiratoria) }}</div>
+              <div><b>Frecuencia Cardíaca:</b> {{ safe(ex.frecuenciaCardiaca) }}</div>
+              <div><b>Temperatura:</b> {{ safe(ex.temperatura) }}</div>
+              <div><b>Saturación O₂:</b> {{ safe(ex.saturacion) }}</div>
+              <div><b>Peso (kg):</b> {{ safe(ex.peso) }}</div>
+              <div><b>Talla (cm):</b> {{ safe(ex.talla) }}</div>
+              <div><b>IMC:</b> {{ safe(ex.imc) }}</div>
+              <div><b>Perímetro Cefálico (cm):</b> {{ safe(ex.perimetroCefalico) }}</div>
+            </div>
+
+            <!-- HALLAZGOS -->
+            <div class="sub">
+              <b>Hallazgos</b>
+
+              <div class="kv"><b>Aspecto General:</b> <span>{{ safe(ex.aspectoGeneral) }}</span></div>
+              <div class="kv"><b>Cráneo:</b> <span>{{ safe(ex.craneoDetalle) }}</span></div>
+              <div class="kv"><b>Ojos:</b> <span>{{ safe(ex.ojosDetalle) }}</span></div>
+              <div class="kv"><b>Oído:</b> <span>{{ safe(ex.oidoDetalle) }}</span></div>
+              <div class="kv"><b>Cuello:</b> <span>{{ safe(ex.cuelloDetalle) }}</span></div>
+              <div class="kv"><b>Cardio-Pulmonar:</b> <span>{{ safe(ex.cardioPulmonarDetalle) }}</span></div>
+              <div class="kv"><b>Senos:</b> <span>{{ safe(ex.senosDetalle) }}</span></div>
+              <div class="kv"><b>Abdomen:</b> <span>{{ safe(ex.abdomenDetalle) }}</span></div>
+              <div class="kv"><b>Genitales:</b> <span>{{ safe(ex.genitalesDetalle) }}</span></div>
+              <div class="kv"><b>Examen Rectal:</b> <span>{{ safe(ex.examenRectalDetalle) }}</span></div>
+              <div class="kv"><b>Neurológico:</b> <span>{{ safe(ex.neurologicoDetalle) }}</span></div>
+              <div class="kv"><b>Extremidades Osteoarticulares:</b> <span>{{ safe(ex.extremidadesOsteoarticularDetalle) }}</span></div>
+
+              <div class="kv" *ngIf="ex.otrosHallazgos">
+                <b>Otros Hallazgos:</b>
+                <p class="note">{{ ex.otrosHallazgos }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- ===== Diagnósticos + Medicamentos ===== -->
-      <div class="section">
-        <h4><span>📝</span> Diagnósticos</h4>
-        <div *ngIf="(d.diagnosticos || []).length === 0" class="muted">Sin datos</div>
+        <div class="section">
+          <h4><span>📝</span> Diagnósticos</h4>
+          <div *ngIf="(d.diagnosticos || []).length === 0" class="muted">Sin datos</div>
 
-        <div class="card" *ngFor="let dx of d.diagnosticos">
-          <!-- ✅ Diagnóstico -->
-          <div class="kv">
-            <b>Diagnóstico:</b>
-            <span>{{ diagnosticoTexto(dx) }}</span>
-          </div>
+          <div class="card" *ngFor="let dx of d.diagnosticos">
+            <!-- ✅ Diagnóstico -->
+            <div class="kv">
+              <b>Diagnóstico:</b>
+              <span>{{ diagnosticoTexto(dx) }}</span>
+            </div>
 
-          <!-- ✅ Recomendaciones / Plan -->
-          <div class="kv">
-            <b>Recomendaciones, plan de tratamiento:</b>
-            <span>{{ dx.plan || '—' }}</span>
-          </div>
+            <!-- ✅ Recomendaciones / Plan -->
+            <div class="kv">
+              <b>Recomendaciones, plan de tratamiento:</b>
+              <span>{{ dx.plan || '—' }}</span>
+            </div>
 
-          <div class="sub">
-            <b>Medicamentos</b>
-            <div *ngIf="!(dx.medicamentos?.length)" class="muted">Sin medicamentos</div>
+            <div class="sub">
+              <b>Medicamentos</b>
+              <div *ngIf="!(dx.medicamentos?.length)" class="muted">Sin medicamentos</div>
 
-            <div class="table-wrap" *ngIf="dx.medicamentos?.length">
-              <table class="meds-table">
-                <thead>
-                  <tr>
-                    <th>Medicamento</th>
-                    <th>Vía</th>
-                    <th>Cantidad</th>
-                    <th>Posología y duración</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let m of dx.medicamentos">
-                    <td>
-                      <ng-container *ngIf="m.medicamentoNombre; else manualName">
-                        {{ m.medicamentoNombre }}
-                        <span class="chip neutral" *ngIf="m.medicamentoId"></span>
-                      </ng-container>
-                      <ng-template #manualName>
-                        {{ m.nombreMedicamentoManual || '—' }}
-                      </ng-template>
-                    </td>
-                    
-                    <td>{{ m.via || '—' }}</td>
-                    <td>
-                      <ng-container *ngIf="m.dosisCantidad || m.dosisDescripcion; else noCant">
-                        {{ m.dosisCantidad || '' }} {{ m.dosisDescripcion || '' }}
-                      </ng-container>
-                      <ng-template #noCant>—</ng-template>
-                    </td>
-                    <td>
-                      <ng-container *ngIf="m.dosificacion || m.frecuenciaHoras || m.frecuenciaTiempo || m.diasTratamiento; else noPoso">
-                        {{ m.dosificacion || '' }}
-                        <span *ngIf="m.frecuenciaHoras || m.frecuenciaTiempo"> • c/ {{ m.frecuenciaHoras || '' }} {{ m.frecuenciaTiempo || '' }}</span>
-                        <span *ngIf="m.diasTratamiento"> • {{ m.diasTratamiento }} días</span>
-                      </ng-container>
-                      <ng-template #noPoso>—</ng-template>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="table-wrap" *ngIf="dx.medicamentos?.length">
+                <table class="meds-table">
+                  <thead>
+                    <tr>
+                      <th>Medicamento</th>
+                      <th>Vía</th>
+                      <th>Cantidad</th>
+                      <th>Posología y duración</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let m of dx.medicamentos">
+                      <td>
+                        <ng-container *ngIf="m.medicamentoNombre; else manualName">
+                          {{ m.medicamentoNombre }}
+                          <span class="chip neutral" *ngIf="m.medicamentoId"></span>
+                        </ng-container>
+                        <ng-template #manualName>
+                          {{ m.nombreMedicamentoManual || '—' }}
+                        </ng-template>
+                      </td>
+                      
+                      <td>{{ m.via || '—' }}</td>
+                      <td>
+                        <ng-container *ngIf="m.dosisCantidad || m.dosisDescripcion; else noCant">
+                          {{ m.dosisCantidad || '' }} {{ m.dosisDescripcion || '' }}
+                        </ng-container>
+                        <ng-template #noCant>—</ng-template>
+                      </td>
+                      <td>
+                        <ng-container *ngIf="m.dosificacion || m.frecuenciaHoras || m.frecuenciaTiempo || m.diasTratamiento; else noPoso">
+                          {{ m.dosificacion || '' }}
+                          <span *ngIf="m.frecuenciaHoras || m.frecuenciaTiempo"> • c/ {{ m.frecuenciaHoras || '' }} {{ m.frecuenciaTiempo || '' }}</span>
+                          <span *ngIf="m.diasTratamiento"> • {{ m.diasTratamiento }} días</span>
+                        </ng-container>
+                        <ng-template #noPoso>—</ng-template>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="hist-footer muted">
+              Registrado por: <b>{{ registradorNombre(h, d) }}</b>
+              • Fecha y hora:
+              <b>{{ (h.fecha || d?.fecha) | date:'dd/MM/yyyy HH:mm':'America/Bogota' }}</b>
             </div>
           </div>
-
-          <div class="hist-footer muted">
-            Registrado por: <b>{{ registradorNombre(h, d) }}</b>
-            • Fecha y hora:
-            <b>{{ (h.fecha || d?.fecha) | date:'dd/MM/yyyy HH:mm':'America/Bogota' }}</b>
-          </div>
         </div>
-      </div>
       </ng-container>
     </div>
   </div>
+
   <!-- Acciones al final del historial -->
   <div class="hist-actions-bottom">
     <button type="button" class="btn back" (click)="volverAlMenu()">

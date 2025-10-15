@@ -19,6 +19,13 @@ type HistoriaDet = {
     enfermedadActual?: string;
     medicamentoActual?: string;
     // Si luego quieres síntomas/revisión, aquí podrías añadir campos.
+    // === Booleans mapeados a los 6 labels de riesgos/violencias ===
+    victimaViolencia?: boolean;          // ¿Ha sufrido algún tipo de violencia en su casa?
+    dolorToraxico?: boolean;             // Físico
+    disgeusia?: boolean;                 // Sexual
+    cefalea?: boolean;                   // Emocional
+    sintomaticoRespiratorio?: boolean;   // ¿Usted se siente en riesgo?
+    sintomaticoPiel?: boolean;           // ¿Quiere hablar del tema?
   }>;
 
   antecedentesPersonales?: Array<{
@@ -63,7 +70,8 @@ type HistoriaDet = {
 
     plan?: string;                     // ⬅ se imprime con label nuevo
     medicamentos?: Array<{
-      nombreMedicamentoManual?: string;
+      medicamentoNombre?: string;          // 🔹 nombre desde catálogo
+      nombreMedicamentoManual?: string;    // 🔹 nombre digitado manualmente
       via?: string;
       dosisCantidad?: string|number;
       dosisDescripcion?: string;
@@ -83,6 +91,10 @@ type PacienteInfo = {
   fechaNacimiento?: string|Date;
   // sexo?: string;                  // ⬅️ eliminado del header
 };
+
+/** ===== helper para si o no  ===== */
+const yesNo = (v: any) =>
+  v === true ? "Sí" : v === false ? "No" : "—";
 
 /** ===== Utiles de formato ===== */
 const fmt = (v: any) => (v === null || v === undefined || v === "" ? "—" : String(v));
@@ -275,23 +287,71 @@ export function exportarHistorialPDF(
       cursorY = keyValue(doc, "Motivo consulta", fmt(h.motivoConsulta), cursorY, paciente);
     }
 
-    // ===== Antecedentes patológicos
+    // === ANTECEDENTES PATOLÓGICOS ===
+cursorY += 2;
+cursorY = sectionTitle(doc, "Antecedentes patológicos", cursorY, paciente);
+
+const aps = h.detalle?.antecedentesPatologicos ?? [];
+if (!aps.length) {
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(120);
+  cursorY = ensureSpace(doc, cursorY, lineHeight(doc), paciente);
+  doc.text("Sin datos", MARG.left, cursorY);
+  cursorY += lineHeight(doc);
+} else {
+  // Helper local para pintar Sí/No/—
+  const yn = (v: any) => (v === true ? "Sí" : v === false ? "No" : "—");
+
+  aps.forEach(ap => {
+    // Campos base
+    cursorY = keyValue(doc, "Motivo",               fmt(ap.motivoConsulta),     cursorY, paciente);
+    cursorY = keyValue(doc, "Enfermedad actual",    fmt(ap.enfermedadActual),   cursorY, paciente);
+    cursorY = keyValue(doc, "Medicamento actual",   fmt(ap.medicamentoActual),  cursorY, paciente);
+
+    // Subtítulo: Detección de riesgos y violencias
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(44, 62, 80);
+    const lh = lineHeight(doc);
+    cursorY = ensureSpace(doc, cursorY, lh, paciente);
+    doc.text("Detección de riesgos y violencias", MARG.left, cursorY);
+    cursorY += Math.round(lh * 1.15);
+    cursorY = ensureSpace(doc, cursorY, lineHeight(doc), paciente);
+
+    // 6 labels (mapeo a los campos existentes del modelo)
+    // - victimaViolencia            → ¿Ha sufrido algún tipo de violencia en su casa?
+    // - dolorToraxico               → Físico
+    // - disgeusia                   → Sexual
+    // - cefalea                     → Emocional
+    // - sintomaticoRespiratorio     → ¿Usted se siente en riesgo?
+    // - sintomaticoPiel             → ¿Quiere hablar del tema?
+
+    // Nota: usamos keyValue para que quede alineado como el resto
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(15);
+
+    cursorY = keyValue(doc, "¿Ha sufrido algún tipo de violencia en su casa?",
+                       yn((ap as any).victimaViolencia), cursorY, paciente);
+
+    cursorY = keyValue(doc, "Físico",
+                       yn((ap as any).dolorToraxico), cursorY, paciente);
+
+    cursorY = keyValue(doc, "Sexual",
+                       yn((ap as any).disgeusia), cursorY, paciente);
+
+    cursorY = keyValue(doc, "Emocional",
+                       yn((ap as any).cefalea), cursorY, paciente);
+
+    cursorY = keyValue(doc, "¿Usted se siente en riesgo?",
+                       yn((ap as any).sintomaticoRespiratorio), cursorY, paciente);
+
+    cursorY = keyValue(doc, "¿Quiere hablar del tema?",
+                       yn((ap as any).sintomaticoPiel), cursorY, paciente);
+
+    // respiración entre items
     cursorY += 2;
-    cursorY = sectionTitle(doc, "Antecedentes patológicos", cursorY, paciente);
-    const aps = h.detalle?.antecedentesPatologicos ?? [];
-    if (!aps.length) {
-      doc.setFont("helvetica", "normal"); doc.setTextColor(120);
-      cursorY = ensureSpace(doc, cursorY, lineHeight(doc), paciente);
-      doc.text("Sin datos", MARG.left, cursorY);
-      cursorY += lineHeight(doc);
-    } else {
-      aps.forEach(ap => {
-        cursorY = keyValue(doc, "Motivo", fmt(ap.motivoConsulta), cursorY, paciente);
-        cursorY = keyValue(doc, "Enfermedad actual", fmt(ap.enfermedadActual), cursorY, paciente);
-        cursorY = keyValue(doc, "Medicamento actual", fmt(ap.medicamentoActual), cursorY, paciente);
-        cursorY += 2;
-      });
-    }
+  });
+}
+
 
     // ===== Antecedentes personales
     cursorY += 2;
@@ -387,22 +447,43 @@ export function exportarHistorialPDF(
         }
 
         // Tabla de medicamentos
-        const meds = _dx.medicamentos ?? [];
+        const meds = (_dx.medicamentos ?? []) as Array<{
+          medicamentoNombre?: string;
+          nombreMedicamentoManual?: string;
+          via?: string;
+          dosisCantidad?: string | number;
+          dosisDescripcion?: string;
+          dosificacion?: string;
+          frecuenciaHoras?: string | number;
+          frecuenciaTiempo?: string;
+          diasTratamiento?: string | number;
+        }>;
+
         if (meds.length) {
           const pageH = doc.internal.pageSize.getHeight();
           if (cursorY > pageH - 160) { doc.addPage(); addHeader(doc, paciente); cursorY = MARG.top; }
 
           const head = [["Medicamento", "Vía administración", "Cantidad", "Posología y duración"]];
-          const body: RowInput[] = meds.map(m => ([
-            fmt(m.nombreMedicamentoManual),
-            fmt(m.via),
-            (m.dosisCantidad || m.dosisDescripcion) ? `${fmt(m.dosisCantidad)} ${fmt(m.dosisDescripcion)}`.trim() : "—",
-            [
+
+          const body: RowInput[] = meds.map(m => {
+            const nombre = fmt(m.medicamentoNombre ?? m.nombreMedicamentoManual ?? "");
+            const via    = fmt(m.via ?? "");
+            
+            // 🔹 Ahora no muestra “—” cuando está vacío
+            const cantidad = (m.dosisCantidad || m.dosisDescripcion)
+              ? `${fmt(m.dosisCantidad)} ${fmt(m.dosisDescripcion)}`.trim()
+              : "";
+
+            const posologia = [
               m.dosificacion ? `${m.dosificacion}` : "",
-              (m.frecuenciaHoras || m.frecuenciaTiempo) ? `c/ ${fmt(m.frecuenciaHoras)} ${fmt(m.frecuenciaTiempo)}` : "",
+              (m.frecuenciaHoras || m.frecuenciaTiempo)
+                ? `c/ ${fmt(m.frecuenciaHoras)} ${fmt(m.frecuenciaTiempo)}`
+                : "",
               m.diasTratamiento ? `${m.diasTratamiento} días` : ""
-            ].filter(Boolean).join(" • ") || "—"
-          ]));
+            ].filter(Boolean).join(" • ");
+
+            return [nombre, via, cantidad, posologia];
+          });
 
           autoTable(doc, {
             startY: cursorY + 6,

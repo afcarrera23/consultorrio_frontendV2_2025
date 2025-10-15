@@ -188,7 +188,7 @@ export class FormulaMedicaFastComponent implements OnInit {
   // ======================== CATÁLOGOS ========================
   cargarMedicamentos(force = false): void {
     this.cargandoCatalogo = true;
-    this.api.listarMedicamentos('', 0, 1000, force).subscribe({
+    this.api.listarMedicamentos('', 0, 10000, force).subscribe({
       next: (resp: any) => {
         this.medicamentosCatalogo = Array.isArray(resp) ? resp : (resp?.content || []);
         this.cargandoCatalogo = false;
