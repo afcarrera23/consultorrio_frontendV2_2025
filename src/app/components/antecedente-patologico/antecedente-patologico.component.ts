@@ -4,6 +4,7 @@ import { PacienteRegistroDTO } from 'src/app/models/paciente.model';
 import { AntecedentePatologicoDTO } from 'src/app/models/antecedente-patologico.model';
 import { RegistroTempService } from 'src/app/services/registro-temporal';
 import { PacienteService } from 'src/app/services/paciente.service'; // ⬅️ NUEVO
+import { HistoriaFlowService } from 'src/app/services/historia-flow.service';
 
 @Component({
   selector: 'app-antecedente-patologico',
@@ -48,7 +49,8 @@ export class AntecedentePatologicoComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private registroTemp: RegistroTempService,
-    private pacienteService: PacienteService // ⬅️ NUEVO
+    private pacienteService: PacienteService, // ⬅️ NUEVO
+    private flow: HistoriaFlowService,
   ) {}
 
   ngOnInit(): void {
@@ -60,6 +62,14 @@ export class AntecedentePatologicoComponent implements OnInit {
       this.router.navigate(['/registro-paciente']);
       return;
     }
+
+    // ⬅️ NUEVO: asegura modo de flujo (a prueba de F5 o ingreso directo)
+    // Si el paciente fue creado en este flujo => NEW_PATIENT; si no => EXISTING_PATIENT.
+    const createdHere = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+    this.flow.ensureModeByFlag(createdHere);
+    // (Opcional) mantener sincronizado usuario/paciente en el estado del flujo:
+    this.flow.setUsuario(this.paciente.usuarioRegistroId);   // ⬅️ NUEVO (opcional)
+    this.flow.setPaciente(this.paciente);                    // ⬅️ NUEVO (opcional)
 
     // 1) Precarga desde draft (si existe)
     const draft = this.registroTemp.getDraftAntecedentePatologico();

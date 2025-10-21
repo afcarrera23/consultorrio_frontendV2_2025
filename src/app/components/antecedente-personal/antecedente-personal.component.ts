@@ -5,6 +5,7 @@ import { AntecedentePersonalDTO } from 'src/app/models/antecedente-personal.mode
 import { RegistroTempService } from 'src/app/services/registro-temporal';
 import { AuthService } from 'src/app/services/auth.service';
 import { PacienteService } from 'src/app/services/paciente.service'; // ⬅️ NUEVO
+import { HistoriaFlowService } from 'src/app/services/historia-flow.service';
 
 @Component({
   selector: 'app-antecedente-personal',
@@ -38,12 +39,13 @@ export class AntecedentePersonalComponent implements OnInit {
     private route: ActivatedRoute,
     private registroTemp: RegistroTempService,
     private authService: AuthService,
-    private pacienteService: PacienteService // ⬅️ NUEVO
+    private pacienteService: PacienteService, // ⬅️ NUEVO
+    private flow: HistoriaFlowService
   ) {}
 
   ngOnInit(): void {
     const pacienteIdParam = Number(this.route.snapshot.paramMap.get('pacienteId'));
-
+  
     // 1) Cargar paciente desde el registro temporal
     this.paciente = this.registroTemp.obtenerPaciente();
     if (!this.paciente || this.paciente.id !== pacienteIdParam) {
@@ -51,21 +53,33 @@ export class AntecedentePersonalComponent implements OnInit {
       this.router.navigate(['/registro-paciente']);
       return;
     }
-
+  
+    // ⬅️ NUEVO: asegura modo de flujo (a prueba de F5 o ingreso directo)
+    // Si el paciente fue creado en este flujo => NEW_PATIENT; si no => EXISTING_PATIENT.
+    const createdHere = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+    this.flow.ensureModeByFlag(createdHere);
+  
+    // (Opcional) mantener sincronizado usuario/paciente en el estado del flujo:
+    this.flow.setUsuario(this.paciente.usuarioRegistroId);   // ⬅️ NUEVO (opcional)
+    this.flow.setPaciente(this.paciente);                    // ⬅️ NUEVO (opcional)
+  
     // 2) Precargar draft (si existe); si no, setear IDs
     const draft = this.registroTemp.getDraftAntecedentePersonal();
     if (draft) {
       this.antecedentePersonal = { ...this.antecedentePersonal, ...draft };
     } else {
       this.antecedentePersonal.pacienteId = this.paciente.id ?? 0;
-
+  
       const medico = this.authService.getMedicoLogueado?.();
       this.antecedentePersonal.usuarioId = medico?.id ?? this.paciente.usuarioRegistroId ?? 0;
     }
-
+  
     // 3) Normaliza el datetime-local
-    this.antecedentePersonal.fechaConsulta = this.toLocalDateTime(this.antecedentePersonal.fechaConsulta);
+    this.antecedentePersonal.fechaConsulta = this.toLocalDateTime(
+      this.antecedentePersonal.fechaConsulta
+    );
   }
+  
 
   /** Normaliza a 'YYYY-MM-DDTHH:mm' para <input type="datetime-local"> */
   private toLocalDateTime(value: string): string {

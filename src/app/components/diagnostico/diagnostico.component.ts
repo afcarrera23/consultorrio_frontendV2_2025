@@ -16,6 +16,8 @@ import { HistoriaMedicaService } from 'src/app/services/historia-medica-service'
 import { PrintService } from 'src/app/services/print-service';
 import { MedicamentoDTO, MedicamentoService, Page } from 'src/app/services/medicamento-service';
 
+import { AuthService } from 'src/app/services/auth.service';
+
 type DiagnosticoFila = {
   codigoDiagnosticoId?: number;
   codigo?: string;
@@ -29,7 +31,7 @@ type DiagnosticoFila = {
 })
 export class DiagnosticoComponent implements OnInit {
   pacienteId!: number;
-  usuarioId = 2;
+  usuarioId = 0;
 
   // filas de diagnósticos
   diagnosticos: DiagnosticoFila[] = [{}];
@@ -68,7 +70,8 @@ export class DiagnosticoComponent implements OnInit {
     private flow: HistoriaFlowService,
     private historiaApi: HistoriaMedicaService,
     private medsApi: MedicamentoService,
-    private printSvc: PrintService
+    private printSvc: PrintService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -84,37 +87,61 @@ export class DiagnosticoComponent implements OnInit {
       error: (err) => console.error('Error al cargar códigos', err)
     });
 
-    // 3) usuario desde paciente en memoria
-    const paciente = this.registroTemp.obtenerPaciente();
+    // 3) usuario (médico) SIEMPRE desde sesión (AuthService)
+    this.usuarioId = this.getUsuarioSesion();
+    if (!this.usuarioId) {
+      console.warn('⚠ No se pudo determinar el usuario de sesión (usuarioId=0). Revisa que haya login y localStorage["medico"].');
+    } else {
+      console.log('[DiagnosticoComponent] Usuario de sesión:', this.usuarioId);
+    }
+    // Propagar al flujo (sin pisarlo con datos del paciente)
+    this.flow.setUsuario(this.usuarioId);
+
+    // 4) paciente en memoria + INICIALIZAR FLUJO (sin pisar usuarioId)
+    const paciente = this.registroTemp.obtenerPaciente?.() ?? null;
     if (!paciente || paciente.id !== this.pacienteId) {
       console.warn('⚠ Paciente no encontrado/discordante con la URL.');
+      this.flow.ensureModeByFlag(false); // asume existente si no hay contexto
     } else {
-      this.usuarioId = paciente.usuarioRegistroId ?? this.usuarioId;
+      const createdHere = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+      this.flow.ensureModeByFlag(createdHere);
+      this.flow.setPaciente(paciente);
     }
 
-    // 4) cargar catálogo de medicamentos (datalist) y, al terminar, hidratar draft si existe
+    // 5) cargar catálogo de medicamentos (datalist) y, al terminar, hidratar draft si existe
     this.cargarCatalogoMedicamentos(() => {
       const draft = this.registroTemp.getDraftDiagnosticos();
       if (draft && draft.length) {
-        // cabeceras
         this.plan = draft[0].plan ?? '';
         this.tipoDiagnostico = draft[0].tipoDiagnostico ?? 1;
 
-        // medicamentos
         this.medicamentos = draft[0].medicamentos?.length
           ? [...draft[0].medicamentos]
           : [this.nuevoMedicamento()];
         this.rellenarInputsMedicamentosDesdeModelo();
 
-        // diagnósticos
         this.diagnosticos = draft.map(d => ({ codigoDiagnosticoId: d.codigoDiagnosticoId }));
         this.diagControls = this.diagnosticos.map(() => new FormControl(''));
         this.diagFiltrados = this.diagnosticos.map(() => []);
         this.diagMenuOpen = this.diagnosticos.map(() => false);
 
         this.hidratarFilasConCatalogo();
+      } else {
+        if (!this.medicamentos?.length) this.medicamentos = [this.nuevoMedicamento()];
+        if (!this.diagnosticos?.length) {
+          this.diagnosticos = [{} as any];
+          this.diagControls = [new FormControl('')];
+          this.diagFiltrados = [[]];
+          this.diagMenuOpen = [false];
+        }
       }
     });
+  }
+
+  /** 🔐 Única fuente de verdad del usuario logueado (tu AuthService) */
+  private getUsuarioSesion(): number {
+    const medico = this.authService.getMedicoLogueado(); // lee localStorage["medico"]
+    return medico?.id ? Number(medico.id) : 0;
   }
 
   // ---------- Catálogo de medicamentos ----------
@@ -122,7 +149,6 @@ export class DiagnosticoComponent implements OnInit {
     if (this.catalogoLoading) { done && done(); return; }
     this.catalogoLoading = true;
 
-    // Pide bastante tamaño para incluir recién creados (si el backend no soporta orden, al menos estarán)
     this.medsApi.listar('', 0, 10000).subscribe({
       next: (page) => {
         this.medicamentosCatalogo = page?.content || [];
@@ -137,9 +163,7 @@ export class DiagnosticoComponent implements OnInit {
     });
   }
 
-  /** Completa el input visible del medicamento con nombre de catálogo (si hay id) o manual */
   private rellenarInputsMedicamentosDesdeModelo() {
-    // asegurar arrays paralelos
     this.medInp = []; this.medMenuOpen = []; this.medOpciones = []; this.medLoading = [];
 
     this.medicamentos.forEach((m, i) => {
@@ -165,7 +189,6 @@ export class DiagnosticoComponent implements OnInit {
     }
   }
 
-  // ---------- Diagnósticos ----------
   private hidratarFilasConCatalogo() {
     if (!this.catalogoDiagnosticos?.length || !this.diagnosticos?.length) return;
     this.diagnosticos.forEach((f, i) => {
@@ -268,7 +291,6 @@ export class DiagnosticoComponent implements OnInit {
     if (this.medicamentos.length === 0) this.addMedicamento();
   }
 
-  // Convierte UI → draft
   private construirDraftDesdeUI(): DiagnosticoItem[] {
     const nowISO = new Date().toISOString();
     const usuario = this.usuarioId || 0;
@@ -279,8 +301,8 @@ export class DiagnosticoComponent implements OnInit {
         codigoDiagnosticoId: d.codigoDiagnosticoId!,
         plan: this.plan || '',
         tipoDiagnostico: this.tipoDiagnostico,
-        fechaDiagnostico: nowISO, // requerido por tu interfaz
-        fechaRegistro: nowISO,    // compat opcional
+        fechaDiagnostico: nowISO,
+        fechaRegistro: nowISO,
         usuarioId: usuario,
         medicamentos: (this.medicamentos && this.medicamentos.length) ? this.medicamentos : []
       }));
@@ -303,6 +325,12 @@ export class DiagnosticoComponent implements OnInit {
 
     if (!exUsar) { alert('❌ Falta examen físico.'); return; }
     if (!diagnosticoItems.length) { alert('⚠️ Agrega al menos un diagnóstico.'); return; }
+
+    // Bloqueo defensivo si no hay usuario/médico en sesión
+    if (!this.usuarioId) {
+      alert('⚠️ Tu sesión no está activa. Por favor, inicia sesión de nuevo.');
+      return;
+    }
 
     const mode = this.flow.mode;
 
@@ -327,10 +355,9 @@ export class DiagnosticoComponent implements OnInit {
       });
 
     } else if (mode === 'EXISTING_PATIENT') {
-      const usuarioActualId = this.flow.usuarioId ?? this.usuarioId;
       const dto = {
         pacienteId: paciente.id!,
-        usuarioId: usuarioActualId,
+        usuarioId: this.usuarioId, // ✅ id del médico logueado
         motivoConsulta: antPatUsar?.motivoConsulta,
         antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
         antecedentesPersonales:  antPerUsar ? [antPerUsar] : [],
@@ -361,7 +388,6 @@ export class DiagnosticoComponent implements OnInit {
 
       await this.printSvc.printFromEndpoint(this.pacienteId, fallback);
 
-      // refrescar catálogo para que nuevos meds creados se vean al volver
       this.cargarCatalogoMedicamentos(() => this.rellenarInputsMedicamentosDesdeModelo());
 
       this.registroTemp.limpiarPaciente?.();
@@ -383,7 +409,6 @@ export class DiagnosticoComponent implements OnInit {
     alert('❌ Error al guardar.');
   }
 
-  // navegación
   atras() {
     this.guardarDraftActual();
     this.router.navigate([`/examen-fisico/${this.pacienteId}`]);
@@ -424,7 +449,6 @@ export class DiagnosticoComponent implements OnInit {
   @HostListener('document:keydown.escape')
   onEsc() { if (this.isPopupOpen) this.cerrarPopup(); }
 
-  // Validaciones
   get tipoDiagnosticoValido(): boolean {
     return [1, 2, 3].includes(Number(this.tipoDiagnostico));
   }
@@ -456,7 +480,6 @@ export class DiagnosticoComponent implements OnInit {
            this.planValido;
   }
 
-  // --------- Input medicamento: datalist + sugerencias remotas opcionales ----------
   openMedMenu(i: number) {
     this.medMenuOpen[i] = true;
     const txt = String(this.medInp[i]?.value || '').trim();
@@ -464,10 +487,8 @@ export class DiagnosticoComponent implements OnInit {
   }
 
   onMedInput(i: number, value: string) {
-    // texto visible
     this.medInp[i].setValue(value || '', { emitEvent: false });
 
-    // Coincidencia EXACTA por nombre en catálogo (datalist)
     const v = (value || '').trim().toLowerCase();
     const match = this.medicamentosCatalogo.find(
       m => (m.nombreMedicamento || '').trim().toLowerCase() === v
@@ -507,7 +528,6 @@ export class DiagnosticoComponent implements OnInit {
     this.medMenuOpen[i] = false;
   }
 
-  /** 👇 refresca el catálogo cuando el usuario enfoca el input */
   onMedFocus(i: number) {
     this.cargarCatalogoMedicamentos(() => {
       this.rellenarInputsMedicamentosDesdeModelo();

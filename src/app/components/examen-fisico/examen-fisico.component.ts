@@ -5,6 +5,7 @@ import { PacienteRegistroDTO } from "src/app/models/paciente.model";
 import { ExamenFisicoDTO } from "src/app/models/examen-fisico.model";
 import { RegistroTempService } from "src/app/services/registro-temporal";
 import { PacienteService } from "src/app/services/paciente.service";
+import { HistoriaFlowService } from "src/app/services/historia-flow.service";
 
 @Component({
   selector: "app-examen-fisico",
@@ -65,19 +66,29 @@ export class ExamenFisicoComponent implements OnInit {
     private registroTemp: RegistroTempService,
     private router: Router,
     private route: ActivatedRoute,
-    private pacienteService: PacienteService
+    private pacienteService: PacienteService,
+    private flow: HistoriaFlowService
   ) {}
 
   ngOnInit(): void {
     const pacienteIdParam = Number(this.route.snapshot.paramMap.get("pacienteId"));
     this.paciente = this.registroTemp.obtenerPaciente();
-
+  
     if (!this.paciente || this.paciente.id !== pacienteIdParam) {
       console.error("⚠ Paciente no encontrado o no coincide con la URL. Redirigiendo...");
       this.router.navigate(["/registro-paciente"]);
       return;
     }
-
+  
+    // ⬅️ NUEVO: asegura modo de flujo (a prueba de F5 o ingreso directo)
+    // Si el paciente fue creado en este flujo => NEW_PATIENT; si no => EXISTING_PATIENT.
+    const createdHere = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
+    this.flow.ensureModeByFlag(createdHere);
+  
+    // (Opcional) mantener sincronizado usuario/paciente en el estado del flujo:
+    this.flow.setUsuario(this.paciente.usuarioRegistroId);   // ⬅️ NUEVO (opcional)
+    this.flow.setPaciente(this.paciente);                    // ⬅️ NUEVO (opcional)
+  
     // Precargar draft si existe
     const draft = this.registroTemp.getDraftExamenFisico();
     if (draft) {
@@ -86,10 +97,11 @@ export class ExamenFisicoComponent implements OnInit {
       this.examenFisico.pacienteId = this.paciente.id ?? 0;
       this.examenFisico.usuarioId = this.paciente.usuarioRegistroId;
     }
-
+  
     // Calcular IMC inicial si ya había peso/talla
     this.calcularIMC();
   }
+  
 
   /** Calcula IMC (peso / talla²) */
   calcularIMC(): void {
