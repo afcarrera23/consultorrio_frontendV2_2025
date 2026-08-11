@@ -21,10 +21,13 @@ type ConfirmDeleteState = {
   styleUrls: ['./menu-principal.component.css']
 })
 export class MenuPrincipalComponent {
+  medicoLogueado: any = null;
   pacientes: PacienteListadoDTO[] = [];
   pacientesFiltrados: PacienteListadoDTO[] = [];
   searchQuery = '';
   loadingImprimirId: number | null = null;
+  loadingPacientes = false;
+  errorCarga: string | null = null;
 
   // Estado del modal de eliminación
   confirmDelete: ConfirmDeleteState = { visible: false, loading: false, paciente: null, error: null };
@@ -46,22 +49,51 @@ export class MenuPrincipalComponent {
     if (!medicoLogueado) {
       this.router.navigate(['/iniciar-sesion']);
     } else {
+      this.medicoLogueado = medicoLogueado;
       this.obtenerPacientes();
     }
   }
 
+  get inicialesMedico(): string {
+    const partes = `${this.medicoLogueado?.nombre || ''} ${this.medicoLogueado?.apellido || ''}`
+      .trim().split(/\s+/).filter(Boolean);
+    return partes.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'MD';
+  }
+
+  get saludoActual(): string {
+    const hora = new Date().getHours();
+    if (hora < 12) return 'Buenos días';
+    if (hora < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
   obtenerPacientes(): void {
+    this.loadingPacientes = true;
+    this.errorCarga = null;
     this.http.get<PacienteListadoDTO[]>(`${this.apiBase}/pacientes/listar`).subscribe({
       next: (data) => {
         this.pacientes = data || [];
         this.buscarPaciente();
+        this.loadingPacientes = false;
       },
       error: (error) => {
         console.error('Error al obtener pacientes:', error);
         this.pacientes = [];
         this.pacientesFiltrados = [];
+        this.loadingPacientes = false;
+        this.errorCarga = 'No fue posible cargar los pacientes. Intenta nuevamente.';
       }
     });
+  }
+
+  iniciales(paciente: PacienteListadoDTO): string {
+    const partes = `${paciente?.nombreCompleto || ''} ${paciente?.apellidoCompleto || ''}`
+      .trim().split(/\s+/).filter(Boolean);
+    return partes.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'P';
+  }
+
+  trackByPaciente(_index: number, paciente: PacienteListadoDTO): number {
+    return paciente.id;
   }
 
   private normalize(v: any): string {

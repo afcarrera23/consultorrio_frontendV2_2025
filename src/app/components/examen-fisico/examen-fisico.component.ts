@@ -46,6 +46,8 @@ export class ExamenFisicoComponent implements OnInit {
   /** Estado del popup */
   isPopupOpen = false;
   isSubmitting = false;
+  autosaveStatus = '';
+  private autosaveTimer?: ReturnType<typeof setTimeout>;
 
   /** Campos que deben normalizarse con "Normal" */
   private readonly camposNormal: Array<keyof ExamenFisicoDTO> = [
@@ -115,6 +117,20 @@ export class ExamenFisicoComponent implements OnInit {
       this.examenFisico.imc = 0;
     }
   }
+
+  programarAutoguardado(): void {
+    clearTimeout(this.autosaveTimer);
+    this.autosaveStatus = 'Guardando borrador…';
+    this.autosaveTimer = setTimeout(() => this.guardarBorradorLocal(), 500);
+  }
+
+  private guardarBorradorLocal(): void {
+    this.registroTemp.setDraftExamenFisico({ ...this.examenFisico });
+    this.autosaveStatus = 'Borrador guardado';
+  }
+
+  @HostListener('window:beforeunload')
+  guardarAntesDeCerrar(): void { this.guardarBorradorLocal(); }
 
   /** Botón siguiente → Diagnóstico */
   continuarADiagnostico(): void {

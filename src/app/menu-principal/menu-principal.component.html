@@ -1,119 +1,144 @@
-<div class="container">
-  <!-- ===== Buscador ===== -->
-  <div class="search-box">
-    <div class="form-group">
-      <label for="search" class="search-label">Buscar paciente:</label>
+<main class="patients-page">
+  <section class="session-welcome" *ngIf="medicoLogueado as medico">
+    <div class="session-avatar">{{ inicialesMedico }}</div>
+    <div class="session-copy">
+      <span>{{ saludoActual }}</span>
+      <strong>Dr. {{ medico.nombre }} {{ medico.apellido }}</strong>
+    </div>
+    <div class="session-role">
+      <i aria-hidden="true"></i>
+      Médico en sesión
+    </div>
+  </section>
+
+  <section class="page-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Gestión clínica</span>
+      <h1>Pacientes</h1>
+      <p>Consulta la información de tus pacientes, abre una nueva historia o revisa su historial clínico.</p>
     </div>
 
-    <div class="form-row">
-      <div class="search-input">
+    <div class="hero-actions">
+      <button type="button" class="button button--secondary" (click)="nuevaFormula()">
+        <span class="button-icon">✚</span>
+        Fórmula rápida
+      </button>
+      <button type="button" class="button button--primary" (click)="agregarPaciente()">
+        <span class="button-icon">＋</span>
+        Nuevo paciente
+      </button>
+    </div>
+  </section>
+
+  <section class="patients-panel">
+    <div class="panel-toolbar">
+      <div class="panel-title">
+        <h2>Directorio de pacientes</h2>
+        <span class="result-count" *ngIf="!loadingPacientes">
+          {{ pacientesFiltrados.length }} {{ pacientesFiltrados.length === 1 ? 'paciente' : 'pacientes' }}
+        </span>
+      </div>
+
+      <label class="search-field" for="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
         <input
-          type="text"
+          type="search"
           id="search"
           name="search"
-          placeholder="Número de identificación o nombre del paciente"
+          placeholder="Buscar por nombre o identificación"
           [(ngModel)]="searchQuery"
           (input)="buscarPaciente()"
-          (keyup.enter)="buscarPaciente()"
+          autocomplete="off"
         />
-        <!-- Limpiar -->
-        <button
-          *ngIf="searchQuery"
-          type="button"
-          class="clear"
-          (click)="searchQuery=''; buscarPaciente()"
-          aria-label="Limpiar búsqueda"
-          title="Limpiar"
-        >
-          ×
-        </button>
-      </div>
-
-      <div class="button-group">
-        <button class="btn-secondary" (click)="agregarPaciente()">Agregar paciente</button>
-
-        <!-- Nuevo botón existente -->
-        <button class="btn-formula" (click)="nuevaFormula()">
-          Fórmula rapida
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== Lista ===== -->
-  <div class="patient-list">
-    <h3>Lista de Pacientes</h3>
-
-    <div *ngIf="!pacientesFiltrados?.length" class="empty-result">
-      No hay resultados para “{{ searchQuery || '' }}”.
+        <button *ngIf="searchQuery" type="button" class="clear-search"
+                (click)="searchQuery=''; buscarPaciente()" aria-label="Limpiar búsqueda">×</button>
+      </label>
     </div>
 
-    <table *ngIf="pacientesFiltrados?.length">
-      <thead>
-        <tr>
-          <th>Apellido</th>
-          <th>Nombre</th>
-          <th>Identificación</th>
-          <th style="width: 320px;">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let paciente of pacientesFiltrados">
-          <td>{{ paciente.apellidoCompleto }}</td>
-          <td>{{ paciente.nombreCompleto }}</td>
-          <td>{{ paciente.identificacion }}</td>
-          <td class="acciones-cell">
+    <div class="feedback feedback--loading" *ngIf="loadingPacientes">
+      <span class="spinner"></span> Cargando pacientes…
+    </div>
 
-             <!-- 🔹 NUEVO: botón plano con texto “Editar datos” -->
-             <button class="btn-flat-edit" (click)="editarDatosPersonales(paciente)" title="Editar datos personales">
-              Editar datos
-            </button>
-            
-            <!-- Botón clásico (edición flujo historias) -->
-            <button class="btn-icon" (click)="editarPaciente(paciente)" title="Editar (historias)">
-              <img src="assets/imagenes/editar.png" alt="Editar" class="icono-editar">
-            </button>
-          
-            <!-- Ver historias -->
-            <button class="btn-icon" (click)="verHistorias(paciente)" title="Ver historial">
-              <img src="assets/imagenes/ver.png" alt="Ver" class="icono-ver">
-            </button>
-          
-            <!-- Imprimir receta -->
-            <button
-              class="btn-icon"
-              (click)="imprimirReceta(paciente)"
-              [disabled]="loadingImprimirId===paciente.id"
-              title="Imprimir receta">
-              <img src="assets/imagenes/imprimir.png" alt="Imprimir" class="icono-ver">
-            </button>
-          
-            <!-- Eliminar -->
-            <button class="btn-icon" (click)="abrirConfirmarEliminar(paciente)" title="Eliminar">
-              <img src="assets/imagenes/eliminar.png" alt="Eliminar" class="icono-ver">
-            </button>
-          </td>
-          
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+    <div class="feedback feedback--error" *ngIf="!loadingPacientes && errorCarga">
+      <span>{{ errorCarga }}</span>
+      <button type="button" (click)="obtenerPacientes()">Reintentar</button>
+    </div>
 
-<!-- Modal de confirmación de eliminación -->
+    <div class="feedback feedback--empty"
+         *ngIf="!loadingPacientes && !errorCarga && !pacientesFiltrados.length">
+      <div class="empty-icon">⌕</div>
+      <strong>No encontramos pacientes</strong>
+      <span *ngIf="searchQuery">Prueba con otro nombre o número de identificación.</span>
+      <span *ngIf="!searchQuery">Registra el primer paciente para comenzar.</span>
+    </div>
+
+    <div class="table-wrap" *ngIf="!loadingPacientes && !errorCarga && pacientesFiltrados.length">
+      <table>
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Identificación</th>
+            <th class="actions-heading">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let paciente of pacientesFiltrados; trackBy: trackByPaciente">
+            <td data-label="Paciente">
+              <div class="patient-cell">
+                <span class="patient-avatar">{{ iniciales(paciente) }}</span>
+                <div class="patient-name">
+                  <strong>{{ paciente.nombreCompleto }} {{ paciente.apellidoCompleto }}</strong>
+                  <span>Paciente registrado</span>
+                </div>
+              </div>
+            </td>
+            <td data-label="Identificación">
+              <span class="document-chip">{{ paciente.identificacion }}</span>
+            </td>
+            <td data-label="Acciones" class="actions-cell">
+              <div class="primary-actions">
+                <button type="button" class="action action--history" (click)="verHistorias(paciente)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3.3-6 9-6 9 6 9 6-3.3 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+                  Historial
+                </button>
+                <button type="button" class="action action--new-record" (click)="editarPaciente(paciente)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  Nueva historia
+                </button>
+              </div>
+
+              <div class="secondary-actions" aria-label="Más acciones">
+                <button type="button" class="icon-action" (click)="editarDatosPersonales(paciente)"
+                        title="Editar datos personales" aria-label="Editar datos personales">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-.9L19 8.3 15.7 5 4.9 15.8 4 20Z"/><path d="m13.8 6.9 3.3 3.3"/></svg>
+                </button>
+                <button type="button" class="icon-action" (click)="imprimirReceta(paciente)"
+                        [disabled]="loadingImprimirId===paciente.id" title="Imprimir última receta"
+                        aria-label="Imprimir última receta">
+                  <span class="mini-spinner" *ngIf="loadingImprimirId===paciente.id"></span>
+                  <svg *ngIf="loadingImprimirId!==paciente.id" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v7H7z"/></svg>
+                </button>
+                <button type="button" class="icon-action icon-action--danger"
+                        (click)="abrirConfirmarEliminar(paciente)" title="Eliminar paciente"
+                        aria-label="Eliminar paciente">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7M10 11v6m4-6v6"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
 <ng-container *ngIf="confirmDelete.visible">
   <app-popup
-    [message]="'¿Eliminar definitivamente al paciente ' 
-                + (confirmDelete.paciente?.nombreCompleto || '') + ' ' 
-                + (confirmDelete.paciente?.apellidoCompleto || '') 
-                + ' (' + (confirmDelete.paciente?.identificacion || '') + ')?'"
+    [message]="'¿Eliminar definitivamente al paciente ' + (confirmDelete.paciente?.nombreCompleto || '') + ' ' + (confirmDelete.paciente?.apellidoCompleto || '') + ' (' + (confirmDelete.paciente?.identificacion || '') + ')?'"
     [confirmText]="confirmDelete.loading ? 'Eliminando…' : 'Sí, eliminar'"
     [cancelText]="'Cancelar'"
     (onConfirm)="confirmarEliminar()"
     (onCancel)="cancelarEliminar()">
   </app-popup>
-
-  <div *ngIf="confirmDelete.error" class="popup-error">
-    {{ confirmDelete.error }}
-  </div>
+  <div *ngIf="confirmDelete.error" class="popup-error">{{ confirmDelete.error }}</div>
 </ng-container>

@@ -1,6 +1,8 @@
-<div class="form-container">
-  <form (ngSubmit)="continuarADiagnostico()" #examenFisicoForm="ngForm">
-    <h2>Registro de Examen Físico</h2>
+<div class="form-container clinical-flow">
+  <form (ngSubmit)="continuarADiagnostico()" #examenFisicoForm="ngForm" (input)="programarAutoguardado()" (change)="programarAutoguardado()">
+    <header class="flow-header"><div><span class="flow-kicker">Nueva historia clínica</span><h1>Examen físico</h1><p>Registra signos vitales, medidas y hallazgos por sistema.</p></div><span class="autosave-state" *ngIf="autosaveStatus">{{ autosaveStatus }}</span><span class="flow-counter">Paso 4 de 5</span></header>
+    <div class="flow-steps"><span class="done">Paciente</span><span class="done">Consulta</span><span class="done">Antecedentes</span><span class="active">Examen</span><span>Diagnóstico</span></div>
+    <div class="form-section-title"><span>04</span><div><h2>Signos vitales y hallazgos</h2><p>Completa la valoración física del paciente.</p></div></div>
 
     <!-- Signos vitales y medidas en 3 columnas -->
     <div class="examen-fisico-grid">

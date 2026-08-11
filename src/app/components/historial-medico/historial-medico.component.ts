@@ -319,7 +319,7 @@ private pickProfesionalParaPDF():
         )
       );
 
-      const done = () => {
+      const done = async () => {
         const payload = this.historias.map(h => ({
           id: h.id,
           fecha: h.fecha,
@@ -342,9 +342,11 @@ private pickProfesionalParaPDF():
         console.log('Historial — medicoParam enviado al PDF:', medicoParam);
       
         // 👇 PÁSALO como 3er argumento
-        exportarHistorialPDF(pacienteInfo, payload, medicoParam);
-      
-        this.exporting = false;
+        try {
+          await exportarHistorialPDF(pacienteInfo, payload, medicoParam);
+        } finally {
+          this.exporting = false;
+        }
       };
       
 

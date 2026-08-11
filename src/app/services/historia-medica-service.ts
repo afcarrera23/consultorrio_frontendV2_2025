@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 export interface HistoriaMedicaRegistroDTO {
+  solicitudId: string;
   pacienteId: number;
   usuarioId: number;
   motivoConsulta?: string;

@@ -1,6 +1,8 @@
-<div class="form-container">
-  <form #antPatForm="ngForm">
-    <h2>Antecedente Patológico</h2>
+<div class="form-container clinical-flow">
+  <form #antPatForm="ngForm" (input)="programarAutoguardado()" (change)="programarAutoguardado()">
+    <header class="flow-header"><div><span class="flow-kicker">Nueva historia clínica</span><h1>Consulta actual</h1><p>Describe el motivo, la evolución y los riesgos identificados.</p></div><span class="autosave-state" *ngIf="autosaveStatus">{{ autosaveStatus }}</span><span class="flow-counter">Paso 2 de 5</span></header>
+    <div class="flow-steps"><span class="done">Paciente</span><span class="active">Consulta</span><span>Antecedentes</span><span>Examen</span><span>Diagnóstico</span></div>
+    <div class="form-section-title"><span>02</span><div><h2>Antecedente patológico</h2><p>Información principal de la consulta en curso.</p></div></div>
     <p class="form-note">Complete los campos obligatorios (*)</p>
 
     <!-- ========================= DATOS DE CONSULTA ========================= -->

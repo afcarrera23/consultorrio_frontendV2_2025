@@ -16,12 +16,43 @@
   position: relative; /* para posicionar el botón sin afectar el centrado */
 }
 
+.brand-system {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
 .titulo {
   color: #a40606;
   font-size: 24px;
   margin: 0;
   text-align: center;
   font-weight: 700;
+}
+
+.brand-subtitle {
+  display: block;
+  margin-top: 1px;
+  color: #6f1a1a;
+  font-size: 12px;
+  text-align: center;
+  letter-spacing: .15px;
+}
+
+@media (max-width: 640px) {
+  .header-bar { padding: 7px 10px; }
+  .brand-system { gap: 7px; }
+  .brand-logo { width: 42px; height: 42px; }
+  .titulo { font-size: 17px; }
+  .brand-subtitle { font-size: 10px; }
+  .acciones { right: 4px; }
 }
 
 /* Asegura que el botón de cerrar sesión se quede en el extremo derecho */

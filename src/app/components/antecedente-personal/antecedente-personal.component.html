@@ -1,7 +1,9 @@
-<div class="form-container">
-  <h2>Antecedente Personal</h2>
+<div class="form-container clinical-flow">
+  <header class="flow-header"><div><span class="flow-kicker">Nueva historia clínica</span><h1>Antecedentes del paciente</h1><p>Registra información personal, familiar y gineco-obstétrica relevante.</p></div><span class="autosave-state" *ngIf="autosaveStatus">{{ autosaveStatus }}</span><span class="flow-counter">Paso 3 de 5</span></header>
+  <div class="flow-steps"><span class="done">Paciente</span><span class="done">Consulta</span><span class="active">Antecedentes</span><span>Examen</span><span>Diagnóstico</span></div>
+  <div class="form-section-title"><span>03</span><div><h2>Antecedentes personales</h2><p>Historia previa y factores clínicos importantes.</p></div></div>
 
-  <form #antPersForm="ngForm">
+  <form #antPersForm="ngForm" (input)="programarAutoguardado()" (change)="programarAutoguardado()">
     <!-- Dos columnas: personales y familiares -->
     <div class="form-row two-cols">
       <div class="form-group">

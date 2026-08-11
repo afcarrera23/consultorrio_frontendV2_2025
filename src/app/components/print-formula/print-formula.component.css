@@ -1,9 +1,9 @@
 :root {
   --font: Arial, Helvetica, sans-serif;
-  --fs-xxl: 10pt;   /* título principal */
-  --fs-xl: 8.5pt;   /* subtítulos */
-  --fs-md: 7pt;     /* texto general */
-  --fs-sm: 6.5pt;   /* tablas */
+  --fs-xxl: 13pt;
+  --fs-xl: 9pt;
+  --fs-md: 8pt;
+  --fs-sm: 7.5pt;
 }
 
 * {
@@ -23,24 +23,43 @@ html, body {
   max-width: 7in;   /* ancho media carta */
   height: auto;
   margin: 0 auto;
-  padding: 0.25in;
+  padding: 0.18in 0.22in;
   background: #fff;
   color: #111;
 }
 
+.print-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 2px solid #b5161b;
+}
+
+.print-logo {
+  width: 54px;
+  height: 57px;
+  object-fit: contain;
+}
+
+.print-heading { flex: 1; }
+
 .brand {
   font-weight: 700;
   font-size: var(--fs-xl);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
+  color: #a40606;
 }
 
 h1 {
   font-size: var(--fs-xxl);
-  margin: 2px 0 4px;
+  margin: 0;
 }
 h2 {
   font-size: var(--fs-xl);
-  margin: 4px 0 2px;
+  margin: 5px 0 2px;
+  color: #7f1115;
 }
 
 .meta {
@@ -48,7 +67,7 @@ h2 {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 2px 6px;
   font-size: var(--fs-md);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 /* === Tabla === */
@@ -61,7 +80,7 @@ table {
 
 td, th {
   border: 1px solid #ccc;
-  padding: 3px 4px;
+  padding: 2.5px 3px;
   vertical-align: top;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -75,7 +94,7 @@ th {
 
 /* === Plan / Observaciones === */
 .box.plan {
-  min-height: 0.8in;
+  min-height: 0.42in;
   border: 1px solid #ccc;
   padding: 4px;
   white-space: pre-wrap;
@@ -84,19 +103,19 @@ th {
 
 /* === Profesional / Firma === */
 .profesional {
-  margin-top: 10px;
+  margin-top: 6px;
   border-top: 1px solid #ccc;
-  padding-top: 6px;
+  padding-top: 4px;
   font-size: var(--fs-md);
 }
 
 .firma {
-  margin-top: 8px;
+  margin-top: 3px;
   text-align: left;
 }
 
 .firma img {
-  max-height: 45px; /* más compacta */
+  max-height: 38px;
 }
 
 .firma-line {
@@ -146,10 +165,15 @@ th {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     page-break-inside: avoid;
-    font-size: 7pt !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    font-size: 8pt !important;
     line-height: 1.1;
-    zoom: 0.9; /* reduce todo un poco más */
+    zoom: 1;
   }
+
+  section, tr, .profesional { break-inside: avoid; page-break-inside: avoid; }
 
   .acciones {
     display: none !important;

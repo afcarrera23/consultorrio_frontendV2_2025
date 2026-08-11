@@ -40,6 +40,10 @@ export class PacienteComponent implements OnInit {
   todayISO = '';
 
   isEditMode = false;  // ← nuevo
+  private identificacionOriginal = '';
+  private tipoIdentificacionOriginal = '';
+  autosaveStatus = '';
+  private autosaveTimer?: ReturnType<typeof setTimeout>;
 
   /** Convierte yyyy-MM-dd → dd/MM/yyyy para el DTO de actualización */
   private isoToDDMMYYYY(iso?: string | null): string | null {
@@ -72,6 +76,8 @@ export class PacienteComponent implements OnInit {
       if (usuarioId > 0) this.paciente.usuarioRegistroId = usuarioId;
     }
     this.isEditMode = !!this.paciente?.id; 
+    this.identificacionOriginal = (this.paciente.identificacion ?? '').trim();
+    this.tipoIdentificacionOriginal = (this.paciente.tipoIdentificacion ?? '').trim();
   }
 
   /** Edad calculada (solo UI) */
@@ -91,6 +97,20 @@ export class PacienteComponent implements OnInit {
     // muestra en pantalla; el back recalcula al guardar
     this.paciente.edad = this.edadCalculada ?? undefined;
   }
+
+  programarAutoguardado(): void {
+    clearTimeout(this.autosaveTimer);
+    this.autosaveStatus = 'Guardando borrador…';
+    this.autosaveTimer = setTimeout(() => this.guardarBorradorLocal(), 500);
+  }
+
+  private guardarBorradorLocal(): void {
+    this.registroTemp.guardarPaciente({ ...this.paciente });
+    this.autosaveStatus = 'Borrador guardado';
+  }
+
+  @HostListener('window:beforeunload')
+  guardarAntesDeCerrar(): void { this.guardarBorradorLocal(); }
 
   private nextTempCounter(): number {
     const key = 'tempIdentCounter';
@@ -203,10 +223,33 @@ onPrimaryAction(): void {
 /** PUT /pacientes/{id}/basicos (sin tipo/identificación) */
 private guardarCambiosBasicos(): void {
   if (!this.paciente.id) return;
+
+  const identificacionNueva = (this.paciente.identificacion ?? '').trim();
+  const tipoNuevo = (this.paciente.tipoIdentificacion ?? '').trim();
+  const cambiaDocumento = identificacionNueva !== this.identificacionOriginal
+    || tipoNuevo !== this.tipoIdentificacionOriginal;
+
+  if (!identificacionNueva || !tipoNuevo) {
+    alert('El tipo y número de identificación son obligatorios.');
+    return;
+  }
+
+  if (cambiaDocumento) {
+    const confirmado = window.confirm(
+      `Vas a cambiar la identificación del paciente:\n\n` +
+      `${this.tipoIdentificacionOriginal} ${this.identificacionOriginal} → ${tipoNuevo} ${identificacionNueva}\n\n` +
+      `El historial clínico permanecerá asociado al mismo paciente y el cambio quedará auditado. ¿Deseas continuar?`
+    );
+    if (!confirmado) return;
+  }
+
   this.isSubmitting = true;
 
   const payload = {
     fechaNacimiento: this.isoToDDMMYYYY(this.paciente.fechaNacimiento) ?? '',
+    identificacion: identificacionNueva,
+    tipoIdentificacion: tipoNuevo,
+    usuarioModificoId: Number(localStorage.getItem('usuarioId')) || this.paciente.usuarioRegistroId,
     edad: this.edadCalculada ?? undefined,
     nombreCompleto: this.paciente.nombreCompleto,
     apellidoCompleto: this.paciente.apellidoCompleto,
@@ -221,7 +264,11 @@ private guardarCambiosBasicos(): void {
   this.pacienteService.actualizarBasicos(this.paciente.id, payload).subscribe({
     next: () => {
       this.isSubmitting = false;
-      alert('✅ Datos básicos actualizados correctamente.');
+      this.identificacionOriginal = identificacionNueva;
+      this.tipoIdentificacionOriginal = tipoNuevo;
+      alert(cambiaDocumento
+        ? '✅ Datos e identificación actualizados correctamente. El historial clínico permanece intacto.'
+        : '✅ Datos básicos actualizados correctamente.');
 
       // 🟢 Redireccionar al menú principal
       this.router.navigate(['/menu-principal']);
@@ -229,7 +276,10 @@ private guardarCambiosBasicos(): void {
     error: (err) => {
       console.error('❌ Error al actualizar datos básicos:', err);
       this.isSubmitting = false;
-      alert('No fue posible actualizar los datos.');
+      const mensaje = err?.status === 409
+        ? 'Ya existe otro paciente con esa identificación. No se realizó ningún cambio.'
+        : (err?.error?.message || 'No fue posible actualizar los datos.');
+      alert(mensaje);
     }
   });
 }

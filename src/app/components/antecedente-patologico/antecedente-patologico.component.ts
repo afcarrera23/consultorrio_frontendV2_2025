@@ -44,6 +44,8 @@ export class AntecedentePatologicoComponent implements OnInit {
 
   isPopupOpen = false;
   isSubmitting = false; // ⬅️ NUEVO para bloquear/mostrar estado
+  autosaveStatus = '';
+  private autosaveTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private router: Router,
@@ -106,6 +108,20 @@ export class AntecedentePatologicoComponent implements OnInit {
     this.registroTemp.setDraftAntecedentePatologico(this.antecedente);
     this.router.navigate([`/antecedente-personal/${this.paciente?.id}`]);
   }
+
+  programarAutoguardado(): void {
+    clearTimeout(this.autosaveTimer);
+    this.autosaveStatus = 'Guardando borrador…';
+    this.autosaveTimer = setTimeout(() => this.guardarBorradorLocal(), 500);
+  }
+
+  private guardarBorradorLocal(): void {
+    this.registroTemp.setDraftAntecedentePatologico({ ...this.antecedente });
+    this.autosaveStatus = 'Borrador guardado';
+  }
+
+  @HostListener('window:beforeunload')
+  guardarAntesDeCerrar(): void { this.guardarBorradorLocal(); }
 
   atras(): void {
     this.registroTemp.setDraftAntecedentePatologico(this.antecedente);

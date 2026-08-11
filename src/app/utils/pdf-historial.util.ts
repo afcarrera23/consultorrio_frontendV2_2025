@@ -150,7 +150,35 @@ const dxTexto = (dx: any): string => {
 };
 
 /** ===== Layout ===== */
-const MARG = { left: 14, right: 14, top: 72, bottom: 56 };
+const MARG = { left: 34, right: 34, top: 106, bottom: 34 };
+const COLOR = {
+  wine: [157, 17, 26] as [number, number, number],
+  wineDark: [112, 12, 19] as [number, number, number],
+  wineSoft: [253, 241, 242] as [number, number, number],
+  ink: [38, 40, 45] as [number, number, number],
+  muted: [105, 108, 116] as [number, number, number],
+  line: [226, 226, 229] as [number, number, number],
+  soft: [248, 248, 249] as [number, number, number],
+};
+let activeLogoDataUrl: string | null = null;
+
+async function loadLogoDataUrl(): Promise<string | null> {
+  if (activeLogoDataUrl) return activeLogoDataUrl;
+  try {
+    const response = await fetch("assets/imagenes/logo_drogueria.png");
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    activeLogoDataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    return activeLogoDataUrl;
+  } catch {
+    return null;
+  }
+}
 
 const lineHeight = (doc: jsPDF) => doc.getFontSize() * 1.2;
 
@@ -166,23 +194,38 @@ function ensureSpace(doc: jsPDF, cursorY: number, needed: number, paciente?: Pac
 
 function addHeader(doc: jsPDF, paciente?: PacienteInfo) {
   const w = doc.internal.pageSize.getWidth();
+  doc.setFillColor(...COLOR.wine);
+  doc.rect(0, 0, w, 5, "F");
+
+  if (activeLogoDataUrl) {
+    doc.addImage(activeLogoDataUrl, "PNG", MARG.left, 15, 41, 43, undefined, "FAST");
+  }
+  const textX = activeLogoDataUrl ? MARG.left + 50 : MARG.left;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("Historial clínico", MARG.left, 30);
+  doc.setFontSize(15);
+  doc.setTextColor(...COLOR.wine);
+  doc.text("CONSULTORIO MÉDICO LAS LUNAS", textX, 28);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(8.5);
+  doc.setTextColor(...COLOR.muted);
+  doc.text("Droguería Las Lunas · Pasto", textX, 41);
 
-  // Línea 1: Paciente + Identificación + Reg. #
-  const p1 = `Paciente: ${nombreApellido(paciente)}  |  Identificación: ${fmt(paciente?.identificacion)}  |  Reg. #${fmt(paciente?.id)}`;
-  doc.text(p1, MARG.left, 42);
-
-  // Línea 2: Fecha de nacimiento (sin hora)
-  const p2 = `Fecha de nacimiento: ${fmtDateOnly(paciente?.fechaNacimiento)}`;
-  doc.text(p2, MARG.left, 54);
-
-  doc.setDrawColor(200);
-  doc.line(MARG.left, 60, w - MARG.right, 60);
+  doc.setFillColor(...COLOR.soft);
+  doc.roundedRect(MARG.left, 65, w - MARG.left - MARG.right, 30, 5, 5, "F");
+  const col = (w - MARG.left - MARG.right) / 3;
+  const patientFields = [
+    ["PACIENTE", nombreApellido(paciente)],
+    ["IDENTIFICACIÓN", fmt(paciente?.identificacion)],
+    ["NACIMIENTO", `${fmtDateOnly(paciente?.fechaNacimiento)}  ·  Reg. #${fmt(paciente?.id)}`]
+  ];
+  patientFields.forEach(([label, value], index) => {
+    const x = MARG.left + 10 + (col * index);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); doc.setTextColor(...COLOR.wine);
+    doc.text(label, x, 77);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...COLOR.ink);
+    doc.text(doc.splitTextToSize(value, col - 15)[0], x, 88);
+  });
 }
 
 /** ===== Footer con numeración y fecha de export ===== */
@@ -192,25 +235,33 @@ function addFooter(doc: jsPDF) {
     doc.setPage(i);
     const w = doc.internal.pageSize.getWidth();
     const h = doc.internal.pageSize.getHeight();
-    doc.setFontSize(9);
-    doc.setTextColor(120);
-    doc.text(`Página ${i} de ${pageCount}`, w - MARG.right, h - 10, { align: "right" });
-    doc.text(new Date().toLocaleString(), MARG.left, h - 10);
+    doc.setDrawColor(...COLOR.line);
+    doc.line(MARG.left, h - 25, w - MARG.right, h - 25);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COLOR.muted);
+    doc.text("Documento clínico confidencial", MARG.left, h - 12);
+    doc.text(`Generado: ${new Date().toLocaleString("es-CO")}`, w / 2, h - 12, { align: "center" });
+    doc.text(`Página ${i} de ${pageCount}`, w - MARG.right, h - 12, { align: "right" });
   }
 }
 
 /** ===== Título de sección con salto seguro ===== */
 function sectionTitle(doc: jsPDF, text: string, cursorY: number, paciente?: PacienteInfo) {
-  cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 2, paciente);
+  cursorY = ensureSpace(doc, cursorY, 25, paciente);
+  const pageW = doc.internal.pageSize.getWidth();
+  doc.setFillColor(...COLOR.wineSoft);
+  doc.roundedRect(MARG.left, cursorY - 10, pageW - MARG.left - MARG.right, 20, 4, 4, "F");
+  doc.setFillColor(...COLOR.wine);
+  doc.roundedRect(MARG.left, cursorY - 10, 4, 20, 2, 2, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(44, 62, 80);
-  doc.text(text, MARG.left, cursorY);
-  cursorY += lineHeight(doc) + 2;
+  doc.setFontSize(9);
+  doc.setTextColor(...COLOR.wineDark);
+  doc.text(text.toUpperCase(), MARG.left + 11, cursorY + 3);
+  cursorY += 17;
   return cursorY;
 }
 
-/** Label arriba y valor en la línea siguiente (bloque) */
+/** Label y valor en la misma línea para aprovechar mejor el espacio vertical. */
 function keyValue(
   doc: jsPDF,
   label: string,
@@ -220,37 +271,38 @@ function keyValue(
 ) {
   const pageW = doc.internal.pageSize.getWidth();
   const availW = pageW - MARG.left - MARG.right;
-  const h = lineHeight(doc);
+  doc.setFontSize(8);
+  const h = 10;
+  doc.setFont("helvetica", "bold");
+  const labelText = `${label}:`;
+  const labelW = Math.min(Math.max(doc.getTextWidth(labelText) + 7, 112), availW * 0.40);
+  const valueX = MARG.left + labelW;
+  const valueW = availW - labelW;
 
-  // Prepara el valor envuelto
   doc.setFont("helvetica", "normal");
-  const wrapped = doc.splitTextToSize(value || "—", availW);
+  const wrapped = doc.splitTextToSize(value || "—", valueW);
 
-  // Asegura espacio: una línea para label + n líneas de valor
-  const needed = h * (1 + Math.max(wrapped.length, 1)) + 2;
+  const needed = h * Math.max(wrapped.length, 1) + 1;
   cursorY = ensureSpace(doc, cursorY, needed, paciente);
 
-  // Label
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(44, 62, 80);
-  doc.text(`${label}:`, MARG.left, cursorY);
+  doc.setTextColor(...COLOR.ink);
+  doc.text(labelText, MARG.left, cursorY);
 
-  // Valor en la siguiente línea
-  cursorY += h;
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(33);
-  doc.text(wrapped, MARG.left, cursorY);
+  doc.setTextColor(70, 72, 78);
+  doc.text(wrapped, valueX, cursorY);
 
-  cursorY += h * Math.max(wrapped.length, 1) + 2;
+  cursorY += h * Math.max(wrapped.length, 1) + 1;
   return cursorY;
 }
 
-export function exportarHistorialPDF(
+export async function exportarHistorialPDF(
   paciente: PacienteInfo | undefined,
   historias: Array<{ id: number|string; fecha: string|Date; usuarioNombre?: string; motivoConsulta?: string; detalle?: HistoriaDet }>,
   medico?: { nombre?: string; numeroRegistroMedico?: string; registro?: string } // 👈
 ) {
+  await loadLogoDataUrl();
   const doc = new jsPDF({ unit: "pt", format: "a4" });
 
   // Primera página
@@ -271,18 +323,20 @@ export function exportarHistorialPDF(
       cursorY = MARG.top;
     }
 
-    cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 3, paciente);
+    cursorY = ensureSpace(doc, cursorY, 54, paciente);
 
-    // Encabezado de cada historia
+    // Encabezado visual de cada consulta
+    const contentW = doc.internal.pageSize.getWidth() - MARG.left - MARG.right;
+    doc.setFillColor(...COLOR.wine);
+    doc.roundedRect(MARG.left, cursorY, contentW, 34, 6, 6, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(255, 255, 255);
+    doc.text(`CONSULTA ${String(idx + 1).padStart(2, "0")}`, MARG.left + 12, cursorY + 14);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+    doc.text(fmtDate(h.fecha), MARG.left + 12, cursorY + 26);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(44, 62, 80);
-    doc.text(`Historia #${idx + 1}`, MARG.left, cursorY);
-    cursorY += lineHeight(doc) * 0.9;
+    doc.text(`Profesional: ${fmt(h.usuarioNombre)}`, MARG.left + contentW - 12, cursorY + 20, { align: "right" });
+    cursorY += 45;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(33);
     if (h.motivoConsulta) {
       cursorY = keyValue(doc, "Motivo consulta", fmt(h.motivoConsulta), cursorY, paciente);
     }
@@ -299,53 +353,33 @@ if (!aps.length) {
   doc.text("Sin datos", MARG.left, cursorY);
   cursorY += lineHeight(doc);
 } else {
-  // Helper local para pintar Sí/No/—
-  const yn = (v: any) => (v === true ? "Sí" : v === false ? "No" : "—");
-
   aps.forEach(ap => {
     // Campos base
     cursorY = keyValue(doc, "Motivo",               fmt(ap.motivoConsulta),     cursorY, paciente);
     cursorY = keyValue(doc, "Enfermedad actual",    fmt(ap.enfermedadActual),   cursorY, paciente);
     cursorY = keyValue(doc, "Medicamento actual",   fmt(ap.medicamentoActual),  cursorY, paciente);
 
-    // Subtítulo: Detección de riesgos y violencias
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(44, 62, 80);
-    const lh = lineHeight(doc);
-    cursorY = ensureSpace(doc, cursorY, lh, paciente);
-    doc.text("Detección de riesgos y violencias", MARG.left, cursorY);
-    cursorY += Math.round(lh * 1.15);
-    cursorY = ensureSpace(doc, cursorY, lineHeight(doc), paciente);
-
-    // 6 labels (mapeo a los campos existentes del modelo)
-    // - victimaViolencia            → ¿Ha sufrido algún tipo de violencia en su casa?
-    // - dolorToraxico               → Físico
-    // - disgeusia                   → Sexual
-    // - cefalea                     → Emocional
-    // - sintomaticoRespiratorio     → ¿Usted se siente en riesgo?
-    // - sintomaticoPiel             → ¿Quiere hablar del tema?
-
-    // Nota: usamos keyValue para que quede alineado como el resto
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(15);
-
-    cursorY = keyValue(doc, "¿Ha sufrido algún tipo de violencia en su casa?",
-                       yn((ap as any).victimaViolencia), cursorY, paciente);
-
-    cursorY = keyValue(doc, "Físico",
-                       yn((ap as any).dolorToraxico), cursorY, paciente);
-
-    cursorY = keyValue(doc, "Sexual",
-                       yn((ap as any).disgeusia), cursorY, paciente);
-
-    cursorY = keyValue(doc, "Emocional",
-                       yn((ap as any).cefalea), cursorY, paciente);
-
-    cursorY = keyValue(doc, "¿Usted se siente en riesgo?",
-                       yn((ap as any).sintomaticoRespiratorio), cursorY, paciente);
-
-    cursorY = keyValue(doc, "¿Quiere hablar del tema?",
-                       yn((ap as any).sintomaticoPiel), cursorY, paciente);
+    cursorY = ensureSpace(doc, cursorY, 68, paciente);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...COLOR.ink);
+    doc.text("Detección de riesgos y violencias", MARG.left, cursorY + 8);
+    autoTable(doc, {
+      startY: cursorY + 14,
+      body: [
+        ["Violencia en casa", yesNo(ap.victimaViolencia), "Riesgo actual", yesNo(ap.sintomaticoRespiratorio)],
+        ["Violencia física", yesNo(ap.dolorToraxico), "Desea hablar del tema", yesNo(ap.sintomaticoPiel)],
+        ["Violencia sexual", yesNo(ap.disgeusia), "Violencia emocional", yesNo(ap.cefalea)]
+      ],
+      theme: "grid",
+      styles: { fontSize: 7.5, cellPadding: 3, lineColor: COLOR.line, lineWidth: .4, textColor: COLOR.ink },
+      columnStyles: {
+        0: { fillColor: COLOR.soft, fontStyle: "bold", cellWidth: 125 },
+        1: { halign: "center", textColor: COLOR.wine, fontStyle: "bold", cellWidth: 35 },
+        2: { fillColor: COLOR.soft, fontStyle: "bold", cellWidth: 125 },
+        3: { halign: "center", textColor: COLOR.wine, fontStyle: "bold" }
+      },
+      margin: { left: MARG.left, right: MARG.right }
+    });
+    cursorY = (doc as any).lastAutoTable.finalY + 4;
 
     // respiración entre items
     cursorY += 2;
@@ -393,17 +427,28 @@ if (!aps.length) {
       doc.text("Sin datos", MARG.left, cursorY);
       cursorY += lineHeight(doc);
     } else {
-      // ✅ Todos los campos individuales como en el historial
-      cursorY = keyValue(doc, "Tensión Sistólica", fmt(ex.tensionSistolica), cursorY, paciente);
-      cursorY = keyValue(doc, "Tensión Diastólica", fmt(ex.tensionDiastolica), cursorY, paciente);
-      cursorY = keyValue(doc, "Frecuencia Respiratoria", fmt(ex.frecuenciaRespiratoria), cursorY, paciente);
-      cursorY = keyValue(doc, "Frecuencia Cardíaca", fmt(ex.frecuenciaCardiaca), cursorY, paciente);
-      cursorY = keyValue(doc, "Temperatura", fmt(ex.temperatura), cursorY, paciente);
-      cursorY = keyValue(doc, "Saturación O₂", fmt(ex.saturacion), cursorY, paciente);
-      cursorY = keyValue(doc, "Peso (kg)", fmt(ex.peso), cursorY, paciente);
-      cursorY = keyValue(doc, "Talla (cm)", fmt(ex.talla), cursorY, paciente);
-      cursorY = keyValue(doc, "IMC", fmt(ex.imc), cursorY, paciente);
-      cursorY = keyValue(doc, "Perímetro Cefálico (cm)", fmt(ex.perimetroCefalico), cursorY, paciente);
+      cursorY = ensureSpace(doc, cursorY, 58, paciente);
+      autoTable(doc, {
+        startY: cursorY,
+        head: [["Tensión", "F. respiratoria", "F. cardíaca", "Temperatura", "Saturación O₂"]],
+        body: [[
+          `${fmt(ex.tensionSistolica)}/${fmt(ex.tensionDiastolica)} mmHg`,
+          `${fmt(ex.frecuenciaRespiratoria)} rpm`, `${fmt(ex.frecuenciaCardiaca)} lpm`,
+          `${fmt(ex.temperatura)} °C`, `${fmt(ex.saturacion)} %`
+        ], ["Peso", "Talla", "IMC", "Perím. cefálico", ""], [
+          `${fmt(ex.peso)} kg`, `${fmt(ex.talla)} cm`, fmt(ex.imc), `${fmt(ex.perimetroCefalico)} cm`, ""
+        ]],
+        theme: "grid",
+        styles: { fontSize: 7.5, cellPadding: 3, halign: "center", lineColor: COLOR.line, lineWidth: .4, textColor: COLOR.ink },
+        headStyles: { fillColor: COLOR.wineSoft, textColor: COLOR.wineDark, fontStyle: "bold" },
+        didParseCell: data => {
+          if (data.section === "body" && data.row.index === 1) {
+            data.cell.styles.fillColor = COLOR.soft; data.cell.styles.fontStyle = "bold"; data.cell.styles.textColor = COLOR.muted;
+          }
+        },
+        margin: { left: MARG.left, right: MARG.right }
+      });
+      cursorY = (doc as any).lastAutoTable.finalY + 7;
 
       const hallazgos: [string, any][] = [
         ["Aspecto General", ex.aspectoGeneral],
@@ -489,14 +534,14 @@ if (!aps.length) {
             startY: cursorY + 6,
             head,
             body,
-            styles: { fontSize: 9, cellPadding: 4 },
-            headStyles: { fillColor: [240,240,240], textColor: 30 },
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            headStyles: { fillColor: [248,232,233], textColor: 70 },
             theme: "grid",
             margin: { left: MARG.left, right: MARG.right },
             didDrawPage: (data) => { if (data.pageNumber > 1) addHeader(doc, paciente); }
           });
 
-          cursorY = (doc as any).lastAutoTable.finalY + 14;
+          cursorY = (doc as any).lastAutoTable.finalY + 7;
           cursorY = ensureSpace(doc, cursorY, lineHeight(doc) * 1.5, paciente);
         }
       });
@@ -520,7 +565,11 @@ const medicoRegistroRaw =
   ?? (h as any)?.numeroRegistroMedico
   ?? (h.detalle as any)?.numeroRegistroMedico
   ?? (medico as any)?.registro
-  ?? (h.detalle?.profesional as any)?.registro;    
+  ?? (h.detalle?.profesional as any)?.registro;
+
+if (medicoRegistroRaw) {
+  cursorY = keyValue(doc, "Registro médico", fmt(medicoRegistroRaw), cursorY, paciente);
+}
 
   });
 

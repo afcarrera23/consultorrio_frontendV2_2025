@@ -1,6 +1,11 @@
-<div class="form-container">
-  <h2>Datos Personales</h2>
-  <form #pacienteForm="ngForm">
+<div class="form-container clinical-flow">
+  <header class="flow-header">
+    <div><span class="flow-kicker">Atención clínica</span><h1>{{ isEditMode ? 'Actualizar paciente' : 'Nuevo paciente' }}</h1><p>Registra la información necesaria para iniciar la atención.</p></div>
+    <span class="autosave-state" *ngIf="autosaveStatus">{{ autosaveStatus }}</span><span class="flow-counter">Paso 1 de 5</span>
+  </header>
+  <div class="flow-steps" aria-label="Progreso de la historia clínica"><span class="active">Paciente</span><span>Consulta</span><span>Antecedentes</span><span>Examen</span><span>Diagnóstico</span></div>
+  <div class="form-section-title"><span>01</span><div><h2>Datos personales</h2><p>Identificación e información de contacto del paciente.</p></div></div>
+  <form #pacienteForm="ngForm" (input)="programarAutoguardado()" (change)="programarAutoguardado()">
     <p class="form-note">Los campos marcados con asterisco (*) son obligatorios</p>
 
     <!-- Fila 1: Tipo de identificación + checkbox -->
@@ -10,7 +15,7 @@
         <select id="tipoIdentificacion" name="tipoIdentificacion"
                 [(ngModel)]="paciente.tipoIdentificacion"
                 required
-                [disabled]="isEditMode || paciente.pendienteDocumento">
+                [disabled]="paciente.pendienteDocumento">
           <option value="">Seleccione</option>
           <option value="CC">Cédula de ciudadanía</option>
           <option value="TI">Tarjeta de identidad</option>
@@ -44,7 +49,7 @@
                [required]="!paciente.pendienteDocumento"
                identUnica
                [identUnicaDisabled]="!!paciente.pendienteDocumento || isEditMode"
-               [disabled]="!!paciente.pendienteDocumento || isEditMode"
+               [disabled]="!!paciente.pendienteDocumento"
                [ngModelOptions]="{ updateOn: 'blur' }"
                #identField="ngModel" />
 
@@ -56,6 +61,9 @@
         </small>
         <small class="hint" *ngIf="paciente.pendienteDocumento && !isEditMode">
           Se asignará un identificador temporal automático y podrás actualizarlo después.
+        </small>
+        <small class="identity-change-hint" *ngIf="isEditMode">
+          El cambio de identificación requiere confirmación, valida duplicados y queda registrado en auditoría.
         </small>
       </div>
     </div>

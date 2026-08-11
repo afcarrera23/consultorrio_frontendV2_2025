@@ -1,6 +1,12 @@
 <header class="header-bar">
   <div class="header-content">
-    <h1 class="titulo">Consultorio Médico Las Lunas</h1>
+    <div class="brand-system">
+      <img src="assets/imagenes/logo_drogueria.png" alt="Droguería Las Lunas Pasto" class="brand-logo" />
+      <div>
+        <h1 class="titulo">Consultorio Médico Las Lunas</h1>
+        <span class="brand-subtitle">Droguería Las Lunas · Pasto</span>
+      </div>
+    </div>
 
     <!-- 👇 Solo aparece si hay sesión y NO estamos en /iniciar-sesion -->
     <div class="acciones" *ngIf="auth.isLoggedIn() && !isLoginRoute">

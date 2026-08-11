@@ -1,4 +1,12 @@
-<!-- ===== Header de paciente (bonito) ===== -->
+<main class="history-page">
+<nav class="history-nav" aria-label="Navegación del historial">
+  <button type="button" class="nav-back" (click)="volverAlMenu()">
+    <span aria-hidden="true">←</span>
+    Volver a pacientes
+  </button>
+  <span class="nav-current">Historia clínica</span>
+</nav>
+
 <section class="patient-card" *ngIf="paciente as p">
   <div class="pc-left">
     <div class="avatar">
@@ -6,6 +14,7 @@
     </div>
 
     <div class="pc-info">
+      <div class="eyebrow">Expediente clínico</div>
       <div class="name">{{ nombreApellido(p) }}</div>
       <div class="sub">
         <span class="chip">Doc: {{ p.identificacion || '—' }}</span>
@@ -19,27 +28,56 @@
   </div>
 
   <div class="pc-right">
+    <div class="history-count">
+      <strong>{{ historias.length }}</strong>
+      <span>{{ historias.length === 1 ? 'consulta registrada' : 'consultas registradas' }}</span>
+    </div>
     <button
       class="btn ghost"
       (click)="exportarPDF()"
       [disabled]="loadingLista || !historias?.length || exporting"
       title="Exportar todo el historial en PDF"
     >
-      {{ exporting ? 'Generando PDF…' : 'Exportar PDF' }}
+      <svg *ngIf="!exporting" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+      {{ exporting ? 'Generando PDF…' : 'Exportar historial' }}
     </button>
   </div>
 </section>
 
-<!-- ===== Acordeón de historias ===== -->
+<section class="records-heading">
+  <div>
+    <span class="eyebrow">Seguimiento médico</span>
+    <h1>Historial de consultas</h1>
+    <p>Consulta cronológicamente la evolución y los registros clínicos del paciente.</p>
+  </div>
+</section>
+
+<div class="page-state" *ngIf="loadingLista">
+  <span class="state-spinner" aria-hidden="true"></span>
+  <div><strong>Cargando historial</strong><span>Estamos consultando los registros clínicos.</span></div>
+</div>
+
+<div class="page-state error-state" *ngIf="!loadingLista && errorLista">
+  <span class="state-icon" aria-hidden="true">!</span>
+  <div><strong>No fue posible cargar el historial</strong><span>{{ errorLista }}</span></div>
+</div>
+
+<div class="page-state empty-state" *ngIf="!loadingLista && !errorLista && !historias.length">
+  <span class="state-icon" aria-hidden="true">＋</span>
+  <div><strong>Aún no hay consultas registradas</strong><span>Las nuevas atenciones del paciente aparecerán en este espacio.</span></div>
+</div>
+
 <div class="accordion" *ngIf="!loadingLista && !errorLista">
   <div
     class="item"
     *ngFor="let h of historias; trackBy: trackById"
     [class.open]="rows[h.id]?.open"
   >
-    <button class="header" (click)="toggleFila(h)">
+    <button class="header" (click)="toggleFila(h)" [attr.aria-expanded]="rows[h.id]?.open">
       <div class="left">
+        <span class="visit-marker" aria-hidden="true"></span>
         <div class="pill-date">
+          <span class="date-label">Consulta médica</span>
           {{ h.fecha | date:'EEE d MMM, HH:mm':'America/Bogota' }}
         </div>
         <div class="meta">
@@ -312,3 +350,4 @@
     </button>
   </div>
 </div>
+</main>

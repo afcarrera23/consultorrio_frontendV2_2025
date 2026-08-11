@@ -60,6 +60,8 @@ export class DiagnosticoComponent implements OnInit {
   // popup/estado
   isPopupOpen = false;
   isSubmitting = false;
+  autosaveStatus = '';
+  private autosaveTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private route: ActivatedRoute,
@@ -110,6 +112,7 @@ export class DiagnosticoComponent implements OnInit {
 
     // 5) cargar catálogo de medicamentos (datalist) y, al terminar, hidratar draft si existe
     this.cargarCatalogoMedicamentos(() => {
+      if (this.restaurarBorradorUi()) return;
       const draft = this.registroTemp.getDraftDiagnosticos();
       if (draft && draft.length) {
         this.plan = draft[0].plan ?? '';
@@ -137,6 +140,60 @@ export class DiagnosticoComponent implements OnInit {
       }
     });
   }
+
+  programarAutoguardado(): void {
+    clearTimeout(this.autosaveTimer);
+    this.autosaveStatus = 'Guardando borrador…';
+    this.autosaveTimer = setTimeout(() => this.guardarBorradorUi(), 500);
+  }
+
+  private diagnosticoUiKey(): string { return `diagnosticoUiDraft:${this.pacienteId}`; }
+
+  private guardarBorradorUi(): void {
+    if (!this.pacienteId) return;
+    const data = {
+      pacienteId: this.pacienteId,
+      tipoDiagnostico: this.tipoDiagnostico,
+      plan: this.plan,
+      diagnosticos: this.diagnosticos,
+      diagnosticoTextos: this.diagControls.map(c => c.value || ''),
+      medicamentos: this.medicamentos,
+      medicamentoTextos: this.medInp.map(c => c.value || ''),
+      guardadoEn: Date.now()
+    };
+    localStorage.setItem(this.diagnosticoUiKey(), JSON.stringify(data));
+    this.guardarDraftActual();
+    this.autosaveStatus = 'Borrador guardado';
+  }
+
+  private restaurarBorradorUi(): boolean {
+    const raw = localStorage.getItem(this.diagnosticoUiKey());
+    if (!raw) return false;
+    try {
+      const data = JSON.parse(raw);
+      if (Number(data?.pacienteId) !== this.pacienteId) return false;
+      this.tipoDiagnostico = Number(data.tipoDiagnostico) || 1;
+      this.plan = data.plan || '';
+      this.diagnosticos = Array.isArray(data.diagnosticos) && data.diagnosticos.length ? data.diagnosticos : [{}];
+      this.diagControls = this.diagnosticos.map((_: any, i: number) => new FormControl(data.diagnosticoTextos?.[i] || ''));
+      this.diagFiltrados = this.diagnosticos.map(() => []);
+      this.diagMenuOpen = this.diagnosticos.map(() => false);
+      this.medicamentos = Array.isArray(data.medicamentos) && data.medicamentos.length ? data.medicamentos : [this.nuevoMedicamento()];
+      this.medInp = this.medicamentos.map((_: any, i: number) => new FormControl(data.medicamentoTextos?.[i] || ''));
+      this.medMenuOpen = this.medicamentos.map(() => false);
+      this.medOpciones = this.medicamentos.map(() => []);
+      this.medLoading = this.medicamentos.map(() => false);
+      this.hidratarFilasConCatalogo();
+      this.autosaveStatus = 'Borrador recuperado';
+      return true;
+    } catch {
+      localStorage.removeItem(this.diagnosticoUiKey());
+      return false;
+    }
+  }
+
+  @HostListener('window:beforeunload')
+  guardarAntesDeCerrar(): void { this.guardarBorradorUi(); }
 
   /** 🔐 Única fuente de verdad del usuario logueado (tu AuthService) */
   private getUsuarioSesion(): number {
@@ -256,6 +313,7 @@ export class DiagnosticoComponent implements OnInit {
     };
     this.diagControls[i].setValue(`${sel.codigo} - ${sel.descripcion}`, { emitEvent: false });
     this.diagMenuOpen[i] = false;
+    this.programarAutoguardado();
   }
 
   addDiagnostico() {
@@ -263,6 +321,7 @@ export class DiagnosticoComponent implements OnInit {
     this.diagControls.push(new FormControl(''));
     this.diagFiltrados.push([]);
     this.diagMenuOpen.push(false);
+    this.programarAutoguardado();
   }
 
   removeDiagnostico(i: number) {
@@ -271,6 +330,7 @@ export class DiagnosticoComponent implements OnInit {
     this.diagFiltrados.splice(i, 1);
     this.diagMenuOpen.splice(i, 1);
     if (this.diagnosticos.length === 0) this.addDiagnostico();
+    this.programarAutoguardado();
   }
 
   // ---------- Medicamentos (UI) ----------
@@ -280,6 +340,7 @@ export class DiagnosticoComponent implements OnInit {
     this.medMenuOpen.push(false);
     this.medOpciones.push([]);
     this.medLoading.push(false);
+    this.programarAutoguardado();
   }
 
   removeMedicamento(i: number) {
@@ -289,6 +350,7 @@ export class DiagnosticoComponent implements OnInit {
     this.medOpciones.splice(i, 1);
     this.medLoading.splice(i, 1);
     if (this.medicamentos.length === 0) this.addMedicamento();
+    this.programarAutoguardado();
   }
 
   private construirDraftDesdeUI(): DiagnosticoItem[] {
@@ -315,6 +377,8 @@ export class DiagnosticoComponent implements OnInit {
 
   // ---------- Guardar (finalizar) ----------
   guardarTodo() {
+    if (this.isSubmitting) return;
+
     const paciente: PacienteRegistroDTO | null = this.registroTemp.obtenerPaciente();
     if (!paciente) { alert('❌ No hay paciente en memoria.'); return; }
 
@@ -332,47 +396,43 @@ export class DiagnosticoComponent implements OnInit {
       return;
     }
 
-    const mode = this.flow.mode;
-
-    if (mode === 'NEW_PATIENT') {
-      const payload = {
-        ...paciente,
-        id: paciente.id,
-        usuarioRegistroId: paciente.usuarioRegistroId,
-        antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
-        antecedentePersonal:     antPerUsar ? [antPerUsar] : [],
-        examenFisico: exUsar,
-        diagnostico: diagnosticoItems
-      };
-
-      this.pacienteService.registrarConTodo(payload).subscribe({
-        next: (resp: any) => {
-          const nuevoId = Number(resp?.id || resp?.pacienteId);
-          if (nuevoId && !Number.isNaN(nuevoId)) this.pacienteId = nuevoId;
-          this.finalizarOkConImpresion();
-        },
-        error: (e) => this.finalizaError(e)
-      });
-
-    } else if (mode === 'EXISTING_PATIENT') {
-      const dto = {
-        pacienteId: paciente.id!,
-        usuarioId: this.usuarioId, // ✅ id del médico logueado
-        motivoConsulta: antPatUsar?.motivoConsulta,
-        antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
-        antecedentesPersonales:  antPerUsar ? [antPerUsar] : [],
-        examenFisico: exUsar,
-        diagnosticos: diagnosticoItems
-      };
-
-      this.historiaApi.crearHistoriaCompleta(dto).subscribe({
-        next: () => this.finalizarOkConImpresion(),
-        error: (e) => this.finalizaError(e)
-      });
-
-    } else {
-      alert('⚠️ Modo de flujo no definido.');
+    if (!paciente.id) {
+      alert('❌ El paciente todavía no tiene un identificador válido. Regresa al primer paso e inténtalo de nuevo.');
+      return;
     }
+
+    // El paciente ya existe en BD desde el primer paso, tanto en flujos nuevos como existentes.
+    // Una única ruta transaccional reduce diferencias y permite reintentos idempotentes.
+    const solicitudId = this.obtenerSolicitudId(paciente.id);
+    const dto = {
+      solicitudId,
+      pacienteId: paciente.id,
+      usuarioId: this.usuarioId,
+      motivoConsulta: antPatUsar?.motivoConsulta,
+      antecedentesPatologicos: antPatUsar ? [antPatUsar] : [],
+      antecedentesPersonales:  antPerUsar ? [antPerUsar] : [],
+      examenFisico: exUsar,
+      diagnosticos: diagnosticoItems
+    };
+
+    this.guardarDraftActual();
+    this.isSubmitting = true;
+    this.historiaApi.crearHistoriaCompleta(dto).subscribe({
+      next: () => this.finalizarOkConImpresion(),
+      error: (e) => this.finalizaError(e)
+    });
+  }
+
+  private obtenerSolicitudId(pacienteId: number): string {
+    const key = `historiaSubmissionId:${pacienteId}`;
+    const existente = localStorage.getItem(key);
+    if (existente) return existente;
+
+    const generado = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(key, generado);
+    return generado;
   }
 
   private async finalizarOkConImpresion() {
@@ -386,12 +446,14 @@ export class DiagnosticoComponent implements OnInit {
         doc:      draft?.identificacion ?? ''
       };
 
-      await this.printSvc.printFromEndpoint(this.pacienteId, fallback);
-
-      this.cargarCatalogoMedicamentos(() => this.rellenarInputsMedicamentosDesdeModelo());
-
+      // El guardado ya terminó. Limpiamos antes de imprimir para que un problema de
+      // navegación/impresión no permita enviar nuevamente la misma historia.
+      localStorage.removeItem(`historiaSubmissionId:${this.pacienteId}`);
+      localStorage.removeItem(this.diagnosticoUiKey());
       this.registroTemp.limpiarPaciente?.();
       this.flow.clear();
+
+      await this.printSvc.printFromEndpoint(this.pacienteId, fallback);
     } finally {
       this.isSubmitting = false;
     }
@@ -401,12 +463,18 @@ export class DiagnosticoComponent implements OnInit {
     alert('✅ Registro guardado correctamente.');
     this.registroTemp.limpiarPaciente?.();
     this.flow.clear();
+    localStorage.removeItem(this.diagnosticoUiKey());
     this.router.navigate(['/menu-principal']);
   }
 
   private finalizaError(e: any) {
     console.error('❌ Error al guardar:', e);
-    alert('❌ Error al guardar.');
+    this.isSubmitting = false;
+    const detalle = e?.error?.message || e?.error?.error;
+    const mensaje = e?.status === 0
+      ? 'No fue posible confirmar la respuesta del servidor. Tus datos siguen guardados en este equipo; verifica la conexión y pulsa Registrar nuevamente.'
+      : (detalle || 'No fue posible guardar la historia. Revisa los datos e inténtalo nuevamente.');
+    alert(`❌ ${mensaje}`);
   }
 
   atras() {
@@ -421,6 +489,10 @@ export class DiagnosticoComponent implements OnInit {
     this.isPopupOpen = false;
 
     const id = this.registroTemp.obtenerIdPaciente();
+    if (id) {
+      localStorage.removeItem(`historiaSubmissionId:${id}`);
+      localStorage.removeItem(this.diagnosticoUiKey());
+    }
     const fueCreado = this.registroTemp.tienePacienteCreadoEnEsteFlujo();
 
     if (fueCreado && id) {

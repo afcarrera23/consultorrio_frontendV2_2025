@@ -7,7 +7,6 @@ import { MenuPrincipalComponent } from './menu-principal/menu-principal.componen
 import { AuthGuard } from './guards/auth.guard';
 import { AdminGuard } from './guards/admin.guard';
 
-
 import { PacienteComponent } from './components/paciente/paciente.component';
 import { AntecedentePatologicoComponent } from './components/antecedente-patologico/antecedente-patologico.component';
 import { AntecedentePersonalComponent } from './components/antecedente-personal/antecedente-personal.component';
@@ -19,9 +18,6 @@ import { UserOnlyGuard } from './services/user-only.guard';
 import { MedicamentoComponent } from './components/components-admin/medicamento/medicamento.component';
 import { MedicoComponent } from './components/components-admin/medico/medico.component';
 import { FormulaMedicaFastComponent } from './components/formula-medica-fast/formula-medica-fast.component';
-
-// 👇 Ajusta estas rutas de import a tu estructura real
-
 
 const routes: Routes = [
   { path: 'iniciar-sesion', component: IniciarSesionComponent },
@@ -35,7 +31,8 @@ const routes: Routes = [
   { path: 'diagnostico/:pacienteId', component: DiagnosticoComponent, canActivate: [AuthGuard, UserOnlyGuard] },
   { path: 'historial-medico/:pacienteId', component: HistorialMedicoComponent, canActivate: [AuthGuard, UserOnlyGuard] },
   { path: 'formula-nueva', component: FormulaMedicaFastComponent, canActivate: [AuthGuard, UserOnlyGuard] },
-  { path: 'print', component: PrintFormulaComponent, canActivate: [AuthGuard, UserOnlyGuard] },
+
+  // Print (sin header en tu layout si lo usas)
   { path: 'print', component: PrintFormulaComponent, data: { noHeader: true }, canActivate: [AuthGuard, UserOnlyGuard] },
 
   // 👑 Paneles ADMIN (solo rol=4)
@@ -47,7 +44,14 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [
+    RouterModule.forRoot(routes, {
+      useHash: true,                    // ✅ evita 404 del backend al refrescar
+      scrollPositionRestoration: 'enabled',
+      onSameUrlNavigation: 'reload'     // opcional, útil si recargas misma ruta
+      // enableTracing: true,            // opcional para debug de rutas
+    })
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}

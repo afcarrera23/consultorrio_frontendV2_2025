@@ -1,15 +1,27 @@
 <div class="diag-wrapper">
+  <header class="page-hero">
+    <div class="hero-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M9 5h6M9 9h6M9 13h3M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="m14.5 16.5 3-3 2 2-3 3-2.5.5.5-2.5Z"/></svg>
+    </div>
+    <div>
+      <span class="eyebrow">Prescripción médica</span>
+      <h1>Fórmula rápida</h1>
+      <p>Crea, registra e imprime una fórmula médica de manera ágil y segura.</p>
+    </div>
+    <span class="hero-status"><i></i> Sesión médica activa</span>
+  </header>
+
   <!-- ======================== MÉDICO SESIÓN ======================== -->
   <div class="medico-box" *ngIf="medicoSesionMin || medicoDetalle">
     <div class="medico-info">
       <div class="medico-name">
-        <strong>Médico:</strong>
+        <span class="medico-label">Profesional responsable</span>
         {{ (medicoDetalle?.nombreMedico || medicoSesionMin?.nombre) }}
         {{ (medicoDetalle?.apellidoMedico || medicoSesionMin?.apellido) }}
       </div>
 
       <div class="medico-reg" *ngIf="medicoDetalle?.registroMedico">
-        <strong>Registro:</strong> {{ medicoDetalle?.registroMedico }}
+        Registro médico: <strong>{{ medicoDetalle?.registroMedico }}</strong>
       </div>
 
       <div class="medico-desc" *ngIf="medicoDetalle?.descripcionMedicaUno || medicoDetalle?.descripcionMedicaDos">
@@ -24,7 +36,11 @@
   </div>
 
   <!-- ======================== DATOS PACIENTE ======================== -->
-  <h3>Datos del paciente</h3>
+  <section class="form-card">
+  <div class="section-heading">
+    <span class="section-step">01</span>
+    <div><h3>Datos del paciente</h3><p>Información básica para identificar la prescripción.</p></div>
+  </div>
   <div class="grid-3">
     <div>
       <label class="lbl">Nombre *</label>
@@ -51,9 +67,14 @@
       <input class="input" type="date" [(ngModel)]="form.fecha" name="fecha" />
     </div>
   </div>
+  </section>
 
   <!-- ======================== MEDICAMENTOS ======================== -->
-  <h4>Medicamentos</h4>
+  <section class="form-card">
+  <div class="section-heading">
+    <span class="section-step">02</span>
+    <div><h3>Medicamentos</h3><p>Selecciona un medicamento del catálogo o escribe uno nuevo.</p></div>
+  </div>
   <div class="table-scroll">
     <table class="ui-table">
       <thead>
@@ -115,7 +136,7 @@
           </td>
 
           <td class="center">
-            <button type="button" class="btn btn-ghost danger" (click)="removeMed(i)">🗑️ Quitar</button>
+            <button type="button" class="btn btn-ghost danger" (click)="removeMed(i)" title="Quitar medicamento">× <span>Quitar</span></button>
           </td>
         </tr>
       </tbody>
@@ -125,9 +146,14 @@
   <div class="actions-row" style="margin:8px 0 16px;">
     <button type="button" class="btn btn-ghost" (click)="addMed()">+ Agregar medicamento</button>
   </div>
+  </section>
 
   <!-- ======================== PLAN ======================== -->
-  <h4>Plan de tratamiento</h4>
+  <section class="form-card">
+  <div class="section-heading">
+    <span class="section-step">03</span>
+    <div><h3>Plan de tratamiento</h3><p>Indica recomendaciones, controles y signos de alarma.</p></div>
+  </div>
   <textarea
     class="input plan-textarea"
     rows="4"
@@ -143,13 +169,14 @@
       class="btn success"
       (click)="registrar()"
       [disabled]="!esValido() || guardando || !medicoDetalle">
-      Registrar
+      {{ guardando ? 'Registrando fórmula…' : 'Registrar e imprimir fórmula' }}
     </button>
   </div>
 
   <div *ngIf="error" class="state-error" style="margin-top:8px;">
     ⚠️ {{ error }}
   </div>
+  </section>
 
   <!-- Fila inferior: Atrás / Cancelar -->
   <div class="form-row form-bottom">
@@ -168,11 +195,10 @@
   </div>
 
   <!-- ======================== LISTADO DE FÓRMULAS (GLOBAL) ======================== -->
-  <hr class="my-4" />
-
+  <section class="records-card">
   <div class="table-title">
-    <h3>Fórmulas registradas (global)</h3>
-    <button type="button" class="btn btn-ghost" (click)="cargarLista()">↻ Recargar</button>
+    <div><span class="eyebrow">Historial de prescripciones</span><h3>Fórmulas registradas</h3><p>Consulta, imprime o administra las fórmulas existentes.</p></div>
+    <button type="button" class="btn btn-ghost" (click)="cargarLista()">↻ Actualizar</button>
   </div>
 
   <div *ngIf="cargandoLista" class="state-loading">Cargando…</div>
@@ -207,7 +233,7 @@
                   class="btn btn-ghost primary"
                   (click)="onImprimirSimple(f)"
                   title="Imprimir">
-                  🖨️ Imprimir
+                  Imprimir
                 </button>
 
                 <button
@@ -216,7 +242,7 @@
                   [disabled]="deletingId === f.id"
                   (click)="onEliminarSimple(f)"
                   title="Eliminar">
-                  {{ deletingId === f.id ? 'Eliminando…' : '🗑️ Eliminar' }}
+                  {{ deletingId === f.id ? 'Eliminando…' : 'Eliminar' }}
                 </button>
               </div>
             </td>
@@ -226,4 +252,5 @@
       </table>
     </div>
   </div>
+  </section>
 </div>
